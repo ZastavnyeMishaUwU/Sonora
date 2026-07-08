@@ -19,6 +19,53 @@
             android:textStyle="bold"
             android:layout_marginBottom="20dp" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Local Registration"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/usernameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Username"
+            android:inputType="textPersonName"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/emailEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/passwordEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/registerButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Register User"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Jamendo Tracks"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
         <EditText
             android:id="@+id/searchEditText"
             android:layout_width="match_parent"
@@ -47,6 +94,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Get Track Details"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/saveFavoriteButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Last Track To Favorites"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/removeFavoriteButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Remove Current Track From Favorites"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/showFavoritesButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Show Favorite Tracks"
             android:layout_marginBottom="20dp" />
 
         <ImageView
