@@ -34,11 +34,35 @@
             android:text="Search in Jamendo"
             android:layout_marginBottom="20dp" />
 
+        <EditText
+            android:id="@+id/trackIdEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter track ID for details"
+            android:inputType="text"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/detailsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Get Track Details"
+            android:layout_marginBottom="20dp" />
+
+        <ImageView
+            android:id="@+id/trackImageView"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginBottom="20dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            android:contentDescription="Track image" />
+
         <TextView
             android:id="@+id/resultTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Search result will appear here"
+            android:text="Result will appear here"
             android:textSize="16sp" />
 
     </LinearLayout>
