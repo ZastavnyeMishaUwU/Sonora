@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">IT-robota</string>
+    <string name="jamendo_client_id">1bd51584</string>
 </resources>
