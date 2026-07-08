@@ -16,6 +16,10 @@ import androidx.room.RoomDatabase;
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
+
+    //conect to database this USERDAO btw
+    public abstract UserDao userDao();
+
     private static volatile AppDatabase INSTANCE;
     public static AppDatabase getInstance(final Context context) {
         if (INSTANCE == null) {
