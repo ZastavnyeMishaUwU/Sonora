@@ -1,9 +1,14 @@
+
+
 plugins {
     alias(libs.plugins.android.application)
 }
 
+
+
 android {
     namespace = "com.example.it_robota"
+
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -18,6 +23,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
     }
 
     buildTypes {
@@ -27,6 +34,7 @@ android {
             }
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
