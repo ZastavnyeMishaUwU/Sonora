@@ -6,10 +6,6 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-/**
- * Main Room database for the Android music application.
- * Stores users, tracks, favorite tracks and downloaded tracks.
- */
 @Database(
         entities = {
                 UserEntity.class,
@@ -21,7 +17,6 @@ import androidx.room.RoomDatabase;
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
-
 
     //conect to database this USERDAO btw
     public abstract UserDao userDao();
@@ -48,6 +43,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 }
             }
         }
+
         return INSTANCE;
     }
 }
