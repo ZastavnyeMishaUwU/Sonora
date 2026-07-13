@@ -176,7 +176,17 @@ public class AuthRepository {
     public String getCurrentUserEmail() {
         return sharedPreferences.getString(KEY_USER_EMAIL, null);
     }
-
+    /**
+     * Logs out the current user.
+     * Clears only session-related data without deleting user data.
+     */
+    public void logout() {
+        sharedPreferences.edit()
+                .remove(KEY_LOGGED_IN)
+                .remove(KEY_USER_ID)
+                .remove(KEY_USER_EMAIL)
+                .apply();
+    }
     /**
      * Checks if a user with this email already exists.
      *
