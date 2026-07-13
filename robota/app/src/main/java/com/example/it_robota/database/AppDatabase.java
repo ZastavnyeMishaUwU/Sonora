@@ -5,6 +5,10 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
+/**
+ * Main Room database for the Android music application.
+ * Stores users, tracks, favorite tracks and downloaded tracks.
+ */
 @Database(
         entities = {
                 UserEntity.class,
@@ -17,6 +21,11 @@ import androidx.room.RoomDatabase;
 )
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
+        /**
+     * Returns singleton instance of the application database.
+     * * @param context application or activity context
+     * @return AppDatabase instance
+     */
     public static AppDatabase getInstance(final Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
