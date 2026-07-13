@@ -21,7 +21,7 @@ import androidx.room.RoomDatabase;
 )
 public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
-     /**
+    /**
      * Returns singleton instance of the application database.
      * @param context application or activity context
      * @return AppDatabase instance
