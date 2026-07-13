@@ -99,7 +99,6 @@ public class AuthRepository {
         if (!isEmailValid(email)) {
             return new AuthResult(false, "Invalid email format.", null);
         }
-
         User user = getUserByEmail(email);
         if (user == null) {
             return new AuthResult(false, "User not found.", null);
