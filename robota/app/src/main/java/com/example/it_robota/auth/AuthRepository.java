@@ -22,6 +22,9 @@ public class AuthRepository {
     private static final String PREF_NAME = "auth_repository_prefs";
     private static final String USER_EMAILS_KEY = "user_emails";
     private static final String USER_PREFIX = "user_";
+    private static final String KEY_LOGGED_IN = "loggedIn";
+    private static final String KEY_USER_ID = "currentUserId";
+    private static final String KEY_USER_EMAIL = "currentUserEmail";
 
     private final SharedPreferences sharedPreferences;
 
@@ -83,6 +86,40 @@ public class AuthRepository {
     }
 
     /**
+     * Logs in a user locally.
+     *
+     * @param email user email
+     * @param password user password
+     * @return authentication result
+     */
+    public AuthResult login(String email, String password) {
+        email = normalizeEmail(email);
+        password = password == null ? "" : password.trim();
+
+        if (!isEmailValid(email)) {
+            return new AuthResult(false, "Invalid email format.", null);
+        }
+
+        User user = getUserByEmail(email);
+        if (user == null) {
+            return new AuthResult(false, "User not found.", null);
+        }
+
+        try {
+            String hashedPassword = hashPassword(password);
+            if (user.getPasswordHash().equals(hashedPassword)) {
+                saveSession(user);
+                return new AuthResult(true, "Login successful.", user);
+            } else {
+                return new AuthResult(false, "Invalid password.", null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AuthResult(false, "Login failed.", null);
+        }
+    }
+
+    /**
      * Checks if username is valid.
      *
      * @param username username value
@@ -112,6 +149,33 @@ public class AuthRepository {
      */
     public boolean isPasswordValid(String password) {
         return password != null && password.length() >= 6;
+    }
+
+    /**
+     * Checks if a user is currently logged in.
+     *
+     * @return true if logged in
+     */
+    public boolean isLoggedIn() {
+        return sharedPreferences.getBoolean(KEY_LOGGED_IN, false);
+    }
+
+    /**
+     * Returns current user ID from session.
+     *
+     * @return user ID or -1 if not logged in
+     */
+    public long getCurrentUserId() {
+        return sharedPreferences.getLong(KEY_USER_ID, -1);
+    }
+
+    /**
+     * Returns current user email from session.
+     *
+     * @return user email or null if not logged in
+     */
+    public String getCurrentUserEmail() {
+        return sharedPreferences.getString(KEY_USER_EMAIL, null);
     }
 
     /**
@@ -150,6 +214,19 @@ public class AuthRepository {
             e.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     * Saves user session to SharedPreferences.
+     *
+     * @param user user object
+     */
+    private void saveSession(User user) {
+        sharedPreferences.edit()
+                .putBoolean(KEY_LOGGED_IN, true)
+                .putLong(KEY_USER_ID, user.getId())
+                .putString(KEY_USER_EMAIL, user.getEmail())
+                .apply();
     }
 
     /**
