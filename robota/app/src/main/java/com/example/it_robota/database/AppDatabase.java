@@ -1,6 +1,7 @@
 package com.example.it_robota.database;
 
 import android.content.Context;
+
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -20,9 +21,17 @@ import androidx.room.RoomDatabase;
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
+
+    /**
+     * Connect UserDao to DataBase
+    */
+    public abstract UserDao userDao();
+
     private static volatile AppDatabase INSTANCE;
+
     /**
      * Returns singleton instance of the application database.
+     *
      * @param context application or activity context
      * @return AppDatabase instance
      */
@@ -40,6 +49,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 }
             }
         }
+
         return INSTANCE;
     }
 }
