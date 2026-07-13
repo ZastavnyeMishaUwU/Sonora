@@ -9,19 +9,27 @@ import com.example.it_robota.models.User;
 @Dao
 public interface UserDao {
 
-    // Add a new user to the database
+    /**
+     * Inserts a new user into the database.
+     */
     @Insert
     void insertUser(User user);
 
-    // Get user by email
+    /**
+     * Returns a user by email.
+     */
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
     User getUserByEmail(String email);
 
-    // Get user by ID
+    /**
+     * Returns a user by ID.
+     */
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
     User getUserById(long id);
 
-    // Check if a user with this email already exists
+    /**
+     * Checks if a user with the given email exists.
+     */
     @Query("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)")
     boolean checkUserExists(String email);
 }
