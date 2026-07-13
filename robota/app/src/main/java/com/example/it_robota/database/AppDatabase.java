@@ -22,7 +22,9 @@ import androidx.room.RoomDatabase;
 )
 public abstract class AppDatabase extends RoomDatabase {
 
-    //conect to database this USERDAO btw
+    /**
+     * Connect UserDao to DataBase
+    * */
     public abstract UserDao userDao();
 
     private static volatile AppDatabase INSTANCE;
