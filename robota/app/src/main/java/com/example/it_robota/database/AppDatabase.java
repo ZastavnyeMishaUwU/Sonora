@@ -6,6 +6,10 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
+/**
+ * Main Room database for the Android music application.
+ * Stores users, tracks, favorite tracks and downloaded tracks.
+ */
 @Database(
         entities = {
                 UserEntity.class,
