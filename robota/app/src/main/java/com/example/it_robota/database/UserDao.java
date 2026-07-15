@@ -2,33 +2,46 @@ package com.example.it_robota.database;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import com.example.it_robota.models.User;
-
+/**
+ * DAO for working with users in the local Room database.
+ */
 @Dao
 public interface UserDao {
 
     /**
-     * Inserts a new user into the database.
+     * Inserts a user into the local database.
+     *
+     * @param userEntity user entity to insert
      */
-    @Insert
-    void insertUser(User user);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertUser(UserEntity userEntity);
 
     /**
      * Returns a user by email.
+     *
+     * @param email user email
+     * @return found user entity or null
      */
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
-    User getUserByEmail(String email);
+    UserEntity getUserByEmail(String email);
 
     /**
      * Returns a user by ID.
+     *
+     * @param id user ID
+     * @return found user entity or null
      */
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
-    User getUserById(long id);
+    UserEntity getUserById(long id);
 
     /**
-     * Checks if a user with the given email exists.
+     * Checks if a user with this email exists.
+     *
+     * @param email user email
+     * @return true if user exists, false otherwise
      */
     @Query("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)")
     boolean checkUserExists(String email);
