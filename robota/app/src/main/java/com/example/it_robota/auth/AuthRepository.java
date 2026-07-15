@@ -8,6 +8,7 @@ import com.example.it_robota.models.User;
 
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HashSet;
 import java.util.Locale;
@@ -15,13 +16,18 @@ import java.util.Set;
 
 /**
  * Repository for local authentication logic.
- * Handles local user registration using SharedPreferences.
+ * Handles local user registration, login and session state using SharedPreferences.
  */
 public class AuthRepository {
 
     private static final String PREF_NAME = "auth_repository_prefs";
+
     private static final String USER_EMAILS_KEY = "user_emails";
     private static final String USER_PREFIX = "user_";
+
+    private static final String SESSION_LOGGED_IN_KEY = "session_logged_in";
+    private static final String SESSION_USER_ID_KEY = "session_user_id";
+    private static final String SESSION_USER_EMAIL_KEY = "session_user_email";
 
     private final SharedPreferences sharedPreferences;
 
@@ -83,6 +89,89 @@ public class AuthRepository {
     }
 
     /**
+     * Logs in an existing local user.
+     *
+     * @param email email entered by the user
+     * @param password password entered by the user
+     * @return authentication result with status and message
+     */
+    public AuthResult login(String email, String password) {
+        email = normalizeEmail(email);
+        password = password == null ? "" : password.trim();
+
+        if (!isEmailValid(email)) {
+            return new AuthResult(false, "Email is not valid.", null);
+        }
+
+        if (password.isEmpty()) {
+            return new AuthResult(false, "Password must not be empty.", null);
+        }
+
+        User user = getUserByEmail(email);
+
+        if (user == null) {
+            return new AuthResult(false, "User with this email was not found.", null);
+        }
+
+        try {
+            String enteredPasswordHash = hashPassword(password);
+
+            if (!enteredPasswordHash.equals(user.getPasswordHash())) {
+                return new AuthResult(false, "Incorrect password.", null);
+            }
+
+            saveSession(user);
+
+            return new AuthResult(true, "Login successful.", user);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AuthResult(false, "Login failed.", null);
+        }
+    }
+
+    /**
+     * Checks whether a user session is currently active.
+     *
+     * @return true if user is logged in, false otherwise
+     */
+    public boolean isLoggedIn() {
+        boolean loggedIn = sharedPreferences.getBoolean(SESSION_LOGGED_IN_KEY, false);
+        String email = sharedPreferences.getString(SESSION_USER_EMAIL_KEY, "");
+
+        return loggedIn && email != null && !email.trim().isEmpty() && getUserByEmail(email) != null;
+    }
+
+    /**
+     * Returns the email of the currently logged-in user.
+     *
+     * @return current user email or empty string
+     */
+    public String getCurrentUserEmail() {
+        return sharedPreferences.getString(SESSION_USER_EMAIL_KEY, "");
+    }
+
+    /**
+     * Returns the ID of the currently logged-in user.
+     *
+     * @return current user ID or 0
+     */
+    public long getCurrentUserId() {
+        return sharedPreferences.getLong(SESSION_USER_ID_KEY, 0);
+    }
+
+    /**
+     * Clears only the current user session.
+     */
+    public void logout() {
+        sharedPreferences.edit()
+                .remove(SESSION_LOGGED_IN_KEY)
+                .remove(SESSION_USER_ID_KEY)
+                .remove(SESSION_USER_EMAIL_KEY)
+                .apply();
+    }
+
+    /**
      * Checks if username is valid.
      *
      * @param username username value
@@ -105,7 +194,7 @@ public class AuthRepository {
     }
 
     /**
-     * Checks if password is valid.
+     * Checks if password is valid for registration.
      *
      * @param password password value
      * @return true if password is valid
@@ -169,6 +258,19 @@ public class AuthRepository {
     }
 
     /**
+     * Saves current user session data.
+     *
+     * @param user logged-in user
+     */
+    private void saveSession(User user) {
+        sharedPreferences.edit()
+                .putBoolean(SESSION_LOGGED_IN_KEY, true)
+                .putLong(SESSION_USER_ID_KEY, user.getId())
+                .putString(SESSION_USER_EMAIL_KEY, user.getEmail())
+                .apply();
+    }
+
+    /**
      * Reads all registered user emails.
      *
      * @return copied set of user emails
@@ -225,7 +327,7 @@ public class AuthRepository {
      */
     private String hashPassword(String password) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hashBytes = digest.digest(password.getBytes());
+        byte[] hashBytes = digest.digest(password.getBytes(StandardCharsets.UTF_8));
 
         StringBuilder hexString = new StringBuilder();
 
