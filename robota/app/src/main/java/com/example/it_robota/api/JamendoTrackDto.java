@@ -14,9 +14,11 @@ public class JamendoTrackDto {
     private String image;
     private String licenseUrl;
 
+    // Default empty constructor required for serialization/deserialization
     public JamendoTrackDto() {
     }
 
+    // Constructor with all fields to easily instantiate track DTOs
     public JamendoTrackDto(String id,
                            String name,
                            String artistName,
@@ -37,6 +39,10 @@ public class JamendoTrackDto {
         this.licenseUrl = licenseUrl;
     }
 
+    /*
+     * Converts this API-specific DTO into the clean domain Track model.
+     * Sets default values for local UI flags like isFavorite (false) and localPath (null).
+     */
     public Track toTrack() {
         return new Track(
                 id,

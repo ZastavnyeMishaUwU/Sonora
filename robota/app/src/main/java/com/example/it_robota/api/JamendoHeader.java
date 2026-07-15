@@ -1,5 +1,9 @@
 package com.example.it_robota.api;
 
+/**
+ * Model class representing the header section of a Jamendo API response.
+ * It contains response metadata, status codes, and error details.
+ */
 public class JamendoHeader {
 
     private String status;
@@ -7,9 +11,11 @@ public class JamendoHeader {
     private String errorMessage;
     private int resultsCount;
 
+    // Default empty constructor required for serialization/deserialization
     public JamendoHeader() {
     }
 
+    // Constructor with all fields to easily create header instances
     public JamendoHeader(String status, int code, String errorMessage, int resultsCount) {
         this.status = status;
         this.code = code;

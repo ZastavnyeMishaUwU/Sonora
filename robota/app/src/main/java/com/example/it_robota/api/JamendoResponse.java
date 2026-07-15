@@ -18,6 +18,10 @@ public class JamendoResponse {
         this.results = results;
     }
 
+    /*
+     * Converts API DTO models into the main domain Track models.
+     * Maps each JamendoTrackDto inside results into a clean, local Track object.
+     */
     public List<Track> toTrackList() {
         List<Track> tracks = new ArrayList<>();
 
