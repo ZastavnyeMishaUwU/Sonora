@@ -2,6 +2,7 @@ package com.example.it_robota.database;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 /**
@@ -11,11 +12,11 @@ import androidx.room.Query;
 public interface UserDao {
 
     /**
-     * Inserts a new user into the database.
+     * Inserts a user into the local database.
      *
      * @param userEntity user entity to insert
      */
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertUser(UserEntity userEntity);
 
     /**
@@ -37,7 +38,7 @@ public interface UserDao {
     UserEntity getUserById(long id);
 
     /**
-     * Checks if a user with this email already exists.
+     * Checks if a user with this email exists.
      *
      * @param email user email
      * @return true if user exists, false otherwise
