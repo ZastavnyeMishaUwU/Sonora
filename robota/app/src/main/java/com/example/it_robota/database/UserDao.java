@@ -4,44 +4,32 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
 
-/**
- * DAO for working with users in the local Room database.
- */
+import com.example.it_robota.models.User;
+
 @Dao
 public interface UserDao {
 
     /**
      * Inserts a new user into the database.
-     *
-     * @param userEntity user entity to insert
      */
     @Insert
-    void insertUser(UserEntity userEntity);
+    void insertUser(User user);
 
     /**
      * Returns a user by email.
-     *
-     * @param email user email
-     * @return found user entity or null
      */
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
-    UserEntity getUserByEmail(String email);
+    User getUserByEmail(String email);
 
     /**
      * Returns a user by ID.
-     *
-     * @param id user ID
-     * @return found user entity or null
      */
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
-    UserEntity getUserById(long id);
+    User getUserById(long id);
 
     /**
-     * Checks if a user with this email exists.
-     *
-     * @param email user email
-     * @return number of users with this email
+     * Checks if a user with the given email exists.
      */
-    @Query("SELECT COUNT(*) FROM users WHERE email = :email")
-    int checkUserExists(String email);
+    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)")
+    boolean checkUserExists(String email);
 }
