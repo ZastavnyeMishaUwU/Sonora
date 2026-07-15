@@ -128,18 +128,44 @@ public class AuthRepository {
         return sessionManager.isLoggedIn();
     }
 
+    /**
+     * Creates a failed authentication result with no user data.
+     *
+     * @param message user-facing failure message
+     * @return failed authentication result
+     */
     private AuthResult failure(String message) {
         return new AuthResult(false, message, null);
     }
 
+    /**
+     * Checks whether an email has a supported format.
+     *
+     * @param email normalized email value
+     * @return true when the email format is valid
+     */
     private boolean isEmailValid(String email) {
         return !email.isEmpty() && EMAIL_PATTERN.matcher(email).matches();
     }
 
+    /**
+     * Checks whether a password meets the minimum length requirement.
+     *
+     * @param password raw password value
+     * @return true when the password is valid
+     */
     private boolean isPasswordValid(String password) {
         return password != null && password.length() >= MIN_PASSWORD_LENGTH;
     }
 
+    /**
+     * Safely compares a raw password with a stored password hash.
+     *
+     * @param password raw password entered by the user
+     * @param passwordHash stored password hash
+     * @return true when the password matches the stored hash
+     * @throws Exception if the password cannot be hashed
+     */
     private boolean passwordMatches(String password, String passwordHash) throws Exception {
         if (passwordHash == null || passwordHash.isEmpty()) {
             return false;
@@ -150,6 +176,13 @@ public class AuthRepository {
         return MessageDigest.isEqual(actualHash, expectedHash);
     }
 
+    /**
+     * Creates a SHA-256 hash for a raw password.
+     *
+     * @param password raw password value
+     * @return hexadecimal password hash
+     * @throws Exception if the SHA-256 algorithm is unavailable
+     */
     private String hashPassword(String password) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hashBytes = digest.digest(password.getBytes(StandardCharsets.UTF_8));
@@ -162,10 +195,22 @@ public class AuthRepository {
         return hash.toString();
     }
 
+    /**
+     * Removes surrounding whitespace from a username.
+     *
+     * @param username raw username value
+     * @return normalized username or an empty string
+     */
     private String normalizeUsername(String username) {
         return username == null ? "" : username.trim();
     }
 
+    /**
+     * Normalizes an email for consistent database lookup.
+     *
+     * @param email raw email value
+     * @return trimmed lowercase email or an empty string
+     */
     private String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
