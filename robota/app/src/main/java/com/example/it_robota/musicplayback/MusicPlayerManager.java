@@ -1,14 +1,20 @@
-package com.example.it_robota.MusicPlayback;
+package com.example.it_robota.musicplayback;
 
 import android.media.MediaPlayer;
 import java.io.IOException;
 
+/**
+ * Manager class that encapsulates Android MediaPlayer logic for audio playback.
+ * - Handles streaming from remote URLs (such as Jamendo API) asynchronously.
+ * - Manages playback states (play, pause, resume, stop) safely.
+ * - Prevents UI freezing and memory leaks by properly releasing media resources.
+ */
 public class MusicPlayerManager {
 
-    // Internal MediaPlayer instance to handle audio streaming
+    /*  Internal MediaPlayer instance to handle audio streaming*/
     private MediaPlayer mediaPlayer;
 
-    // Constructor initializing the MediaPlayer
+    /*  Constructor initializing the MediaPlayer*/
     public MusicPlayerManager() {
         mediaPlayer = new MediaPlayer();
     }
@@ -36,28 +42,28 @@ public class MusicPlayerManager {
         }
     }
 
-    // Pauses the current audio playback
+    /*  Pauses the current audio playback */
     public void pause() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
         }
     }
 
-    // Resumes playback from the paused state
+    /*  Resumes playback from the paused state*/
     public void resume() {
         if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
             mediaPlayer.start();
         }
     }
 
-    // Stops the playback completely
+    /*  Stops the playback completely */
     public void stop() {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
         }
     }
 
-    // Checks if audio is currently playing
+    /* Checks if audio is currently playing */
     public boolean isPlaying() {
         if (mediaPlayer != null) {
             return mediaPlayer.isPlaying();
@@ -65,7 +71,7 @@ public class MusicPlayerManager {
         return false;
     }
 
-    // Releases MediaPlayer resources to prevent memory leaks when Activity is destroyed
+    /* Releases MediaPlayer resources to prevent memory leaks when Activity is destroyed */
     public void release() {
         if (mediaPlayer != null) {
             mediaPlayer.release();
