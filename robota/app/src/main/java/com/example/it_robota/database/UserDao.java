@@ -37,11 +37,11 @@ public interface UserDao {
     UserEntity getUserById(long id);
 
     /**
-     * Checks if a user with this email exists.
+     * Checks if a user with this email already exists.
      *
      * @param email user email
-     * @return number of users with this email
+     * @return true if user exists, false otherwise
      */
-    @Query("SELECT COUNT(*) FROM users WHERE email = :email")
-    int checkUserExists(String email);
+    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)")
+    boolean checkUserExists(String email);
 }
