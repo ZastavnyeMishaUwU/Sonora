@@ -5,9 +5,6 @@
 build/
 */build/
 
-# Keep Gradle wrapper
-!gradle/wrapper/gradle-wrapper.jar
-
 # =========================
 # Local configuration
 # =========================
@@ -94,6 +91,9 @@ desktop.ini
 *.jar
 *.war
 *.ear
+
+# Keep Gradle wrapper
+!robota/gradle/wrapper/gradle-wrapper.jar
 
 # =========================
 # Temporary files
