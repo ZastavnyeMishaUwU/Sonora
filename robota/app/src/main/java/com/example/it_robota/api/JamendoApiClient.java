@@ -48,13 +48,17 @@ public class JamendoApiClient {
             throw new Exception("Jamendo Client ID is missing. Add it to strings.xml.");
         }
 
-        // Safe query encoding to handle spaces and special characters
+        /**
+         * Safe query encoding to handle spaces and special characters
+         */
         String encodedQuery = URLEncoder.encode(
                 query.trim(),
                 StandardCharsets.UTF_8.toString()
         );
 
-        // Construct the query URL with search parameters
+        /**
+         * Construct the query URL with search parameters
+         */
         String requestUrl = ApiConfig.BASE_URL + "tracks/?" +
                 "client_id=" + clientId +
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
@@ -73,7 +77,9 @@ public class JamendoApiClient {
             return tracks;
         }
 
-        // Parse each track object in the results array
+        /**
+         * Parse each track object in the results array
+         */
         for (int i = 0; i < resultsArray.length(); i++) {
             JSONObject trackObject = resultsArray.optJSONObject(i);
 
@@ -85,7 +91,7 @@ public class JamendoApiClient {
         return tracks;
     }
 
-    /*
+    /**
      * Retrieves specific details for a single track by its ID.
      * - Validates the track ID and API client ID.
      * - Fetches the single result and returns the parsed Track object.
@@ -106,7 +112,9 @@ public class JamendoApiClient {
                 StandardCharsets.UTF_8.toString()
         );
 
-        // Construct the URL to target a single track ID
+        /**
+         * Construct the URL to target a single track ID
+         */
         String requestUrl = ApiConfig.BASE_URL + "tracks/?" +
                 "client_id=" + clientId +
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
@@ -134,7 +142,7 @@ public class JamendoApiClient {
         return parseTrack(trackObject);
     }
 
-    /*
+    /**
      * Sends an HTTP GET request to the specified URL.
      * - Manages connection timeouts and response streams.
      * - Handles error responses from the server.
@@ -180,7 +188,7 @@ public class JamendoApiClient {
         }
     }
 
-    /*
+    /**
      * Validates the Jamendo API response headers.
      * - Throws an exception if the status is not successful.
      */
@@ -200,7 +208,7 @@ public class JamendoApiClient {
         }
     }
 
-    /*
+    /**
      * Parses a single JSON track object into the local Track model.
      */
     private Track parseTrack(JSONObject trackObject) {
@@ -236,7 +244,7 @@ public class JamendoApiClient {
         );
     }
 
-    /*
+    /**
      * Reads input stream contents and converts them to a single String.
      */
     private String readStream(InputStream inputStream) throws Exception {

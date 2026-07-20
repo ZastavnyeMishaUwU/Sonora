@@ -38,18 +38,30 @@ public class JamendoResponse {
         return tracks;
     }
 
+    /**
+     * Gets the response header
+     */
     public JamendoHeader getHeader() {
         return header;
     }
 
+    /**
+     * Sets the response header
+     */
     public void setHeader(JamendoHeader header) {
         this.header = header;
     }
 
+    /**
+     * Gets the list of track DTOs
+     */
     public List<JamendoTrackDto> getResults() {
         return results;
     }
 
+    /**
+     * Sets the list of track DTOs
+     */
     public void setResults(List<JamendoTrackDto> results) {
         this.results = results;
     }
