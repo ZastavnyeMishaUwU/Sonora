@@ -348,6 +348,7 @@ public class AuthRepository {
             return "";
         }
 
+
         return email.trim().toLowerCase(Locale.ROOT);
     }
 }
