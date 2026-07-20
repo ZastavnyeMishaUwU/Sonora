@@ -11,7 +11,6 @@ import com.example.it_robota.R;
 public class ApiConfig {
 
     public static final String BASE_URL = "https://api.jamendo.com/v3.0/";
-
     public static final String DEFAULT_FORMAT = "json";
     public static final String DEFAULT_AUDIO_FORMAT = "mp32";
     public static final int DEFAULT_LIMIT = 10;
