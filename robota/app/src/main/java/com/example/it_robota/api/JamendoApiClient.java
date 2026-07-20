@@ -25,6 +25,10 @@ public class JamendoApiClient {
     private final Context context;
 
 
+    /**
+     * Client class responsible for executing HTTP requests to the Jamendo API.
+     * Provides methods to search for tracks, retrieve track details, and parse JSON responses into domain models.
+     */
     public JamendoApiClient(Context context) {
         this.context = context.getApplicationContext();
     }
