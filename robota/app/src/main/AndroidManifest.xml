@@ -2,10 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Дозвіл на інтернет для Jamendo API, пошуку треків і стримінгу музики -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Дозвіл на перевірку стану мережі -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -19,7 +16,7 @@
         android:theme="@style/Theme.ITrobota">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".SearchActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
 
@@ -30,6 +27,11 @@
             </intent-filter>
 
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
     </application>
 

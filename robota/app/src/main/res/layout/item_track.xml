@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#FFFFFF"
+    android:elevation="2dp"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/trackNameTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Track name"
+        android:textColor="#111827"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/trackArtistTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Artist name"
+        android:textColor="#4B5563"
+        android:textSize="14sp"
+        android:layout_marginTop="5dp" />
+
+    <TextView
+        android:id="@+id/trackIdTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ID:"
+        android:textColor="#9CA3AF"
+        android:textSize="12sp"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout>

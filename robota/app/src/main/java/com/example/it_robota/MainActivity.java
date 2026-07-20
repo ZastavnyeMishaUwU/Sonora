@@ -22,7 +22,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Main activity for testing Jamendo search and track details.
+ * Can also open details automatically when a track ID is passed from SearchActivity.
+ */
 public class MainActivity extends AppCompatActivity {
+
+    public static final String EXTRA_TRACK_ID = "extra_track_id";
 
     private EditText searchEditText;
     private EditText trackIdEditText;
@@ -38,6 +44,11 @@ public class MainActivity extends AppCompatActivity {
     private ExecutorService executorService;
     private Handler mainHandler;
 
+    /**
+     * Initializes main screen and sets button listeners.
+     *
+     * @param savedInstanceState saved activity state
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,8 +70,28 @@ public class MainActivity extends AppCompatActivity {
 
         searchButton.setOnClickListener(v -> searchTracks());
         detailsButton.setOnClickListener(v -> getTrackDetails());
+
+        handleIncomingTrackDetailsIntent();
     }
 
+    /**
+     * Checks whether this activity was opened with a track ID.
+     * If track ID exists, details are loaded automatically.
+     */
+    private void handleIncomingTrackDetailsIntent() {
+        String trackId = getIntent().getStringExtra(EXTRA_TRACK_ID);
+
+        if (trackId == null || trackId.trim().isEmpty()) {
+            return;
+        }
+
+        trackIdEditText.setText(trackId);
+        getTrackDetails();
+    }
+
+    /**
+     * Searches tracks by query through Jamendo API.
+     */
     private void searchTracks() {
         String query = searchEditText.getText().toString().trim();
 
@@ -89,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Loads track details by ID.
+     */
     private void getTrackDetails() {
         String trackId = trackIdEditText.getText().toString().trim();
 
@@ -117,6 +151,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Displays search results as plain text.
+     *
+     * @param tracks found tracks
+     */
     private void showSearchResults(List<Track> tracks) {
         if (tracks == null || tracks.isEmpty()) {
             resultTextView.setText("No tracks found.");
@@ -157,6 +196,11 @@ public class MainActivity extends AppCompatActivity {
         resultTextView.setText(result.toString());
     }
 
+    /**
+     * Displays selected track details.
+     *
+     * @param track selected track
+     */
     private void showTrackDetails(Track track) {
         if (track == null) {
             resultTextView.setText("Track details are empty.");
@@ -188,6 +232,11 @@ public class MainActivity extends AppCompatActivity {
         resultTextView.setText(result);
     }
 
+    /**
+     * Loads track image from URL.
+     *
+     * @param imageUrl track image URL
+     */
     private void loadTrackImage(String imageUrl) {
         if (imageUrl == null || imageUrl.trim().isEmpty()) {
             trackImageView.setImageDrawable(null);
@@ -216,6 +265,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Releases executor resources.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();

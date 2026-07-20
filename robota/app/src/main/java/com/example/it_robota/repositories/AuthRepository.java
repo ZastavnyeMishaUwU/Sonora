@@ -1,217 +1,353 @@
 package com.example.it_robota.repositories;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Patterns;
+
 import com.example.it_robota.auth.AuthResult;
-import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.UserDao;
+import com.example.it_robota.database.UserEntity;
 import com.example.it_robota.models.User;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 /**
- * Provides the single entry point for local authentication operations.
+ * Repository for local authentication logic.
+ * Handles user registration, login and active session state.
  */
 public class AuthRepository {
 
-    private static final int MIN_PASSWORD_LENGTH = 6;
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$",
-            Pattern.CASE_INSENSITIVE
-    );
+    private static final String PREF_NAME = "auth_session_prefs";
+
+    private static final String SESSION_LOGGED_IN_KEY = "session_logged_in";
+    private static final String SESSION_USER_ID_KEY = "session_user_id";
+    private static final String SESSION_USER_EMAIL_KEY = "session_user_email";
 
     private final UserDao userDao;
-    private final SessionManager sessionManager;
+    private final SharedPreferences sharedPreferences;
 
     /**
-     * Creates a repository backed by persisted users and session storage.
+     * Creates an AuthRepository instance.
      *
-     * @param userDao data access object for local users
-     * @param sessionManager storage for the active user session
+     * @param context application or activity context
      */
-    public AuthRepository(UserDao userDao, SessionManager sessionManager) {
-        this.userDao = userDao;
-        this.sessionManager = sessionManager;
+    public AuthRepository(Context context) {
+        AppDatabase database = AppDatabase.getInstance(context);
+
+        this.userDao = database.userDao();
+        this.sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
     /**
-     * Validates registration data and creates a new local user.
+     * Registers a new local user.
      *
      * @param username username entered by the user
      * @param email email entered by the user
      * @param password password entered by the user
-     * @return success or failure result suitable for displaying in the UI
+     * @return authentication result with status, message and optional user data
      */
     public AuthResult register(String username, String email, String password) {
-        String normalizedUsername = normalizeUsername(username);
-        String normalizedEmail = normalizeEmail(email);
+        username = username == null ? "" : username.trim();
+        email = normalizeEmail(email);
+        password = password == null ? "" : password.trim();
 
-        if (normalizedUsername.isEmpty()) {
-            return failure("Username must not be empty.");
+        if (!isUsernameValid(username)) {
+            return new AuthResult(false, "Username must not be empty.", null);
         }
 
-        if (!isEmailValid(normalizedEmail)) {
-            return failure("Email is not valid.");
+        if (!isEmailValid(email)) {
+            return new AuthResult(false, "Email is not valid.", null);
         }
 
         if (!isPasswordValid(password)) {
-            return failure("Password must contain at least 6 characters.");
+            return new AuthResult(false, "Password must contain at least 6 characters.", null);
         }
 
         try {
-            if (userDao.checkUserExists(normalizedEmail)) {
-                return failure("User with this email already exists.");
+            if (userDao.checkUserExists(email)) {
+                return new AuthResult(false, "User with this email already exists.", null);
             }
 
             long currentTime = System.currentTimeMillis();
+
             User user = new User(
                     currentTime,
-                    normalizedUsername,
-                    normalizedEmail,
+                    username,
+                    email,
                     hashPassword(password),
                     currentTime
             );
 
-            userDao.insertUser(user);
+            userDao.insertUser(userToEntity(user));
+
             return new AuthResult(true, "User registered successfully.", user);
-        } catch (Exception exception) {
-            return failure("Registration failed.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AuthResult(false, "Registration failed.", null);
         }
     }
 
     /**
-     * Validates credentials and starts a session for the matching local user.
+     * Logs in an existing local user.
      *
      * @param email email entered by the user
      * @param password password entered by the user
-     * @return success or failure result suitable for displaying in the UI
+     * @return authentication result with status, message and optional user data
      */
     public AuthResult login(String email, String password) {
-        String normalizedEmail = normalizeEmail(email);
+        email = normalizeEmail(email);
+        password = password == null ? "" : password.trim();
 
-        if (!isEmailValid(normalizedEmail)) {
-            return failure("Email is not valid.");
+        if (!isEmailValid(email)) {
+            return new AuthResult(false, "Email is not valid.", null);
         }
 
-        if (password == null || password.isEmpty()) {
-            return failure("Password must not be empty.");
+        if (password.isEmpty()) {
+            return new AuthResult(false, "Password must not be empty.", null);
         }
 
         try {
-            User user = userDao.getUserByEmail(normalizedEmail);
+            UserEntity userEntity = userDao.getUserByEmail(email);
+            User user = entityToUser(userEntity);
 
-            if (user == null || !passwordMatches(password, user.getPasswordHash())) {
-                return failure("Email or password is incorrect.");
+            if (user == null) {
+                return new AuthResult(false, "User with this email was not found.", null);
             }
 
-            sessionManager.saveSession(user.getId(), user.getEmail());
+            String enteredPasswordHash = hashPassword(password);
+
+            if (!enteredPasswordHash.equals(user.getPasswordHash())) {
+                return new AuthResult(false, "Incorrect password.", null);
+            }
+
+            saveSession(user);
+
             return new AuthResult(true, "Login successful.", user);
-        } catch (Exception exception) {
-            return failure("Login failed.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AuthResult(false, "Login failed.", null);
         }
     }
 
     /**
-     * Clears the active user session.
-     */
-    public void logout() {
-        sessionManager.clearSession();
-    }
-
-    /**
-     * Reports whether an active user session exists.
+     * Checks whether a user session is active.
      *
-     * @return true when a user is currently logged in
+     * @return true if user is logged in
      */
-    public boolean isUserLoggedIn() {
-        return sessionManager.isLoggedIn();
-    }
+    public boolean isLoggedIn() {
+        boolean loggedIn = sharedPreferences.getBoolean(SESSION_LOGGED_IN_KEY, false);
+        String email = sharedPreferences.getString(SESSION_USER_EMAIL_KEY, "");
 
-    /**
-     * Creates a failed authentication result with no user data.
-     *
-     * @param message user-facing failure message
-     * @return failed authentication result
-     */
-    private AuthResult failure(String message) {
-        return new AuthResult(false, message, null);
-    }
-
-    /**
-     * Checks whether an email has a supported format.
-     *
-     * @param email normalized email value
-     * @return true when the email format is valid
-     */
-    private boolean isEmailValid(String email) {
-        return !email.isEmpty() && EMAIL_PATTERN.matcher(email).matches();
-    }
-
-    /**
-     * Checks whether a password meets the minimum length requirement.
-     *
-     * @param password raw password value
-     * @return true when the password is valid
-     */
-    private boolean isPasswordValid(String password) {
-        return password != null && password.length() >= MIN_PASSWORD_LENGTH;
-    }
-
-    /**
-     * Safely compares a raw password with a stored password hash.
-     *
-     * @param password raw password entered by the user
-     * @param passwordHash stored password hash
-     * @return true when the password matches the stored hash
-     * @throws Exception if the password cannot be hashed
-     */
-    private boolean passwordMatches(String password, String passwordHash) throws Exception {
-        if (passwordHash == null || passwordHash.isEmpty()) {
+        if (!loggedIn || email == null || email.trim().isEmpty()) {
             return false;
         }
 
-        byte[] actualHash = hashPassword(password).getBytes(StandardCharsets.UTF_8);
-        byte[] expectedHash = passwordHash.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(actualHash, expectedHash);
+        return userDao.getUserByEmail(email) != null;
     }
 
     /**
-     * Creates a SHA-256 hash for a raw password.
+     * Returns the current logged-in user.
      *
-     * @param password raw password value
-     * @return hexadecimal password hash
-     * @throws Exception if the SHA-256 algorithm is unavailable
+     * @return current user or null
+     */
+    public User getCurrentUser() {
+        String email = getCurrentUserEmail();
+
+        if (email == null || email.trim().isEmpty()) {
+            return null;
+        }
+
+        UserEntity userEntity = userDao.getUserByEmail(email);
+
+        return entityToUser(userEntity);
+    }
+
+    /**
+     * Returns current user email from session.
+     *
+     * @return current user email or empty string
+     */
+    public String getCurrentUserEmail() {
+        return sharedPreferences.getString(SESSION_USER_EMAIL_KEY, "");
+    }
+
+    /**
+     * Returns current user ID from session.
+     *
+     * @return current user ID or 0
+     */
+    public long getCurrentUserId() {
+        return sharedPreferences.getLong(SESSION_USER_ID_KEY, 0);
+    }
+
+    /**
+     * Clears the current active session.
+     */
+    public void logout() {
+        sharedPreferences.edit()
+                .remove(SESSION_LOGGED_IN_KEY)
+                .remove(SESSION_USER_ID_KEY)
+                .remove(SESSION_USER_EMAIL_KEY)
+                .apply();
+    }
+
+    /**
+     * Checks if username is valid.
+     *
+     * @param username username value
+     * @return true if username is valid
+     */
+    public boolean isUsernameValid(String username) {
+        return username != null && !username.trim().isEmpty();
+    }
+
+    /**
+     * Checks if email has valid format.
+     *
+     * @param email email value
+     * @return true if email is valid
+     */
+    public boolean isEmailValid(String email) {
+        return email != null
+                && !email.trim().isEmpty()
+                && Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    /**
+     * Checks if password is valid for registration.
+     *
+     * @param password password value
+     * @return true if password is valid
+     */
+    public boolean isPasswordValid(String password) {
+        return password != null && password.length() >= 6;
+    }
+
+    /**
+     * Checks whether user with this email already exists.
+     *
+     * @param email user email
+     * @return true if user exists
+     */
+    public boolean checkUserExists(String email) {
+        String normalizedEmail = normalizeEmail(email);
+
+        if (normalizedEmail.isEmpty()) {
+            return false;
+        }
+
+        return userDao.checkUserExists(normalizedEmail);
+    }
+
+    /**
+     * Returns a user by email.
+     *
+     * @param email user email
+     * @return user model or null
+     */
+    public User getUserByEmail(String email) {
+        String normalizedEmail = normalizeEmail(email);
+
+        if (normalizedEmail.isEmpty()) {
+            return null;
+        }
+
+        UserEntity userEntity = userDao.getUserByEmail(normalizedEmail);
+
+        return entityToUser(userEntity);
+    }
+
+    /**
+     * Saves current user session.
+     *
+     * @param user logged-in user
+     */
+    private void saveSession(User user) {
+        sharedPreferences.edit()
+                .putBoolean(SESSION_LOGGED_IN_KEY, true)
+                .putLong(SESSION_USER_ID_KEY, user.getId())
+                .putString(SESSION_USER_EMAIL_KEY, user.getEmail())
+                .apply();
+    }
+
+    /**
+     * Converts User model to UserEntity for Room database.
+     *
+     * @param user user model
+     * @return user entity
+     */
+    private UserEntity userToEntity(User user) {
+        return new UserEntity(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPasswordHash(),
+                user.getCreatedAt()
+        );
+    }
+
+    /**
+     * Converts UserEntity from Room database to User model.
+     *
+     * @param userEntity user entity
+     * @return user model or null
+     */
+    private User entityToUser(UserEntity userEntity) {
+        if (userEntity == null) {
+            return null;
+        }
+
+        return new User(
+                userEntity.getId(),
+                userEntity.getUsername(),
+                userEntity.getEmail(),
+                userEntity.getPasswordHash(),
+                userEntity.getCreatedAt()
+        );
+    }
+
+    /**
+     * Creates SHA-256 hash from password.
+     *
+     * @param password raw password
+     * @return hashed password
+     * @throws Exception if hashing fails
      */
     private String hashPassword(String password) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hashBytes = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-        StringBuilder hash = new StringBuilder();
+
+        StringBuilder hexString = new StringBuilder();
 
         for (byte hashByte : hashBytes) {
-            hash.append(String.format(Locale.ROOT, "%02x", hashByte));
+            String hex = Integer.toHexString(0xff & hashByte);
+
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+
+            hexString.append(hex);
         }
 
-        return hash.toString();
+        return hexString.toString();
     }
 
     /**
-     * Removes surrounding whitespace from a username.
+     * Normalizes email value.
      *
-     * @param username raw username value
-     * @return normalized username or an empty string
-     */
-    private String normalizeUsername(String username) {
-        return username == null ? "" : username.trim();
-    }
-
-    /**
-     * Normalizes an email for consistent database lookup.
-     *
-     * @param email raw email value
-     * @return trimmed lowercase email or an empty string
+     * @param email raw email
+     * @return normalized email
      */
     private String normalizeEmail(String email) {
-        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        if (email == null) {
+            return "";
+        }
+
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

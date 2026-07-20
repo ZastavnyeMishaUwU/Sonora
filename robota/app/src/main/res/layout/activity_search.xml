@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/searchTitleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Search Music"
+        android:textColor="#111827"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/searchSubtitleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Find tracks from Jamendo API"
+        android:textColor="#6B7280"
+        android:textSize="15sp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="20dp" />
+
+    <LinearLayout
+        android:id="@+id/searchCardLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="4dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_marginBottom="18dp">
+
+        <EditText
+            android:id="@+id/searchEditText"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:hint="Enter track or artist name"
+            android:inputType="text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:singleLine="true"
+            android:textColor="#111827"
+            android:textColorHint="#9CA3AF"
+            android:textSize="16sp"
+            android:background="#F3F4F6"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/searchButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Search"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#2563EB" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/resultCountTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="#374151"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:id="@+id/emptyStateTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="2dp"
+        android:gravity="center"
+        android:padding="18dp"
+        android:text="Enter a query to search tracks."
+        android:textColor="#6B7280"
+        android:textSize="16sp"
+        android:layout_marginTop="8dp" />
+
+    <ListView
+        android:id="@+id/tracksListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="10dp"
+        android:paddingBottom="12dp"
+        android:visibility="gone" />
+
+</LinearLayout>
