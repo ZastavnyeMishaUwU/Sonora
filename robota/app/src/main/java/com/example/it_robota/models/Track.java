@@ -2,7 +2,7 @@ package com.example.it_robota.models;
 
 /**
  * Represents a music track inside the application.
- * Stores online track data, favorite status and local file information.
+ * Stores track metadata, audio links, favorite status and local download information.
  */
 public class Track {
 
@@ -25,7 +25,7 @@ public class Track {
     }
 
     /**
-     * Creates a Track object with all required track fields.
+     * Creates a Track object with all fields.
      *
      * @param id track ID
      * @param name track name
@@ -138,7 +138,7 @@ public class Track {
     /**
      * Returns the track duration in seconds.
      *
-     * @return track duration in seconds
+     * @return duration in seconds
      */
     public int getDuration() {
         return duration;
@@ -147,7 +147,7 @@ public class Track {
     /**
      * Sets the track duration in seconds.
      *
-     * @param duration track duration in seconds
+     * @param duration duration in seconds
      */
     public void setDuration(int duration) {
         this.duration = duration;
@@ -156,7 +156,7 @@ public class Track {
     /**
      * Returns the audio streaming URL.
      *
-     * @return audio streaming URL
+     * @return audio URL
      */
     public String getAudioUrl() {
         return audioUrl;
@@ -165,7 +165,7 @@ public class Track {
     /**
      * Sets the audio streaming URL.
      *
-     * @param audioUrl audio streaming URL
+     * @param audioUrl audio URL
      */
     public void setAudioUrl(String audioUrl) {
         this.audioUrl = audioUrl;
@@ -174,7 +174,7 @@ public class Track {
     /**
      * Returns the audio download URL.
      *
-     * @return audio download URL
+     * @return download URL
      */
     public String getDownloadUrl() {
         return downloadUrl;
@@ -183,7 +183,7 @@ public class Track {
     /**
      * Sets the audio download URL.
      *
-     * @param downloadUrl audio download URL
+     * @param downloadUrl download URL
      */
     public void setDownloadUrl(String downloadUrl) {
         this.downloadUrl = downloadUrl;
@@ -259,5 +259,163 @@ public class Track {
      */
     public void setLocalFilePath(String localFilePath) {
         this.localFilePath = localFilePath;
+    }
+
+    /**
+     * Checks whether the track has a valid ID.
+     *
+     * @return true if track ID is not empty
+     */
+    public boolean hasId() {
+        return id != null && !id.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track has a name.
+     *
+     * @return true if track name is not empty
+     */
+    public boolean hasName() {
+        return name != null && !name.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track has artist information.
+     *
+     * @return true if artist name is not empty
+     */
+    public boolean hasArtistName() {
+        return artistName != null && !artistName.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track has album information.
+     *
+     * @return true if album name is not empty
+     */
+    public boolean hasAlbumName() {
+        return albumName != null && !albumName.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track has audio streaming URL.
+     *
+     * @return true if audio URL is not empty
+     */
+    public boolean hasAudioUrl() {
+        return audioUrl != null && !audioUrl.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track has download URL.
+     *
+     * @return true if download URL is not empty
+     */
+    public boolean hasDownloadUrl() {
+        return downloadUrl != null && !downloadUrl.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track has image URL.
+     *
+     * @return true if image URL is not empty
+     */
+    public boolean hasImageUrl() {
+        return imageUrl != null && !imageUrl.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track has license URL.
+     *
+     * @return true if license URL is not empty
+     */
+    public boolean hasLicenseUrl() {
+        return licenseUrl != null && !licenseUrl.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether the track is downloaded locally.
+     *
+     * @return true if local file path is not empty
+     */
+    public boolean isDownloaded() {
+        return localFilePath != null && !localFilePath.trim().isEmpty();
+    }
+
+    /**
+     * Returns readable duration text.
+     *
+     * @return duration in mm:ss format
+     */
+    public String getFormattedDuration() {
+        if (duration <= 0) {
+            return "0:00";
+        }
+
+        int minutes = duration / 60;
+        int seconds = duration % 60;
+
+        if (seconds < 10) {
+            return minutes + ":0" + seconds;
+        }
+
+        return minutes + ":" + seconds;
+    }
+
+    /**
+     * Returns safe track name for UI.
+     *
+     * @return track name or fallback text
+     */
+    public String getDisplayName() {
+        if (hasName()) {
+            return name;
+        }
+
+        return "Unknown track";
+    }
+
+    /**
+     * Returns safe artist name for UI.
+     *
+     * @return artist name or fallback text
+     */
+    public String getDisplayArtistName() {
+        if (hasArtistName()) {
+            return artistName;
+        }
+
+        return "Unknown artist";
+    }
+
+    /**
+     * Returns safe album name for UI.
+     *
+     * @return album name or fallback text
+     */
+    public String getDisplayAlbumName() {
+        if (hasAlbumName()) {
+            return albumName;
+        }
+
+        return "Unknown album";
+    }
+
+    /**
+     * Returns a safe string representation of the track.
+     *
+     * @return string representation of the track
+     */
+    @Override
+    public String toString() {
+        return "Track{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", artistName='" + artistName + '\'' +
+                ", albumName='" + albumName + '\'' +
+                ", duration=" + duration +
+                ", isFavorite=" + isFavorite +
+                ", localFilePath='" + localFilePath + '\'' +
+                '}';
     }
 }

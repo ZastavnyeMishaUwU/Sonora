@@ -1,8 +1,8 @@
 package com.example.it_robota.models;
 
 /**
- * Represents a local application user.
- * Used for registration, login and user session logic.
+ * Represents an application user.
+ * Stores basic account data used for authentication and local session logic.
  */
 public class User {
 
@@ -19,12 +19,12 @@ public class User {
     }
 
     /**
-     * Creates a User object with all required fields.
+     * Creates a User object with all fields.
      *
      * @param id user ID
      * @param username username
      * @param email user email
-     * @param passwordHash hashed user password
+     * @param passwordHash hashed password
      * @param createdAt account creation timestamp
      */
     public User(long id, String username, String email, String passwordHash, long createdAt) {
@@ -90,7 +90,7 @@ public class User {
     }
 
     /**
-     * Returns the hashed user password.
+     * Returns the hashed password.
      *
      * @return hashed password
      */
@@ -99,7 +99,7 @@ public class User {
     }
 
     /**
-     * Sets the hashed user password.
+     * Sets the hashed password.
      *
      * @param passwordHash hashed password
      */
@@ -123,5 +123,56 @@ public class User {
      */
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Checks whether the user has a valid ID.
+     *
+     * @return true if ID is greater than 0
+     */
+    public boolean hasId() {
+        return id > 0;
+    }
+
+    /**
+     * Checks whether username is filled.
+     *
+     * @return true if username is not empty
+     */
+    public boolean hasUsername() {
+        return username != null && !username.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether email is filled.
+     *
+     * @return true if email is not empty
+     */
+    public boolean hasEmail() {
+        return email != null && !email.trim().isEmpty();
+    }
+
+    /**
+     * Checks whether password hash is filled.
+     *
+     * @return true if password hash is not empty
+     */
+    public boolean hasPasswordHash() {
+        return passwordHash != null && !passwordHash.trim().isEmpty();
+    }
+
+    /**
+     * Returns a safe string representation of the user without exposing password hash.
+     *
+     * @return string representation of the user
+     */
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
     }
 }
