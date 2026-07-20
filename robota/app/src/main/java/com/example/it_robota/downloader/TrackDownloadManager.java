@@ -26,6 +26,11 @@ public class TrackDownloadManager {
     private final AppDatabase database;
     private final AuthRepository authRepository;
 
+    /**
+     * Creates a TrackDownloadManager instance.
+     *
+     * @param context application context
+     */
     public TrackDownloadManager(Context context) {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getInstance(this.context);
