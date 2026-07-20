@@ -6,8 +6,14 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import java.util.List;
 
+/**
+ * Provides database access operations for managing favorite tracks.
+ * Handles inserting track details, linking tracks to specific users,
+ * removing favorites, and checking favorite statuses in the local Room database.
+ */
 @Dao
 public interface FavoriteTrackDao {
+
     /**
      * Inserts a track into the tracks table. Replaces it if it already exists.
      */
