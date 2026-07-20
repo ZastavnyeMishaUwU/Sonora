@@ -18,6 +18,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Client class responsible for executing HTTP requests to the Jamendo API.
+ * Provides methods to search for tracks, retrieve track details, and parse JSON responses into domain models.
+ */
 public class JamendoApiClient {
 
     private static final String TAG = "JamendoApiClient";
