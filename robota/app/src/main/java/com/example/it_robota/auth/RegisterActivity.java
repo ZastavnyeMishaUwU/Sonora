@@ -17,7 +17,6 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText etUsername;
     private EditText etEmail;
     private EditText etPassword;
-    private Button btnRegister;
     private TextView tvStatus;
 
     @Override
@@ -25,14 +24,14 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Ініціалізуємо репозиторій контекстом Activity
+        // Initialize repository with Activity context
         authRepository = new AuthRepository(this);
 
-        // Ініціалізуємо елементи інтерфейсу (UI)
+        // Initialize UI components
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
-        btnRegister = findViewById(R.id.btnRegister);
+        Button btnRegister = findViewById(R.id.btnRegister);
         tvStatus = findViewById(R.id.tvStatus);
 
         btnRegister.setOnClickListener(v -> performRegistration());
@@ -43,10 +42,10 @@ public class RegisterActivity extends AppCompatActivity {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        // Очищуємо попередній статус помилки
+        // Clear previous status message
         showStatus("");
 
-        // Локальна валідація на порожні поля (запобігає крашам)
+        // Local validation for empty fields (prevents crashes)
         if (username.isEmpty()) {
             showStatus("Username cannot be empty");
             return;
@@ -60,14 +59,14 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // Викликаємо логіку реєстрації з репозиторію
+        // Call registration logic from repository
         AuthResult result = authRepository.register(username, email, password);
 
         if (result.isSuccess()) {
-            // Успіх! Переходимо на головний екран
+            // Success! Navigate to main screen
             navigateToMainScreen();
         } else {
-            // Виводимо конкретну помилку валідації, яку повернув репозиторій
+            // Display specific validation error returned by repository
             showStatus(result.getMessage());
         }
     }
