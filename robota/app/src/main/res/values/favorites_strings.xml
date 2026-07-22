@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="favorites_title">Your favorites</string>
+    <string name="favorites_subtitle">Tracks saved for this account</string>
+    <string name="favorites_empty_state">No favorite tracks yet.</string>
+    <string name="favorites_login_required">Log in to view your favorite tracks.</string>
+    <string name="favorites_remove">Remove</string>
+    <string name="favorites_removed">Removed from favorites.</string>
+    <string name="favorites_details_unavailable">Track details are not available yet.</string>
+    <string name="favorites_unknown_track">Unknown track</string>
+    <string name="favorites_unknown_artist">Unknown artist</string>
+</resources>

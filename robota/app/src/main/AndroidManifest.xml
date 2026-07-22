@@ -2,10 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Дозвіл на інтернет для Jamendo API, пошуку треків і стримінгу музики -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Дозвіл на перевірку стану мережі -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -17,6 +15,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ITrobota">
+
+        <activity
+            android:name=".tracks.FavoritesActivity"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
