@@ -16,7 +16,7 @@
         android:theme="@style/Theme.ITrobota">
 
         <activity
-            android:name=".trackactivities.TrackDetailsActivity"
+            android:name=".tracks.TrackDetailsActivity"
             android:exported="false" />
 
         <activity
