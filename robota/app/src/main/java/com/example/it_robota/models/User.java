@@ -10,7 +10,17 @@ public class User {
     private String username;
     private String email;
     private String passwordHash;
-    private long createdAt;
+
+    private String firstName;
+    private String lastName;
+
+    private String avatarUrl;
+    private String bio;
+    private String country;
+    private String language;
+    private String theme;
+
+    private boolean emailVerified;
 
     /**
      * Creates an empty User object.
@@ -25,14 +35,87 @@ public class User {
      * @param username username
      * @param email user email
      * @param passwordHash hashed user password
-     * @param createdAt account creation timestamp
      */
-    public User(long id, String username, String email, String passwordHash, long createdAt) {
+    public User(
+            long id,
+            String username,
+            String email,
+            String passwordHash
+    ) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.createdAt = createdAt;
+    }
+
+    /**
+     * Creates a User object with required fields and optional name fields.
+     *
+     * @param id user ID
+     * @param username username
+     * @param email user email
+     * @param passwordHash hashed user password
+     * @param firstName optional user first name
+     * @param lastName optional user last name
+     */
+    public User(
+            long id,
+            String username,
+            String email,
+            String passwordHash,
+            String firstName,
+            String lastName
+    ) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    /**
+     * Creates a User object with all available user fields.
+     *
+     * @param id user ID
+     * @param username username
+     * @param email user email
+     * @param passwordHash hashed user password
+     * @param firstName optional user first name
+     * @param lastName optional user last name
+     * @param avatarUrl optional avatar image URL
+     * @param bio optional user biography
+     * @param country optional user country
+     * @param language optional application language
+     * @param theme optional application theme
+     * @param emailVerified whether the email is verified
+     */
+    public User(
+            long id,
+            String username,
+            String email,
+            String passwordHash,
+            String firstName,
+            String lastName,
+            String avatarUrl,
+            String bio,
+            String country,
+            String language,
+            String theme,
+            boolean emailVerified
+    ) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.avatarUrl = avatarUrl;
+        this.bio = bio;
+        this.country = country;
+        this.language = language;
+        this.theme = theme;
+        this.emailVerified = emailVerified;
     }
 
     /**
@@ -108,20 +191,146 @@ public class User {
     }
 
     /**
-     * Returns the account creation timestamp.
+     * Returns the optional user first name.
      *
-     * @return creation timestamp
+     * @return first name or null
      */
-    public long getCreatedAt() {
-        return createdAt;
+    public String getFirstName() {
+        return firstName;
     }
 
     /**
-     * Sets the account creation timestamp.
+     * Sets the optional user first name.
      *
-     * @param createdAt creation timestamp
+     * @param firstName first name or null
      */
-    public void setCreatedAt(long createdAt) {
-        this.createdAt = createdAt;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    /**
+     * Returns the optional user last name.
+     *
+     * @return last name or null
+     */
+    public String getLastName() {
+        return lastName;
+    }
+
+    /**
+     * Sets the optional user last name.
+     *
+     * @param lastName last name or null
+     */
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    /**
+     * Returns the user avatar URL.
+     *
+     * @return avatar URL or null
+     */
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    /**
+     * Sets the user avatar URL.
+     *
+     * @param avatarUrl avatar URL or null
+     */
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    /**
+     * Returns the user biography.
+     *
+     * @return biography or null
+     */
+    public String getBio() {
+        return bio;
+    }
+
+    /**
+     * Sets the user biography.
+     *
+     * @param bio biography or null
+     */
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    /**
+     * Returns the user country.
+     *
+     * @return country or null
+     */
+    public String getCountry() {
+        return country;
+    }
+
+    /**
+     * Sets the user country.
+     *
+     * @param country country or null
+     */
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    /**
+     * Returns the application language selected by the user.
+     *
+     * @return language code or null
+     */
+    public String getLanguage() {
+        return language;
+    }
+
+    /**
+     * Sets the application language selected by the user.
+     *
+     * @param language language code or null
+     */
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    /**
+     * Returns the application theme selected by the user.
+     *
+     * @return theme or null
+     */
+    public String getTheme() {
+        return theme;
+    }
+
+    /**
+     * Sets the application theme selected by the user.
+     *
+     * @param theme theme or null
+     */
+    public void setTheme(String theme) {
+        this.theme = theme;
+    }
+
+    /**
+     * Reports whether the user email has been verified.
+     *
+     * @return true when the email is verified
+     */
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    /**
+     * Sets whether the user email has been verified.
+     *
+     * @param emailVerified true when the email is verified
+     */
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 }

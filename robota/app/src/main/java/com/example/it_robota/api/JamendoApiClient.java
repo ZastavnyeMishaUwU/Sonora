@@ -18,16 +18,31 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Client class responsible for executing HTTP requests to the Jamendo API.
+ * Provides methods to search for tracks, retrieve track details, and parse JSON responses into domain models.
+ */
 public class JamendoApiClient {
 
     private static final String TAG = "JamendoApiClient";
 
     private final Context context;
 
+
+    /**
+     * Client class responsible for executing HTTP requests to the Jamendo API.
+     * Provides methods to search for tracks, retrieve track details, and parse JSON responses into domain models.
+     */
     public JamendoApiClient(Context context) {
         this.context = context.getApplicationContext();
     }
 
+    /**
+     * Searches for music tracks based on the user's query.
+     * - Validates the query and API client ID.
+     * - Builds the request URL and executes the GET request.
+     * - Parses the JSON response into a list of Track objects.
+     */
     public List<Track> searchTracks(String query) throws Exception {
         List<Track> tracks = new ArrayList<>();
 
@@ -41,11 +56,17 @@ public class JamendoApiClient {
             throw new Exception("Jamendo Client ID is missing. Add it to strings.xml.");
         }
 
+        /**
+         * Safe query encoding to handle spaces and special characters
+         */
         String encodedQuery = URLEncoder.encode(
                 query.trim(),
                 StandardCharsets.UTF_8.toString()
         );
 
+        /**
+         * Construct the query URL with search parameters
+         */
         String requestUrl = ApiConfig.BASE_URL + "tracks/?" +
                 "client_id=" + clientId +
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
@@ -64,6 +85,9 @@ public class JamendoApiClient {
             return tracks;
         }
 
+        /**
+         * Parse each track object in the results array
+         */
         for (int i = 0; i < resultsArray.length(); i++) {
             JSONObject trackObject = resultsArray.optJSONObject(i);
 
@@ -75,6 +99,11 @@ public class JamendoApiClient {
         return tracks;
     }
 
+    /**
+     * Retrieves specific details for a single track by its ID.
+     * - Validates the track ID and API client ID.
+     * - Fetches the single result and returns the parsed Track object.
+     */
     public Track getTrackDetails(String trackId) throws Exception {
         if (trackId == null || trackId.trim().isEmpty()) {
             throw new Exception("Track ID is empty.");
@@ -91,6 +120,9 @@ public class JamendoApiClient {
                 StandardCharsets.UTF_8.toString()
         );
 
+        /**
+         * Construct the URL to target a single track ID
+         */
         String requestUrl = ApiConfig.BASE_URL + "tracks/?" +
                 "client_id=" + clientId +
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
@@ -118,6 +150,11 @@ public class JamendoApiClient {
         return parseTrack(trackObject);
     }
 
+    /**
+     * Sends an HTTP GET request to the specified URL.
+     * - Manages connection timeouts and response streams.
+     * - Handles error responses from the server.
+     */
     private String sendGetRequest(String requestUrl) throws Exception {
         Log.d(TAG, "Request URL: " + requestUrl);
 
@@ -159,6 +196,10 @@ public class JamendoApiClient {
         }
     }
 
+    /**
+     * Validates the Jamendo API response headers.
+     * - Throws an exception if the status is not successful.
+     */
     private void checkApiHeader(JSONObject rootObject) throws Exception {
         JSONObject headersObject = rootObject.optJSONObject("headers");
 
@@ -175,6 +216,9 @@ public class JamendoApiClient {
         }
     }
 
+    /**
+     * Parses a single JSON track object into the local Track model.
+     */
     private Track parseTrack(JSONObject trackObject) {
         String id = trackObject.optString("id", "");
         String name = trackObject.optString("name", "");
@@ -208,6 +252,9 @@ public class JamendoApiClient {
         );
     }
 
+    /**
+     * Reads input stream contents and converts them to a single String.
+     */
     private String readStream(InputStream inputStream) throws Exception {
         if (inputStream == null) {
             return "";
