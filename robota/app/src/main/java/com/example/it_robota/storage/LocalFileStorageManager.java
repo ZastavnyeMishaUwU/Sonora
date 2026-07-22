@@ -102,12 +102,25 @@ public class LocalFileStorageManager {
         }
     }
 
+    /**
+     * Verifies that a file resolves inside the managed music directory.
+     *
+     * @param file file whose canonical location should be checked
+     * @return true when the file is located inside the music directory
+     * @throws IOException if a canonical path cannot be resolved
+     */
     private boolean isInsideMusicDirectory(File file) throws IOException {
         String directoryPath = getMusicDirectory().getCanonicalPath() + File.separator;
         String filePath = file.getCanonicalPath();
         return filePath.startsWith(directoryPath);
     }
 
+    /**
+     * Converts a track identifier into a safe file-name component.
+     *
+     * @param trackId original track identifier
+     * @return sanitized identifier or a fallback value when it is missing
+     */
     private String sanitizeTrackId(String trackId) {
         if (trackId == null || trackId.trim().isEmpty()) {
             return "unknown";
