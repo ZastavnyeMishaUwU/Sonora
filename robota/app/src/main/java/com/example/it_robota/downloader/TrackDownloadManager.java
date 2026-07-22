@@ -4,7 +4,8 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
-import com.example.it_robota.auth.AuthRepository;
+import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.repositories.AuthRepository;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.DownloadedTrackEntity;
 import com.example.it_robota.models.Track;
@@ -14,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Manager responsible for downloading audio files to the device.
@@ -24,7 +26,7 @@ public class TrackDownloadManager {
 
     private final Context context;
     private final AppDatabase database;
-    private final AuthRepository authRepository;
+    private final SessionManager sessionManager;
 
     /**
      * Creates a TrackDownloadManager instance.
@@ -34,7 +36,7 @@ public class TrackDownloadManager {
     public TrackDownloadManager(Context context) {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getInstance(this.context);
-        this.authRepository = new AuthRepository(this.context);
+        this.sessionManager = new SessionManager(this.context);
     }
 
     /**
@@ -53,7 +55,7 @@ public class TrackDownloadManager {
             throw new Exception("Track download URL is missing. Cannot download.");
         }
 
-        long userId = authRepository.getCurrentUserId();
+        long userId = sessionManager.getCurrentUserId();
         if (userId == -1) {
             throw new Exception("User is not logged in. Downloads require an active session.");
         }
@@ -80,7 +82,7 @@ public class TrackDownloadManager {
                 localFile.getAbsolutePath()
         );
 
-        database.downloadedTrackDao().insert(entity);
+        database.downloadedTrackDao().insertDownloadedTrack(entity);
 
         track.setLocalFilePath(localFile.getAbsolutePath());
     }
@@ -101,13 +103,19 @@ public class TrackDownloadManager {
      * This fulfills the requirement to "store local file path in Room".
      */
     public String getLocalFilePath(String trackId) {
-        long userId = authRepository.getCurrentUserId();
+        long userId = sessionManager.getCurrentUserId();
         if (userId == -1) return null;
 
-        DownloadedTrackEntity entity = database.downloadedTrackDao()
-                .getDownloadedTrack(userId, trackId);
+        List<DownloadedTrackEntity> tracks = database.downloadedTrackDao()
+                .getDownloadedTracks(userId);
 
-        return (entity != null) ? entity.getLocalPath() : null;
+        for (DownloadedTrackEntity entity : tracks) {
+            if (entity.getTrackId().equals(trackId)) {
+                return entity.getLocalPath();
+            }
+        }
+
+        return null;
     }
 
     /**
