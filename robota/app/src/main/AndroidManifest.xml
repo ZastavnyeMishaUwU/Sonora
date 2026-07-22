@@ -18,13 +18,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ITrobota">
 
-        <!-- Реєструємо екран реєстрації (RegisterActivity) -->
+        <!-- Register the registration screen (RegisterActivity) -->
         <activity
             android:name=".auth.RegisterActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Головний екран (MainActivity) -->
+        <!-- Main screen (MainActivity) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

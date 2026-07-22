@@ -25,10 +25,10 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Ініціалізуємо репозиторій контекстом Activity
+        // Initialize the repository with Activity context
         authRepository = new AuthRepository(this);
 
-        // Ініціалізуємо елементи інтерфейсу (UI)
+        // Initialize user interface (UI) elements
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -43,10 +43,10 @@ public class RegisterActivity extends AppCompatActivity {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        // Очищуємо попередній статус помилки
+        // Clear previous error status
         showStatus("");
 
-        // Локальна валідація на порожні поля (запобігає крашам)
+        // Local validation for empty fields (prevents crashes)
         if (username.isEmpty()) {
             showStatus("Username cannot be empty");
             return;
@@ -60,14 +60,14 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // Викликаємо логіку реєстрації з репозиторію
+        // Call registration logic from the repository
         AuthResult result = authRepository.register(username, email, password);
 
         if (result.isSuccess()) {
-            // Успіх! Переходимо на головний екран
+            // Success! Navigate to the main screen
             navigateToMainScreen();
         } else {
-            // Виводимо конкретну помилку валідації, яку повернув репозиторій
+            // Display the specific validation error returned by the repository
             showStatus(result.getMessage());
         }
     }
