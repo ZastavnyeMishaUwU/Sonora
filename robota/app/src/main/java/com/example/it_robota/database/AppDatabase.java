@@ -26,7 +26,19 @@ public abstract class AppDatabase extends RoomDatabase {
      * Connect UserDao to DataBase
      */
     public abstract UserDao userDao();
+
+    /**
+     * Connects DownloadedTrackDao to the database for managing downloaded tracks.
+     *
+     * @return DownloadedTrackDao instance
+     */
     public abstract DownloadedTrackDao downloadedTrackDao();
+
+    /**
+     * Connects FavoriteTrackDao to the database for managing user's favorite tracks.
+     *
+     * @return FavoriteTrackDao instance
+     */
     public abstract FavoriteTrackDao favoriteTrackDao();
 
 
