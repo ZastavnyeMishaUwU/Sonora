@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">IT-robota</string>
     <string name="jamendo_client_id">1bd51584</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_username">Username</string>
+    <string name="settings_email">Email</string>
+    <string name="settings_no_data">Not available</string>
+    <string name="settings_logout">Logout</string>
+    <string name="settings_version">IT-robota version 1.0</string>
 </resources>

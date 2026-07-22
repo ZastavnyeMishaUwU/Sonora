@@ -141,6 +141,30 @@ public class AuthRepository {
     }
 
     /**
+     * Returns the user from the current session.
+     *
+     * @return current user or null if there is no session or user data
+     */
+    public UserEntity getCurrentUser() {
+        long userId = sessionManager.getCurrentUserId();
+
+        if (userId == -1) {
+            return null;
+        }
+
+        return userDao.getUserById(userId);
+    }
+
+    /**
+     * Returns the ID of the user from the current session.
+     *
+     * @return current user ID, or -1 when no user is logged in
+     */
+    public long getCurrentUserId() {
+        return sessionManager.getCurrentUserId();
+    }
+
+    /**
      * Creates a failed authentication result with no user data.
      *
      * @param message user-facing failure message

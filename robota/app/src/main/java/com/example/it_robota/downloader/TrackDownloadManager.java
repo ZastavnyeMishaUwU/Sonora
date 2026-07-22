@@ -4,10 +4,11 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
-import com.example.it_robota.auth.AuthRepository;
+import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.DownloadedTrackEntity;
 import com.example.it_robota.models.Track;
+import com.example.it_robota.repositories.AuthRepository;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,7 +35,10 @@ public class TrackDownloadManager {
     public TrackDownloadManager(Context context) {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getInstance(this.context);
-        this.authRepository = new AuthRepository(this.context);
+        this.authRepository = new AuthRepository(
+                database.userDao(),
+                new SessionManager(this.context)
+        );
     }
 
     /**
@@ -80,7 +84,7 @@ public class TrackDownloadManager {
                 localFile.getAbsolutePath()
         );
 
-        database.downloadedTrackDao().insert(entity);
+        database.downloadedTrackDao().insertDownloadedTrack(entity);
 
         track.setLocalFilePath(localFile.getAbsolutePath());
     }

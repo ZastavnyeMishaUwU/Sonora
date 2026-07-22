@@ -22,6 +22,16 @@ public interface DownloadedTrackDao {
     void insertDownloadedTrack(DownloadedTrackEntity downloadedTrack);
 
     /**
+     * Returns one downloaded track for a user.
+     *
+     * @param userId user identifier
+     * @param trackId track identifier
+     * @return downloaded track record or null when it does not exist
+     */
+    @Query("SELECT * FROM downloaded_tracks WHERE userId = :userId AND trackId = :trackId LIMIT 1")
+    DownloadedTrackEntity getDownloadedTrack(long userId, String trackId);
+
+    /**
      * Removes a downloaded track record for a user.
      *
      * @param trackId track identifier
