@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -20,6 +19,9 @@
             android:name=".auth.RegisterActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+            android:name=".tracks.TrackDetailsActivity"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -3,7 +3,7 @@ package com.example.it_robota.repositories;
 import com.example.it_robota.auth.AuthResult;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.database.UserDao;
-import com.example.it_robota.models.User;
+import com.example.it_robota.database.UserEntity;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -65,16 +65,23 @@ public class AuthRepository {
             }
 
             long currentTime = System.currentTimeMillis();
-            User user = new User(
-                    currentTime,
+            String passwordHash = hashPassword(password);
+
+            UserEntity userEntity = new UserEntity(
+                    0,
                     normalizedUsername,
                     normalizedEmail,
-                    hashPassword(password),
+                    passwordHash,
                     currentTime
             );
 
-            userDao.insertUser(user);
-            return new AuthResult(true, "User registered successfully.", user);
+            userDao.insertUser(userEntity);
+
+            return new AuthResult(
+                    true,
+                    "User registered successfully.",
+                    userEntity
+            );
         } catch (Exception exception) {
             return failure("Registration failed.");
         }
@@ -99,14 +106,19 @@ public class AuthRepository {
         }
 
         try {
-            User user = userDao.getUserByEmail(normalizedEmail);
+            UserEntity user = userDao.getUserByEmail(normalizedEmail);
 
             if (user == null || !passwordMatches(password, user.getPasswordHash())) {
                 return failure("Email or password is incorrect.");
             }
 
             sessionManager.saveSession(user.getId(), user.getEmail());
-            return new AuthResult(true, "Login successful.", user);
+
+            return new AuthResult(
+                    true,
+                    "Login successful.",
+                    user
+            );
         } catch (Exception exception) {
             return failure("Login failed.");
         }
@@ -173,6 +185,7 @@ public class AuthRepository {
 
         byte[] actualHash = hashPassword(password).getBytes(StandardCharsets.UTF_8);
         byte[] expectedHash = passwordHash.getBytes(StandardCharsets.UTF_8);
+
         return MessageDigest.isEqual(actualHash, expectedHash);
     }
 
@@ -185,11 +198,20 @@ public class AuthRepository {
      */
     private String hashPassword(String password) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hashBytes = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+        byte[] hashBytes = digest.digest(
+                password.getBytes(StandardCharsets.UTF_8)
+        );
+
         StringBuilder hash = new StringBuilder();
 
         for (byte hashByte : hashBytes) {
-            hash.append(String.format(Locale.ROOT, "%02x", hashByte));
+            hash.append(
+                    String.format(
+                            Locale.ROOT,
+                            "%02x",
+                            hashByte
+                    )
+            );
         }
 
         return hash.toString();
@@ -212,6 +234,8 @@ public class AuthRepository {
      * @return trimmed lowercase email or an empty string
      */
     private String normalizeEmail(String email) {
-        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        return email == null
+                ? ""
+                : email.trim().toLowerCase(Locale.ROOT);
     }
 }
