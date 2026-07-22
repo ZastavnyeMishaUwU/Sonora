@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Дозвіл на інтернет для Jamendo API, пошуку треків і стримінгу музики -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Дозвіл на перевірку стану мережі -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -19,7 +15,7 @@
         android:theme="@style/Theme.ITrobota">
 
         <activity
-            android:name=".TrackDetailsActivity"
+            android:name=".trackactivities.TrackDetailsActivity"
             android:exported="false" />
 
         <activity
@@ -29,7 +25,6 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 

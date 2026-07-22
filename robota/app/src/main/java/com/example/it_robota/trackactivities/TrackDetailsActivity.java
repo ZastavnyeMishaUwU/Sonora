@@ -1,4 +1,4 @@
-package com.example.it_robota;
+package com.example.it_robota.trackactivities;
 
 import android.os.Bundle;
 import android.view.View;
@@ -9,8 +9,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.it_robota.R;
 import com.example.it_robota.downloader.TrackDownloadManager;
 import com.example.it_robota.models.Track;
+import com.example.it_robota.musicplayback.MusicPlayerManager;
 import com.example.it_robota.repositories.TrackRepository;
 
 import java.util.Locale;
@@ -41,6 +43,11 @@ public class TrackDetailsActivity extends AppCompatActivity {
     private Button favoriteButton;
     private Button downloadButton;
 
+    /**
+     * Initializes dependencies, view bindings, actions and track loading.
+     *
+     * @param savedInstanceState previously saved activity state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +70,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
         loadTrack(trackId.trim());
     }
 
+    /**
+     * Resolves and stores all views used by the screen.
+     */
     private void bindViews() {
         contentView = findViewById(R.id.trackDetailsContent);
         progressBar = findViewById(R.id.trackDetailsProgress);
@@ -77,6 +87,11 @@ public class TrackDetailsActivity extends AppCompatActivity {
         downloadButton = findViewById(R.id.btnDownloadTrack);
     }
 
+    /**
+     * Loads track details and downloaded state outside the UI thread.
+     *
+     * @param trackId identifier of the track to load
+     */
     private void loadTrack(String trackId) {
         showLoading();
         executorService.execute(() -> {
@@ -99,6 +114,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Displays the loaded track and its current action states.
+     */
     private void renderTrack() {
         progressBar.setVisibility(View.GONE);
         stateTextView.setVisibility(View.GONE);
@@ -113,6 +131,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
         updateStatuses();
     }
 
+    /**
+     * Refreshes favorite and downloaded labels and button states.
+     */
     private void updateStatuses() {
         favoriteStatusTextView.setText(currentTrack.isFavorite()
                 ? R.string.track_details_favorite_yes : R.string.track_details_favorite_no);
@@ -128,6 +149,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 ? R.string.track_details_downloaded_button : R.string.track_details_download);
     }
 
+    /**
+     * Starts playback using a downloaded file when available, otherwise streaming audio.
+     */
     private void playTrack() {
         if (currentTrack == null) {
             return;
@@ -144,6 +168,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
         Toast.makeText(this, R.string.track_details_playing, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Adds or removes the current track from favorites and updates the screen.
+     */
     private void toggleFavorite() {
         if (currentTrack == null) {
             return;
@@ -162,6 +189,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Downloads the current track in the background and refreshes its status.
+     */
     private void downloadTrack() {
         if (currentTrack == null) {
             return;
@@ -185,12 +215,20 @@ public class TrackDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Shows the loading indicator while hiding content and messages.
+     */
     private void showLoading() {
         contentView.setVisibility(View.GONE);
         stateTextView.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Shows an error message while hiding content and progress.
+     *
+     * @param messageResource string resource describing the error
+     */
     private void showError(int messageResource) {
         contentView.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
@@ -198,15 +236,31 @@ public class TrackDetailsActivity extends AppCompatActivity {
         stateTextView.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Returns a display-safe value for an optional text field.
+     *
+     * @param value value returned by the track API
+     * @param fallbackResource string resource used when the value is missing
+     * @return original value or localized fallback text
+     */
     private String valueOrFallback(String value, int fallbackResource) {
         return value == null || value.trim().isEmpty() ? getString(fallbackResource) : value;
     }
 
+    /**
+     * Formats a duration in seconds as minutes and seconds.
+     *
+     * @param seconds duration in seconds
+     * @return duration formatted as m:ss
+     */
     private String formatDuration(int seconds) {
         int safeSeconds = Math.max(seconds, 0);
         return String.format(Locale.ROOT, "%d:%02d", safeSeconds / 60, safeSeconds % 60);
     }
 
+    /**
+     * Releases playback and background-thread resources when the activity is destroyed.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
