@@ -1,6 +1,6 @@
 package com.example.it_robota.auth;
 
-import com.example.it_robota.models.User;
+import com.example.it_robota.database.UserEntity;
 
 /**
  * Represents the result of an authentication action.
@@ -10,7 +10,7 @@ public class AuthResult {
 
     private final boolean success;
     private final String message;
-    private final User user;
+    private final UserEntity user;
 
     /**
      * Creates an authentication result.
@@ -19,7 +19,11 @@ public class AuthResult {
      * @param message result message
      * @param user user data or null
      */
-    public AuthResult(boolean success, String message, User user) {
+    public AuthResult(
+            boolean success,
+            String message,
+            UserEntity user
+    ) {
         this.success = success;
         this.message = message;
         this.user = user;
@@ -48,7 +52,7 @@ public class AuthResult {
      *
      * @return user object or null
      */
-    public User getUser() {
+    public UserEntity getUser() {
         return user;
     }
 }
