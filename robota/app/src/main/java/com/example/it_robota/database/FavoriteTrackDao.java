@@ -23,8 +23,8 @@ public interface FavoriteTrackDao {
     /**
      * Deletes a specific track from the database using its ID.
      */
-    @Query("DELETE FROM tracks WHERE id = :trackId")
-    void deleteTrack(String trackId);
+    @Query("DELETE FROM favorite_tracks WHERE trackId = :trackId AND userId = :userId")
+    void deleteTrack(String trackId, long userId);
 
     /**
      * Saves a link between a user and their favorite track. Replaces on conflict.
