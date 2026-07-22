@@ -24,6 +24,15 @@ public class MusicPlayerManager {
     }
 
     /**
+     * Helper method to create and initialize MediaPlayer instance.
+     */
+    private void initMediaPlayer() {
+        if (mediaPlayer == null) {
+            mediaPlayer = new MediaPlayer();
+        }
+    }
+
+    /**
      * Plays a track from a remote audio URL (Jamendo API).
      * - Resets the player to allow safe track switching without crashes.
      * - Prepares the audio asynchronously in the background to prevent UI freezing.
@@ -31,6 +40,7 @@ public class MusicPlayerManager {
      */
     public void play(String url) {
         try {
+            initMediaPlayer();
             mediaPlayer.reset();
             mediaPlayer.setDataSource(url);
             mediaPlayer.prepareAsync();
@@ -65,11 +75,14 @@ public class MusicPlayerManager {
     }
 
     /**
-     * Stops the playback completely
+     * Stops the playback and releases MediaPlayer resources.
      */
     public void stop() {
         if (mediaPlayer != null) {
-            mediaPlayer.stop();
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            release();
         }
     }
 
