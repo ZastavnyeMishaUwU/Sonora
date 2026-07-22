@@ -2,10 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Дозвіл на інтернет для Jamendo API, пошуку треків і стримінгу музики -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Дозвіл на перевірку стану мережі -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
@@ -18,13 +16,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ITrobota">
 
-        <!-- Register the registration screen (RegisterActivity) -->
         <activity
             android:name=".auth.RegisterActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-
-        <!-- Main screen (MainActivity) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
