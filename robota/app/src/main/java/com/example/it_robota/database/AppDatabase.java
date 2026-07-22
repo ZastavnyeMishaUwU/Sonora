@@ -26,6 +26,8 @@ public abstract class AppDatabase extends RoomDatabase {
      * Connect UserDao to DataBase
      */
     public abstract UserDao userDao();
+    public abstract DownloadedTrackDao downloadedTrackDao();
+    public abstract FavoriteTrackDao favoriteTrackDao();
 
 
     private static volatile AppDatabase INSTANCE;
