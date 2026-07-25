@@ -23,7 +23,9 @@ public class RegisterActivity extends AppCompatActivity {
     private Button btnRegister;
     private TextView tvStatus;
 
-    /* Activity initialization method */
+    /* 
+     * Activity initialization method 
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,7 +42,9 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(v -> performRegistration());
     }
 
-    /* Validates user input and calls registration method */
+    /* 
+     * Validates user input and calls registration method 
+     */
     private void performRegistration() {
         String username = etUsername.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
@@ -70,12 +74,16 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
-    /* Displays status or error message on UI */
+    /* 
+     * Displays status or error message on UI 
+     */
     private void showStatus(String message) {
         tvStatus.setText(message);
     }
 
-    /* Navigates to MainActivity and clears task stack */
+    /* 
+     * Navigates to MainActivity and clears task stack 
+     */
     private void navigateToMainScreen() {
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
