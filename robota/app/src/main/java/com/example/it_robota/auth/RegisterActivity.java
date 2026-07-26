@@ -9,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
+import com.example.it_robota.database.AppDatabase;
+import com.example.it_robota.database.UserDao;
+import com.example.it_robota.repositories.AuthRepository;
 
 /*
  * Activity for registering new users.
@@ -30,8 +33,11 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+        AppDatabase db = AppDatabase.getInstance(this);
+        UserDao userDao = db.userDao();
+        SessionManager sessionManager = new SessionManager(this);
 
-        authRepository = new AuthRepository(this);
+        authRepository = new AuthRepository(userDao, sessionManager);
 
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
