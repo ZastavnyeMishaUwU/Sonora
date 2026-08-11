@@ -13,6 +13,8 @@ import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.UserDao;
 import com.example.it_robota.repositories.AuthRepository;
 
+import java.util.concurrent.Executors;
+
 /*
  * Activity for registering new users.
  */
@@ -26,8 +28,8 @@ public class RegisterActivity extends AppCompatActivity {
     private Button btnRegister;
     private TextView tvStatus;
 
-    /* 
-     * Activity initialization method 
+    /*
+     * Activity initialization method
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +50,8 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(v -> performRegistration());
     }
 
-    /* 
-     * Validates user input and calls registration method 
+    /*
+     * Validates user input and calls registration method
      */
     private void performRegistration() {
         String username = etUsername.getText().toString().trim();
@@ -71,24 +73,36 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        AuthResult result = authRepository.register(username, email, password);
+        /*
+         * Execute Room database operations in a background thread
+         * to prevent blocking the Main/UI thread.
+         */
+        Executors.newSingleThreadExecutor().execute(() -> {
+            AuthResult result = authRepository.register(username, email, password);
 
-        if (result.isSuccess()) {
-            navigateToMainScreen();
-        } else {
-            showStatus(result.getMessage());
-        }
+            /*
+             * Return to the UI thread to safely update UI components
+             * based on the registration result.
+             */
+            runOnUiThread(() -> {
+                if (result.isSuccess()) {
+                    navigateToMainScreen();
+                } else {
+                    showStatus(result.getMessage());
+                }
+            });
+        });
     }
 
-    /* 
-     * Displays status or error message on UI 
+    /*
+     * Displays status or error message on UI
      */
     private void showStatus(String message) {
         tvStatus.setText(message);
     }
 
-    /* 
-     * Navigates to MainActivity and clears task stack 
+    /*
+     * Navigates to MainActivity and clears task stack
      */
     private void navigateToMainScreen() {
         Intent intent = new Intent(this, MainActivity.class);

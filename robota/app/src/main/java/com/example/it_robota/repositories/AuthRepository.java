@@ -77,10 +77,19 @@ public class AuthRepository {
 
             userDao.insertUser(userEntity);
 
+            /*
+             * Retrieve the newly created user from the database to obtain
+             * the auto-generated ID, then start the active session.
+             */
+            UserEntity createdUser = userDao.getUserByEmail(normalizedEmail);
+            if (createdUser != null) {
+                sessionManager.saveSession(createdUser.getId(), createdUser.getEmail());
+            }
+
             return new AuthResult(
                     true,
                     "User registered successfully.",
-                    userEntity
+                    createdUser != null ? createdUser : userEntity
             );
         } catch (Exception exception) {
             return failure("Registration failed.");
