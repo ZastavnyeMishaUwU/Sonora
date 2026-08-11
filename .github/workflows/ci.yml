@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./robota
 
     steps:
       - name: Checkout repository
@@ -21,9 +25,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
-
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+        with:
+          build-root-directory: ./robota
 
       - name: Build with Gradle
         run: ./gradlew assembleDebug --stacktrace
