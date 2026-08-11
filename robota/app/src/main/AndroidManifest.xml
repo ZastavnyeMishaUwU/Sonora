@@ -20,6 +20,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".auth.RegisterActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".tracks.TrackDetailsActivity"
             android:exported="false" />
 
