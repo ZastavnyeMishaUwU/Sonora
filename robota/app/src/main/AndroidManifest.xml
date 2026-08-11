@@ -16,7 +16,7 @@
         android:theme="@style/Theme.ITrobota">
 
         <activity
-            android:name=".tracks.DownloadedTracksActivity"
+            android:name=".tracks.FavoritesActivity"
             android:exported="false" />
 
         <activity
