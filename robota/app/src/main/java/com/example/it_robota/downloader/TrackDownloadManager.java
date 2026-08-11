@@ -84,6 +84,8 @@ public class TrackDownloadManager {
         DownloadedTrackEntity entity = new DownloadedTrackEntity(
                 userId,
                 track.getId(),
+                track.getName(),
+                track.getArtistName(),
                 localFile.getAbsolutePath()
         );
 
