@@ -26,6 +26,7 @@ public class TrackDownloadManager {
 
     private final Context context;
     private final AppDatabase database;
+    private final AuthRepository authRepository;
     private final SessionManager sessionManager;
 
     /**
@@ -37,6 +38,7 @@ public class TrackDownloadManager {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getInstance(this.context);
         this.sessionManager = new SessionManager(this.context);
+        this.authRepository = new AuthRepository(database.userDao(), this.sessionManager);
     }
 
     /**
@@ -53,6 +55,9 @@ public class TrackDownloadManager {
         String downloadUrl = track.getDownloadUrl();
         if (downloadUrl == null || downloadUrl.isEmpty()) {
             throw new Exception("Track download URL is missing. Cannot download.");
+        }
+        if (!authRepository.isUserLoggedIn()) {
+            throw new Exception("User is not logged in. Downloads require an active session.");
         }
 
         long userId = sessionManager.getCurrentUserId();
@@ -103,6 +108,7 @@ public class TrackDownloadManager {
      * This fulfills the requirement to "store local file path in Room".
      */
     public String getLocalFilePath(String trackId) {
+        if (!authRepository.isUserLoggedIn()) return null;
         long userId = sessionManager.getCurrentUserId();
         if (userId == -1) return null;
 
