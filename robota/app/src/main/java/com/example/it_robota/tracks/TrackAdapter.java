@@ -34,6 +34,7 @@ public class TrackAdapter
     }
 
     private final List<Track> tracks = new ArrayList<>();
+
     private final OnTrackClickListener onTrackClickListener;
 
     /**

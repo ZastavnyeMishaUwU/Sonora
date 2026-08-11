@@ -15,6 +15,7 @@
         android:imeOptions="actionSearch"
         android:maxLines="1" />
 
+
     <Button
         android:id="@+id/btnSearch"
         android:layout_width="match_parent"
