@@ -2,12 +2,9 @@ package com.example.it_robota.database;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import androidx.room.migration.Migration;
-import androidx.sqlite.db.SupportSQLiteDatabase;
 
 /**
  * Main Room database for the Android music application.
@@ -20,35 +17,16 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 FavoriteTrackEntity.class,
                 DownloadedTrackEntity.class
         },
-        version = 2,
+        version = 1,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
-
-    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
-        /**
-         * Adds offline display metadata without removing existing downloaded tracks.
-         *
-         * @param database database being upgraded
-         */
-        @Override
-        public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE downloaded_tracks ADD COLUMN trackName TEXT");
-            database.execSQL("ALTER TABLE downloaded_tracks ADD COLUMN artistName TEXT");
-        }
-    };
 
     /**
      * Connect UserDao to DataBase
      */
     public abstract UserDao userDao();
 
-    /**
-     * Provides downloaded-track database operations.
-     *
-     * @return downloaded-track DAO
-     */
-    public abstract DownloadedTrackDao downloadedTrackDao();
 
     private static volatile AppDatabase INSTANCE;
 
@@ -67,7 +45,6 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "jamendo_music_db"
                             )
-                            .addMigrations(MIGRATION_1_2)
                             .fallbackToDestructiveMigration()
                             .build();
                 }
