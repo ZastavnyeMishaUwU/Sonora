@@ -1,48 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center_vertical">
+    android:background="@drawable/bg_register"
+    android:fillViewport="true">
 
-    <EditText
-        android:id="@+id/etUsername"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Username"
-        android:inputType="textPersonName"
-        android:layout_marginBottom="12dp" />
+        android:minHeight="700dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="28dp"
+        android:paddingBottom="30dp">
 
-    <EditText
-        android:id="@+id/etEmail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Email"
-        android:inputType="textEmailAddress"
-        android:layout_marginBottom="12dp" />
+        <ImageView
+            android:id="@+id/ivLeavesTop"
+            android:layout_width="90dp"
+            android:layout_height="145dp"
+            android:layout_marginStart="-18dp"
+            android:layout_marginTop="55dp"
+            android:src="@drawable/ic_leaves_top"
+            android:scaleType="fitCenter"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/etPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:layout_marginBottom="16dp" />
+        <ImageView
+            android:id="@+id/ivLeavesBottom"
+            android:layout_width="95dp"
+            android:layout_height="150dp"
+            android:layout_marginEnd="-10dp"
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/ic_leaves_bottom"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <Button
-        android:id="@+id/btnRegister"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Register"
-        android:layout_marginBottom="16dp" />
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="78dp"
+            android:layout_height="78dp"
+            android:layout_marginTop="25dp"
+            android:background="@drawable/bg_logo"
+            android:padding="20dp"
+            android:src="@drawable/ic_music_note"
+            android:scaleType="centerInside"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#FF0000"
-        android:textSize="14sp"
-        android:gravity="center" />
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="17dp"
+            android:gravity="center"
+            android:text="Your Media Library"
+            android:textColor="#102016"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ivLogo" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:gravity="center"
+            android:lineSpacingExtra="1dp"
+            android:text="Registration allows you to create&#10;your personal media library that&#10;synchronizes across all your devices."
+            android:textColor="#536052"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardUsername"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="20dp"
+            app:cardBackgroundColor="#FCFCF7"
+            app:cardCornerRadius="9dp"
+            app:cardElevation="1dp"
+            app:strokeColor="#E1E4DA"
+            app:strokeWidth="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
+
+            <EditText
+                android:id="@+id/etUsername"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_person_green"
+                android:drawablePadding="11dp"
+                android:hint="Name"
+                android:inputType="textPersonName"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textColor="#273027"
+                android:textColorHint="#687067"
+                android:textSize="11sp" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardEmail"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="7dp"
+            app:cardBackgroundColor="#FCFCF7"
+            app:cardCornerRadius="9dp"
+            app:cardElevation="1dp"
+            app:strokeColor="#E1E4DA"
+            app:strokeWidth="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cardUsername">
+
+            <EditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_email_green"
+                android:drawablePadding="11dp"
+                android:hint="Email"
+                android:inputType="textEmailAddress"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textColor="#273027"
+                android:textColorHint="#687067"
+                android:textSize="11sp" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardPassword"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="7dp"
+            app:cardBackgroundColor="#FCFCF7"
+            app:cardCornerRadius="9dp"
+            app:cardElevation="1dp"
+            app:strokeColor="#E1E4DA"
+            app:strokeWidth="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cardEmail">
+
+            <EditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_lock_green"
+                android:drawablePadding="11dp"
+                android:hint="Password"
+                android:inputType="textPassword"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textColor="#273027"
+                android:textColorHint="#687067"
+                android:textSize="11sp" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textColor="#B52620"
+            android:textSize="9sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cardPassword" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRegister"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="7dp"
+            android:text="Register"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:backgroundTint="#B53229"
+            app:cornerRadius="9dp"
+            app:elevation="2dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvStatus" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
