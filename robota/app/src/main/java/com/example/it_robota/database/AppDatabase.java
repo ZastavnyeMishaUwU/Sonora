@@ -26,6 +26,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 public abstract class AppDatabase extends RoomDatabase {
 
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+
         /**
          * Adds offline display metadata while preserving existing downloaded records.
          *
