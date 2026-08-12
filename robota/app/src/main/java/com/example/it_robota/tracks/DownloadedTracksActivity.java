@@ -5,10 +5,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
@@ -161,6 +163,95 @@ public class DownloadedTracksActivity extends AppCompatActivity {
     }
 
     /**
+     * Asks the user to confirm removal of a downloaded track.
+     *
+     * @param downloadedTrack track selected for removal
+     */
+    private void confirmTrackRemoval(DownloadedTrackEntity downloadedTrack) {
+        String trackName = valueOrFallback(
+                downloadedTrack.getTrackName(),
+                getString(R.string.downloaded_tracks_unknown_track, downloadedTrack.getTrackId())
+        );
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.downloaded_tracks_remove_title)
+                .setMessage(getString(R.string.downloaded_tracks_remove_message, trackName))
+                .setNegativeButton(R.string.downloaded_tracks_remove_cancel, null)
+                .setPositiveButton(
+                        R.string.downloaded_tracks_remove_confirm,
+                        (dialog, which) -> removeDownloadedTrack(downloadedTrack)
+                )
+                .show();
+    }
+
+    /**
+     * Deletes the local file and then removes its Room record in the background.
+     * A missing local file is treated as an already completed file deletion.
+     *
+     * @param downloadedTrack track selected for removal
+     */
+    private void removeDownloadedTrack(DownloadedTrackEntity downloadedTrack) {
+        executorService.execute(() -> {
+            try {
+                boolean fileRemoved = localFileStorageManager.deleteFile(
+                        downloadedTrack.getLocalPath()
+                );
+                if (!fileRemoved) {
+                    showRemovalError();
+                    return;
+                }
+
+                downloadedTrackDao.deleteDownloadedTrack(
+                        downloadedTrack.getTrackId(),
+                        downloadedTrack.getUserId()
+                );
+                showRemovalSuccess(downloadedTrack);
+            } catch (Exception exception) {
+                showRemovalError();
+            }
+        });
+    }
+
+    /**
+     * Removes a successfully deleted track from the visible list immediately.
+     *
+     * @param downloadedTrack track whose file and database record were deleted
+     */
+    private void showRemovalSuccess(DownloadedTrackEntity downloadedTrack) {
+        runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+
+            downloadedTracks.remove(downloadedTrack);
+            emptyStateTextView.setText(R.string.downloaded_tracks_empty);
+            downloadedTrackAdapter.notifyDataSetChanged();
+            Toast.makeText(
+                    this,
+                    R.string.downloaded_tracks_remove_success,
+                    Toast.LENGTH_SHORT
+            ).show();
+        });
+    }
+
+    /**
+     * Displays a non-fatal message when a track cannot be fully removed.
+     */
+    private void showRemovalError() {
+        runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+
+            Toast.makeText(
+                    this,
+                    R.string.downloaded_tracks_remove_error,
+                    Toast.LENGTH_SHORT
+            ).show();
+        });
+    }
+
+    /**
      * Returns display-safe text for optional downloaded-track metadata.
      *
      * @param value stored metadata value
@@ -240,6 +331,7 @@ public class DownloadedTracksActivity extends AppCompatActivity {
             DownloadedTrackEntity track = getItem(position);
             TextView trackNameTextView = row.findViewById(R.id.downloadedTrackName);
             TextView artistNameTextView = row.findViewById(R.id.downloadedTrackArtist);
+            Button removeButton = row.findViewById(R.id.removeDownloadedTrackButton);
 
             trackNameTextView.setText(valueOrFallback(
                     track.getTrackName(),
@@ -249,6 +341,7 @@ public class DownloadedTracksActivity extends AppCompatActivity {
                     track.getArtistName(),
                     getString(R.string.downloaded_tracks_unknown_artist)
             ));
+            removeButton.setOnClickListener(view -> confirmTrackRemoval(track));
 
             return row;
         }
