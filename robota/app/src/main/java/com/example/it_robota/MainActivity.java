@@ -1,5 +1,6 @@
 package com.example.it_robota;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -10,9 +11,11 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.it_robota.auth.SettingsActivity;
 import com.example.it_robota.api.JamendoApiClient;
 import com.example.it_robota.models.Track;
 
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button searchButton;
     private Button detailsButton;
+    private Button settingsButton;
 
     private ImageView trackImageView;
     private TextView resultTextView;
@@ -38,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private ExecutorService executorService;
     private Handler mainHandler;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         searchButton = findViewById(R.id.searchButton);
         detailsButton = findViewById(R.id.detailsButton);
+        settingsButton = findViewById(R.id.settingsButton);
 
         trackImageView = findViewById(R.id.trackImageView);
         resultTextView = findViewById(R.id.resultTextView);
@@ -59,6 +65,15 @@ public class MainActivity extends AppCompatActivity {
 
         searchButton.setOnClickListener(v -> searchTracks());
         detailsButton.setOnClickListener(v -> getTrackDetails());
+
+        settingsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                    MainActivity.this,
+                    SettingsActivity.class
+            );
+
+            startActivity(intent);
+        });
     }
 
     private void searchTracks() {
