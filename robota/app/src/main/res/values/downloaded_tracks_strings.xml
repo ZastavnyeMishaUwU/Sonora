@@ -10,4 +10,11 @@
     <string name="downloaded_tracks_unknown_artist">Unknown artist</string>
     <string name="downloaded_tracks_file_missing">The downloaded file is no longer available.</string>
     <string name="downloaded_tracks_playing">Playing downloaded track</string>
+    <string name="downloaded_tracks_remove">Remove</string>
+    <string name="downloaded_tracks_remove_title">Remove downloaded track?</string>
+    <string name="downloaded_tracks_remove_message">Delete %1$s from this device?</string>
+    <string name="downloaded_tracks_remove_cancel">Cancel</string>
+    <string name="downloaded_tracks_remove_confirm">Remove</string>
+    <string name="downloaded_tracks_remove_success">Downloaded track removed.</string>
+    <string name="downloaded_tracks_remove_error">Downloaded track could not be removed.</string>
 </resources>
