@@ -2,6 +2,7 @@ package com.example.it_robota.database;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 
 /**
  * Entity for storing downloaded track information.
@@ -16,6 +17,10 @@ public class DownloadedTrackEntity {
 
     @NonNull
     private String trackId = "";
+
+    private String trackName;
+
+    private String artistName;
 
     private String localPath;
 
@@ -32,9 +37,30 @@ public class DownloadedTrackEntity {
      * @param trackId track ID
      * @param localPath local file path
      */
+    @Ignore
     public DownloadedTrackEntity(long userId, @NonNull String trackId, String localPath) {
+        this(userId, trackId, null, null, localPath);
+    }
+
+    /**
+     * Creates a downloaded track record with metadata required for offline display.
+     *
+     * @param userId user identifier
+     * @param trackId track identifier
+     * @param trackName track name
+     * @param artistName artist name
+     * @param localPath local audio file path
+     */
+    @Ignore
+    public DownloadedTrackEntity(long userId,
+                                 @NonNull String trackId,
+                                 String trackName,
+                                 String artistName,
+                                 String localPath) {
         this.userId = userId;
         this.trackId = trackId;
+        this.trackName = trackName;
+        this.artistName = artistName;
         this.localPath = localPath;
     }
 
@@ -73,6 +99,42 @@ public class DownloadedTrackEntity {
      */
     public void setTrackId(@NonNull String trackId) {
         this.trackId = trackId;
+    }
+
+    /**
+     * Returns the track name stored for offline display.
+     *
+     * @return track name
+     */
+    public String getTrackName() {
+        return trackName;
+    }
+
+    /**
+     * Sets the track name stored for offline display.
+     *
+     * @param trackName track name
+     */
+    public void setTrackName(String trackName) {
+        this.trackName = trackName;
+    }
+
+    /**
+     * Returns the artist name stored for offline display.
+     *
+     * @return artist name
+     */
+    public String getArtistName() {
+        return artistName;
+    }
+
+    /**
+     * Sets the artist name stored for offline display.
+     *
+     * @param artistName artist name
+     */
+    public void setArtistName(String artistName) {
+        this.artistName = artistName;
     }
 
     /**

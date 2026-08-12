@@ -16,16 +16,7 @@
         android:theme="@style/Theme.ITrobota">
 
         <activity
-            android:name=".auth.RegisterActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
-            android:name=".tracks.TrackDetailsActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".MainActivity"
+            android:name=".auth.LoginActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
 
@@ -35,6 +26,31 @@
             </intent-filter>
 
         </activity>
+
+        <activity
+            android:name=".tracks.SearchActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".tracks.DownloadedTracksActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".tracks.FavoritesActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".tracks.TrackDetailsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".auth.RegisterActivity"
+            android:exported="false" />
 
     </application>
 

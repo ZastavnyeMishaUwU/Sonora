@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">IT-robota</string>
     <string name="jamendo_client_id">1bd51584</string>
+    <string name="search_hint">Enter track or artist name</string>
+    <string name="search_button">Search</string>
+    <string name="search_start_message">Enter a query to search for tracks.</string>
+    <string name="search_query_required">Search query must not be empty.</string>
+    <string name="search_no_results">No tracks were found.</string>
+    <string name="search_error">Unable to load tracks. Check your connection and try again.</string>
+    <string name="search_unknown_track">Unknown track</string>
+    <string name="search_unknown_artist">Unknown artist</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_button">Login</string>
+    <string name="login_email_required">Email must not be empty.</string>
+    <string name="login_password_required">Password must not be empty.</string>
+    <string name="login_error">Login failed. Please try again.</string>
+    <string name="register_button">Register</string>
 </resources>

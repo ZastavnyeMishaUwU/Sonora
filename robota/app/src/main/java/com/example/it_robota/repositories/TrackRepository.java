@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.example.it_robota.api.JamendoApiClient;
+import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
 
 import org.json.JSONObject;
@@ -25,6 +26,7 @@ public class TrackRepository {
 
     private final JamendoApiClient jamendoApiClient;
     private final SharedPreferences sharedPreferences;
+    private final SessionManager sessionManager;
 
     /**
      * Creates a TrackRepository instance.
@@ -34,6 +36,7 @@ public class TrackRepository {
     public TrackRepository(Context context) {
         this.jamendoApiClient = new JamendoApiClient(context);
         this.sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        this.sessionManager = new SessionManager(context);
     }
 
     /**
@@ -71,10 +74,15 @@ public class TrackRepository {
      */
     public List<Track> getSavedTracks() {
         List<Track> tracks = new ArrayList<>();
+
+        if (getCurrentUserId() == -1L) {
+            return tracks;
+        }
+
         Set<String> favoriteIds = getFavoriteIds();
 
         for (String trackId : favoriteIds) {
-            String json = sharedPreferences.getString(FAVORITE_TRACK_PREFIX + trackId, null);
+            String json = sharedPreferences.getString(getFavoriteTrackKey(trackId), null);
 
             if (json == null || json.trim().isEmpty()) {
                 continue;
@@ -102,14 +110,18 @@ public class TrackRepository {
             throw new Exception("Track is empty.");
         }
 
+        if (getCurrentUserId() == -1L) {
+            throw new Exception("User is not logged in.");
+        }
+
         track.setFavorite(true);
 
         Set<String> favoriteIds = getFavoriteIds();
         favoriteIds.add(track.getId());
 
         sharedPreferences.edit()
-                .putStringSet(FAVORITE_IDS_KEY, favoriteIds)
-                .putString(FAVORITE_TRACK_PREFIX + track.getId(), trackToJson(track).toString())
+                .putStringSet(getFavoriteIdsKey(), favoriteIds)
+                .putString(getFavoriteTrackKey(track.getId()), trackToJson(track).toString())
                 .apply();
     }
 
@@ -119,7 +131,7 @@ public class TrackRepository {
      * @param trackId track ID that should be removed
      */
     public void removeFavorite(String trackId) {
-        if (trackId == null || trackId.trim().isEmpty()) {
+        if (getCurrentUserId() == -1L || trackId == null || trackId.trim().isEmpty()) {
             return;
         }
 
@@ -127,8 +139,8 @@ public class TrackRepository {
         favoriteIds.remove(trackId);
 
         sharedPreferences.edit()
-                .putStringSet(FAVORITE_IDS_KEY, favoriteIds)
-                .remove(FAVORITE_TRACK_PREFIX + trackId)
+                .putStringSet(getFavoriteIdsKey(), favoriteIds)
+                .remove(getFavoriteTrackKey(trackId))
                 .apply();
     }
 
@@ -139,7 +151,7 @@ public class TrackRepository {
      * @return true if track is favorite, false otherwise
      */
     public boolean isTrackFavorite(String trackId) {
-        if (trackId == null || trackId.trim().isEmpty()) {
+        if (getCurrentUserId() == -1L || trackId == null || trackId.trim().isEmpty()) {
             return false;
         }
 
@@ -152,8 +164,40 @@ public class TrackRepository {
      * @return copied set of favorite track IDs
      */
     private Set<String> getFavoriteIds() {
-        Set<String> savedIds = sharedPreferences.getStringSet(FAVORITE_IDS_KEY, new HashSet<>());
+        if (getCurrentUserId() == -1L) {
+            return new HashSet<>();
+        }
+
+        Set<String> savedIds = sharedPreferences.getStringSet(getFavoriteIdsKey(), new HashSet<>());
         return new HashSet<>(savedIds);
+    }
+
+    /**
+     * Builds a favorites-list key scoped to the active user.
+     *
+     * @return user-scoped favorites key
+     */
+    private String getFavoriteIdsKey() {
+        return FAVORITE_IDS_KEY + "_" + getCurrentUserId();
+    }
+
+    /**
+     * Builds a stored-track key scoped to the active user.
+     *
+     * @param trackId track identifier
+     * @return user-scoped stored-track key
+     */
+    private String getFavoriteTrackKey(String trackId) {
+        return FAVORITE_TRACK_PREFIX + getCurrentUserId() + "_" + trackId;
+    }
+
+    /**
+     * Returns the active session's user identifier.
+     *
+     * @return current user ID or -1
+     */
+    private long getCurrentUserId() {
+        return sessionManager.getCurrentUserId();
     }
 
     /**
