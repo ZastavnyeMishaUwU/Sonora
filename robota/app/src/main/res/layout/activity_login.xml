@@ -33,6 +33,13 @@
         android:layout_marginTop="16dp"
         android:text="@string/login_button" />
 
+    <Button
+        android:id="@+id/btnOpenRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/register_button" />
+
     <ProgressBar
         android:id="@+id/loginProgress"
         android:layout_width="wrap_content"

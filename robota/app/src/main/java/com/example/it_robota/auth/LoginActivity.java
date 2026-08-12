@@ -32,6 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText emailEditText;
     private EditText passwordEditText;
     private Button loginButton;
+    private Button registerButton;
     private TextView statusTextView;
     private ProgressBar progressBar;
 
@@ -70,15 +71,18 @@ public class LoginActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.etLoginEmail);
         passwordEditText = findViewById(R.id.etLoginPassword);
         loginButton = findViewById(R.id.btnLogin);
+        registerButton = findViewById(R.id.btnOpenRegister);
         statusTextView = findViewById(R.id.tvLoginStatus);
         progressBar = findViewById(R.id.loginProgress);
     }
 
     /**
-     * Configures login actions for the button and software keyboard.
+     * Configures login and registration actions.
      */
     private void setupActions() {
         loginButton.setOnClickListener(view -> performLogin());
+
+        registerButton.setOnClickListener(view -> openRegisterScreen());
 
         passwordEditText.setOnEditorActionListener(
                 (textView, actionId, event) -> {
@@ -172,6 +176,7 @@ public class LoginActivity extends AppCompatActivity {
         );
 
         loginButton.setEnabled(!loading);
+        registerButton.setEnabled(!loading);
         emailEditText.setEnabled(!loading);
         passwordEditText.setEnabled(!loading);
     }
@@ -192,6 +197,18 @@ public class LoginActivity extends AppCompatActivity {
     private void clearStatus() {
         statusTextView.setText("");
         statusTextView.setVisibility(View.GONE);
+    }
+
+    /**
+     * Opens the registration screen.
+     */
+    private void openRegisterScreen() {
+        Intent intent = new Intent(
+                this,
+                RegisterActivity.class
+        );
+
+        startActivity(intent);
     }
 
     /**

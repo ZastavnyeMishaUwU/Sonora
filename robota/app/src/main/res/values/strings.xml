@@ -15,4 +15,5 @@
     <string name="login_email_required">Email must not be empty.</string>
     <string name="login_password_required">Password must not be empty.</string>
     <string name="login_error">Login failed. Please try again.</string>
+    <string name="register_button">Register</string>
 </resources>
