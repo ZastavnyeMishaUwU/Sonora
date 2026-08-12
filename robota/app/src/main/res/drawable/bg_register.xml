@@ -14,9 +14,6 @@
 
         </shape>
     </item>
-
-
-    <!-- Внутрішня світла область -->
     <item
         android:left="7dp"
         android:top="7dp"

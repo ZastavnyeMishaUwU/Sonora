@@ -6,12 +6,9 @@
     android:viewportWidth="90"
     android:viewportHeight="145">
 
-    <!-- Стебло -->
     <path
         android:fillColor="#82977A"
         android:pathData="M10,140 C18,105 29,70 61,20 L63,21 C39,63 27,105 15,141 Z" />
-
-    <!-- Листочки -->
     <path
         android:fillColor="#A7B99F"
         android:pathData="M24,101 C13,91 12,78 15,68 C27,75 31,88 24,101 Z" />
