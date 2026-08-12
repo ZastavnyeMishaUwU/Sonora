@@ -32,6 +32,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".tracks.FavoritesActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".tracks.TrackDetailsActivity"
             android:exported="false" />
 
