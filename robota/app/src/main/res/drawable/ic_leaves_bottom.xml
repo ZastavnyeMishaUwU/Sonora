@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="95dp"
+    android:height="150dp"
+    android:viewportWidth="95"
+    android:viewportHeight="150">
+
+    <!-- Стебло -->
+    <path
+        android:fillColor="#82977A"
+        android:pathData="M18,145 C32,111 49,75 78,28 L80,30 C60,72 45,111 24,148 Z" />
+
+    <!-- Листочки -->
+    <path
+        android:fillColor="#A6B79D"
+        android:pathData="M30,120 C18,111 16,99 20,89 C31,96 36,108 30,120 Z" />
+
+    <path
+        android:fillColor="#AABD9F"
+        android:pathData="M39,101 C31,87 34,74 42,66 C50,80 48,92 39,101 Z" />
+
+    <path
+        android:fillColor="#9CAF94"
+        android:pathData="M48,83 C56,69 68,66 78,69 C70,81 59,87 48,83 Z" />
+
+    <path
+        android:fillColor="#A6B79D"
+        android:pathData="M55,65 C53,51 59,40 68,34 C71,47 66,58 55,65 Z" />
+
+    <path
+        android:fillColor="#B2C1AA"
+        android:pathData="M65,49 C73,38 83,36 91,40 C85,50 76,54 65,49 Z" />
+
+    <path
+        android:fillColor="#AABD9F"
+        android:pathData="M25,134 C15,128 10,118 12,108 C23,113 29,123 25,134 Z" />
+
+</vector>
