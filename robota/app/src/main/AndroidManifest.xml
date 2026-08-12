@@ -39,6 +39,7 @@
             android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".auth.RegisterActivity"
             android:exported="false" />
