@@ -33,7 +33,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView emailText;
     private Button logoutButton;
 
-    /*
+    /**
      * Initializes the settings screen and its account actions.
      */
     @Override
@@ -61,7 +61,7 @@ public class SettingsActivity extends AppCompatActivity {
         logoutButton.setOnClickListener(view -> logout());
     }
 
-    /*
+    /**
      * Loads the current user's username and email.
      * Missing account data is displayed as unavailable
      * instead of causing the activity to crash.
@@ -81,7 +81,7 @@ public class SettingsActivity extends AppCompatActivity {
             return;
         }
 
-        /*
+        /**
          * Reads the user from the Room database outside
          * the main UI thread.
          */
@@ -91,7 +91,7 @@ public class SettingsActivity extends AppCompatActivity {
             try {
                 user = userDao.getUserById(userId);
             } catch (RuntimeException exception) {
-                /*
+                /**
                  * Missing or corrupted account data should not
                  * crash the settings screen.
                  */
@@ -114,7 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
-    /*
+    /**
      * Clears the current session and navigates the user
      * back to the Login screen.
      */
@@ -126,7 +126,7 @@ public class SettingsActivity extends AppCompatActivity {
                 LoginActivity.class
         );
 
-        /*
+        /**
          * Removes authenticated screens from the back stack
          * so the user cannot return to Settings after logout.
          */
@@ -139,7 +139,7 @@ public class SettingsActivity extends AppCompatActivity {
         finish();
     }
 
-    /*
+    /**
      * Stops the background executor when the activity is destroyed.
      */
     @Override
