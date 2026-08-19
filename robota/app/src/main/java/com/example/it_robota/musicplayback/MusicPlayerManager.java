@@ -20,7 +20,10 @@ public class MusicPlayerManager {
     * Constructor initializing the MediaPlayer
     */
     public MusicPlayerManager() {
-        mediaPlayer = new MediaPlayer();
+        this(new MediaPlayer());
+    }
+    MusicPlayerManager(MediaPlayer mediaPlayer) {
+        this.mediaPlayer = mediaPlayer;
     }
 
     /**
