@@ -13,8 +13,6 @@
         android:paddingTop="28dp"
         android:paddingEnd="24dp"
         android:paddingBottom="30dp">
-
-        <!-- Декоративні листочки зверху і знизу -->
         <ImageView
             android:id="@+id/ivLeavesTop"
             android:layout_width="90dp"
@@ -36,8 +34,6 @@
             android:src="@drawable/ic_leaves_bottom"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- Логотип та заголовок -->
         <ImageView
             android:id="@+id/ivLogo"
             android:layout_width="78dp"
@@ -64,8 +60,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ivLogo" />
-
-        <!-- Поле Email -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardEmail"
             android:layout_width="0dp"
@@ -98,8 +92,6 @@
                 android:textSize="11sp" />
 
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- Поле Password -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardPassword"
             android:layout_width="0dp"
@@ -132,8 +124,6 @@
                 android:textSize="11sp" />
 
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- Кнопка Входу -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogin"
             android:layout_width="0dp"
@@ -150,8 +140,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cardPassword" />
-
-        <!-- Контурна кнопка Переходу на Реєстрацію -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnOpenRegister"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -168,8 +156,6 @@
             app:layout_constraintTop_toBottomOf="@id/btnLogin"
             app:strokeColor="#E1E4DA"
             app:strokeWidth="1dp" />
-
-        <!-- Прогрес бар -->
         <ProgressBar
             android:id="@+id/loginProgress"
             android:layout_width="wrap_content"
@@ -180,8 +166,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnOpenRegister" />
-
-        <!-- Статус тексту -->
         <TextView
             android:id="@+id/tvLoginStatus"
             android:layout_width="0dp"
