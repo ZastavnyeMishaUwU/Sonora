@@ -3,49 +3,31 @@ package com.example.it_robota.musicplayback;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.it_robota.R;
 
-/**
- * Screen used to control playback of the selected track.
- */
+import com.example.it_robota.R;
+import com.example.it_robota.api.JamendoApiClient;
+import com.example.it_robota.models.Track;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class PlayerActivity extends AppCompatActivity {
 
-    /**
-     * Displays the current track title.
-     */
     private TextView trackTitle;
-
-    /**
-     * Displays the current playback state.
-     */
     private TextView playbackStatus;
-
-    /**
-     * Button used to play or pause the current track.
-     */
     private Button playPauseButton;
-
-    /**
-     * Button used to stop playback.
-     */
     private Button stopButton;
 
-    /**
-     * Handles music playback.
-     */
     private MusicPlayerManager musicPlayer;
+    private JamendoApiClient apiClient;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    /**
-     * Temporary track URL for testing.
-     * Later this value should come from the selected track.
-     */
-    private final String currentTrackUrl = "TRACK_URL";
+    private String trackId;
+    private String currentTrackUrl;
 
-    /**
-     * Initializes the player screen.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,64 +35,87 @@ public class PlayerActivity extends AppCompatActivity {
 
         trackTitle = findViewById(R.id.trackTitle);
         playbackStatus = findViewById(R.id.playbackStatus);
-
         playPauseButton = findViewById(R.id.playPauseButton);
         stopButton = findViewById(R.id.stopButton);
 
         musicPlayer = new MusicPlayerManager();
+        apiClient = new JamendoApiClient(this);
+        if (getIntent() != null) {
+            trackId = getIntent().getStringExtra("TRACK_ID");
+        }
 
-        /**
-         * Temporary track title.
-         */
-        trackTitle.setText("Selected Track");
-
-        /**
-         * Handles Play / Pause button clicks.
-         */
+        if (trackId != null && !trackId.isEmpty()) {
+            trackTitle.setText("Loading track " + trackId + "...");
+            loadTrackAndPlay(trackId);
+        } else {
+            trackTitle.setText("Track ID is missing");
+        }
         playPauseButton.setOnClickListener(v -> {
-
             if (musicPlayer.isPlaying()) {
-
                 musicPlayer.pause();
-
                 playbackStatus.setText("Paused");
                 playPauseButton.setText("Play");
-
             } else {
-
                 if ("Paused".contentEquals(playbackStatus.getText())) {
-
                     musicPlayer.resume();
-
-                } else {
-
+                    playbackStatus.setText("Playing");
+                    playPauseButton.setText("Pause");
+                } else if (currentTrackUrl != null && !currentTrackUrl.isEmpty()) {
                     musicPlayer.play(currentTrackUrl);
-
+                    playbackStatus.setText("Playing");
+                    playPauseButton.setText("Pause");
                 }
-
-                playbackStatus.setText("Playing");
-                playPauseButton.setText("Pause");
             }
         });
-
-        /**
-         * Handles Stop button clicks.
-         */
         stopButton.setOnClickListener(v -> {
-
             musicPlayer.stop();
-
             playbackStatus.setText("Stopped");
             playPauseButton.setText("Play");
         });
     }
+    private void loadTrackAndPlay(String id) {
+        executorService.execute(() -> {
+            try {
+                Track track = apiClient.getTrackDetails(id);
 
-    /**
-     * Releases MediaPlayer resources when the activity is destroyed.
-     */
+                runOnUiThread(() -> {
+                    if (track != null) {
+                        // Отримуємо прямий URL на MP3 з вашої моделі Track
+                        currentTrackUrl = track.getAudioUrl();
+
+                        // Формуємо гарну назву (Назва - Виконавець)
+                        String titleText = track.getName() != null ? track.getName() : "Track ID: " + id;
+                        if (track.getArtistName() != null && !track.getArtistName().isEmpty()) {
+                            titleText += " - " + track.getArtistName();
+                        }
+                        trackTitle.setText(titleText);
+
+                        // Запускаємо відтворення
+                        if (currentTrackUrl != null && !currentTrackUrl.isEmpty()) {
+                            musicPlayer.play(currentTrackUrl);
+                            playbackStatus.setText("Playing");
+                            playPauseButton.setText("Pause");
+                        } else {
+                            Toast.makeText(PlayerActivity.this, "Audio URL is empty", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    trackTitle.setText("Error loading track");
+                    Toast.makeText(PlayerActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        musicPlayer.release();
+        if (musicPlayer != null) {
+            musicPlayer.release();
+        }
+        executorService.shutdown();
     }
 }

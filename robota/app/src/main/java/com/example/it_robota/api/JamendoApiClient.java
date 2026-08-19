@@ -228,13 +228,17 @@ public class JamendoApiClient {
 
         String audioUrl = trackObject.optString("audio", "");
         String downloadUrl = trackObject.optString("audiodownload", "");
+        Log.d(TAG, "id"+id);
+        Log.d(TAG, "name"+name);
+        Log.d(TAG, "audio"+audioUrl);
+        Log.d(TAG, "download"+downloadUrl);
 
         String imageUrl = trackObject.optString("image", "");
 
         if (imageUrl.isEmpty()) {
             imageUrl = trackObject.optString("album_image", "");
         }
-
+Log.d(TAG,"url" + trackObject.optString("audio", "empty"));
         String licenseUrl = trackObject.optString("license_ccurl", "");
 
         return new Track(

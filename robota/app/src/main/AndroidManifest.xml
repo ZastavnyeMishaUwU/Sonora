@@ -51,9 +51,8 @@
         <activity
             android:name=".auth.RegisterActivity"
             android:exported="false" />
-
         <activity
-            android:name=".auth.SettingsActivity"
+            android:name=".musicplayback.PlayerActivity"
             android:exported="false" />
 
     </application>
