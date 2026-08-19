@@ -140,7 +140,6 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /*
-    /*
      * Stops the background executor when the activity is destroyed.
      */
     @Override
