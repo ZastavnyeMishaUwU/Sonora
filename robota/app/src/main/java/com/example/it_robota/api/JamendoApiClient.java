@@ -128,7 +128,7 @@ public class JamendoApiClient {
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
                 "&limit=1" +
                 "&audioformat=" + ApiConfig.DEFAULT_AUDIO_FORMAT +
-                "&id=" + encodedTrackId;
+                "&id[]=" + encodedTrackId;
 
         String response = sendGetRequest(requestUrl);
 
