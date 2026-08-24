@@ -28,10 +28,8 @@ public class JamendoApiClient {
 
     private final Context context;
 
-
     /**
-     * Client class responsible for executing HTTP requests to the Jamendo API.
-     * Provides methods to search for tracks, retrieve track details, and parse JSON responses into domain models.
+     * Initializes the client with application context.
      */
     public JamendoApiClient(Context context) {
         this.context = context.getApplicationContext();
@@ -39,9 +37,10 @@ public class JamendoApiClient {
 
     /**
      * Searches for music tracks based on the user's query.
-     * - Validates the query and API client ID.
-     * - Builds the request URL and executes the GET request.
-     * - Parses the JSON response into a list of Track objects.
+     *
+     * @param query search text entered by the user
+     * @return list of found tracks
+     * @throws Exception if API request or parsing fails
      */
     public List<Track> searchTracks(String query) throws Exception {
         List<Track> tracks = new ArrayList<>();
@@ -52,21 +51,17 @@ public class JamendoApiClient {
 
         String clientId = ApiConfig.getClientId(context);
 
-        if (clientId == null || clientId.trim().isEmpty()) {
+        if (clientId.trim().isEmpty()) {
             throw new Exception("Jamendo Client ID is missing. Add it to strings.xml.");
         }
 
-        /**
-         * Safe query encoding to handle spaces and special characters
-         */
+        // Safe query encoding compatible with API level 24+
         String encodedQuery = URLEncoder.encode(
                 query.trim(),
-                StandardCharsets.UTF_8.toString()
+                StandardCharsets.UTF_8.name()
         );
 
-        /**
-         * Construct the query URL with search parameters
-         */
+        // Construct the query URL with search parameters
         String requestUrl = ApiConfig.BASE_URL + "tracks/?" +
                 "client_id=" + clientId +
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
@@ -85,9 +80,7 @@ public class JamendoApiClient {
             return tracks;
         }
 
-        /**
-         * Parse each track object in the results array
-         */
+        // Parse each track object in the results array
         for (int i = 0; i < resultsArray.length(); i++) {
             JSONObject trackObject = resultsArray.optJSONObject(i);
 
@@ -101,8 +94,10 @@ public class JamendoApiClient {
 
     /**
      * Retrieves specific details for a single track by its ID.
-     * - Validates the track ID and API client ID.
-     * - Fetches the single result and returns the parsed Track object.
+     *
+     * @param trackId Jamendo track ID
+     * @return track details
+     * @throws Exception if track details cannot be loaded
      */
     public Track getTrackDetails(String trackId) throws Exception {
         if (trackId == null || trackId.trim().isEmpty()) {
@@ -111,18 +106,17 @@ public class JamendoApiClient {
 
         String clientId = ApiConfig.getClientId(context);
 
-        if (clientId == null || clientId.trim().isEmpty()) {
+        if (clientId.trim().isEmpty()) {
             throw new Exception("Jamendo Client ID is missing. Add it to strings.xml.");
         }
 
+        // Safe track ID encoding compatible with API level 24+
         String encodedTrackId = URLEncoder.encode(
                 trackId.trim(),
-                StandardCharsets.UTF_8.toString()
+                StandardCharsets.UTF_8.name()
         );
 
-        /**
-         * Construct the URL to target a single track ID
-         */
+        // Construct the URL to target a single track ID
         String requestUrl = ApiConfig.BASE_URL + "tracks/?" +
                 "client_id=" + clientId +
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
@@ -152,8 +146,6 @@ public class JamendoApiClient {
 
     /**
      * Sends an HTTP GET request to the specified URL.
-     * - Manages connection timeouts and response streams.
-     * - Handles error responses from the server.
      */
     private String sendGetRequest(String requestUrl) throws Exception {
         Log.d(TAG, "Request URL: " + requestUrl);
@@ -198,7 +190,6 @@ public class JamendoApiClient {
 
     /**
      * Validates the Jamendo API response headers.
-     * - Throws an exception if the status is not successful.
      */
     private void checkApiHeader(JSONObject rootObject) throws Exception {
         JSONObject headersObject = rootObject.optJSONObject("headers");
@@ -253,23 +244,21 @@ public class JamendoApiClient {
     }
 
     /**
-     * Reads input stream contents and converts them to a single String.
+     * Reads input stream contents safely using try-with-resources.
      */
     private String readStream(InputStream inputStream) throws Exception {
         if (inputStream == null) {
             return "";
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         StringBuilder result = new StringBuilder();
 
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            result.append(line);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
         }
-
-        reader.close();
 
         return result.toString();
     }
