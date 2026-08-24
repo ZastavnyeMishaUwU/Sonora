@@ -1,7 +1,10 @@
 package com.example.it_robota.repositories;
 
+import android.content.Context;
+
 import com.example.it_robota.auth.AuthResult;
 import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.UserDao;
 import com.example.it_robota.database.UserEntity;
 
@@ -23,6 +26,18 @@ public class AuthRepository {
 
     private final UserDao userDao;
     private final SessionManager sessionManager;
+
+    /**
+     * Creates a repository using the application's database and session storage.
+     *
+     * @param context application or activity context
+     */
+    public AuthRepository(Context context) {
+        this(
+                AppDatabase.getInstance(context).userDao(),
+                new SessionManager(context)
+        );
+    }
 
     /**
      * Creates a repository backed by persisted users and session storage.
