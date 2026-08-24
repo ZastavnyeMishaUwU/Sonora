@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 /**
  * Handles audio streaming playback and displays detailed track information.
  */
-
 public class PlayerActivity extends AppCompatActivity {
 
     private ImageView trackCoverImage;
