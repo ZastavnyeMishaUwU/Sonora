@@ -21,6 +21,7 @@ import com.example.it_robota.auth.LoginActivity;
 import com.example.it_robota.auth.RegisterActivity;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
+import com.example.it_robota.musicplayback.PlayerActivity;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -85,7 +86,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (detailsButton != null) {
-            detailsButton.setOnClickListener(v -> getTrackDetails());
+            detailsButton.setOnClickListener(v -> {
+                if (trackIdEditText == null) return;
+                String trackId = trackIdEditText.getText().toString().trim();
+
+                if (trackId.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Введіть ID треку", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
+                intent.putExtra("TRACK_ID", trackId);
+                startActivity(intent);
+            });
         }
 
         if (saveFavoriteButton != null) {
@@ -156,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
             logoutAuthButton.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
         }
 
-        // Блок з вмістом пошуку залишаємо завжди видимим для незареєстрованих
         if (authOnlyContentLayout != null) {
             authOnlyContentLayout.setVisibility(View.VISIBLE);
         }
@@ -189,38 +201,6 @@ public class MainActivity extends AppCompatActivity {
                         resultTextView.setText("Error: " + e.getMessage());
                     }
                     Toast.makeText(this, "Search error", Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
-    }
-
-    private void getTrackDetails() {
-        if (trackIdEditText == null) return;
-        String trackId = trackIdEditText.getText().toString().trim();
-
-        if (trackId.isEmpty()) {
-            Toast.makeText(this, "Enter track ID", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (trackImageView != null) trackImageView.setImageDrawable(null);
-        if (resultTextView != null) {
-            resultTextView.setVisibility(View.VISIBLE);
-            resultTextView.setText("Loading track details...");
-        }
-
-        executorService.execute(() -> {
-            try {
-                Track track = jamendoApiClient.getTrackDetails(trackId);
-                mainHandler.post(() -> showTrackDetails(track));
-            } catch (Exception e) {
-                e.printStackTrace();
-                mainHandler.post(() -> {
-                    if (resultTextView != null) {
-                        resultTextView.setVisibility(View.VISIBLE);
-                        resultTextView.setText("Error: " + e.getMessage());
-                    }
-                    Toast.makeText(this, "Details error", Toast.LENGTH_SHORT).show();
                 });
             }
         });
