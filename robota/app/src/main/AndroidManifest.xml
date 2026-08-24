@@ -28,9 +28,6 @@
 
         </activity>
         <activity
-            android:name=".musicplayback.PlayerActivity"
-            android:exported="false" />
-        <activity
             android:name=".auth.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
