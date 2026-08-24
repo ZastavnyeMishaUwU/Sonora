@@ -88,6 +88,7 @@ public class MusicPlayerManager {
             release();
         }
     }
+
     /**
      * Returns current playback position in milliseconds.
      */

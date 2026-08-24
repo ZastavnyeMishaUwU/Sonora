@@ -30,18 +30,29 @@
         <activity
             android:name=".musicplayback.PlayerActivity"
             android:exported="false" />
-
         <activity
             android:name=".auth.LoginActivity"
-            android:exported="true"
+            android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+
+        <activity
+            android:name=".auth.RegisterActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
 
         <activity
             android:name=".tracks.SearchActivity"
             android:exported="false" />
 
         <activity
-            android:name=".tracks.DownloadedTracksActivity"
+            android:name=".tracks.TrackDetailsActivity"
+            android:exported="false" />
+
+
+        <activity
+            android:name=".musicplayback.PlayerActivity"
             android:exported="false" />
 
         <activity
@@ -49,16 +60,13 @@
             android:exported="false" />
 
         <activity
-            android:name=".tracks.TrackDetailsActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".auth.RegisterActivity"
+            android:name=".tracks.DownloadedTracksActivity"
             android:exported="false" />
 
         <activity
             android:name=".auth.SettingsActivity"
             android:exported="false" />
+
 
     </application>
 

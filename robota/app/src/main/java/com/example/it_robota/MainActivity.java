@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         showFavoritesButton.setOnClickListener(v ->
                 Toast.makeText(this, "Show favorites clicked", Toast.LENGTH_SHORT).show()
         );
+
         if (loginAuthButton != null) {
             loginAuthButton.setOnClickListener(v ->
                     startActivity(new Intent(MainActivity.this, LoginActivity.class))

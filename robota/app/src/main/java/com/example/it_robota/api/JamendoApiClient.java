@@ -238,7 +238,7 @@ public class JamendoApiClient {
         if (imageUrl.isEmpty()) {
             imageUrl = trackObject.optString("album_image", "");
         }
-Log.d(TAG,"url" + trackObject.optString("audio", "empty"));
+        Log.d(TAG,"url" + trackObject.optString("audio", "empty"));
         String licenseUrl = trackObject.optString("license_ccurl", "");
 
         return new Track(
