@@ -40,8 +40,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.material)
-
-    // Room Database
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
@@ -50,4 +49,5 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.11.0")
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
+
 }
