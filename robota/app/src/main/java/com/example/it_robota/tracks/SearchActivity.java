@@ -39,11 +39,6 @@ public class SearchActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView stateTextView;
 
-    /**
-     * Initializes the search screen, repository, list and user actions.
-     *
-     * @param savedInstanceState previously saved activity state, or null
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,9 +62,6 @@ public class SearchActivity extends AppCompatActivity {
         refreshCurrentSearchResults();
     }
 
-    /**
-     * Resolves all views used by the search screen.
-     */
     private void bindViews() {
         searchInput = findViewById(R.id.etSearchQuery);
         searchButton = findViewById(R.id.btnSearch);
@@ -78,9 +70,6 @@ public class SearchActivity extends AppCompatActivity {
         stateTextView = findViewById(R.id.tvSearchState);
     }
 
-    /**
-     * Configures the RecyclerView and track adapter.
-     */
     private void setupRecyclerView() {
         trackAdapter = new TrackAdapter(
                 Collections.emptyList(),
@@ -94,9 +83,6 @@ public class SearchActivity extends AppCompatActivity {
         resultsRecyclerView.setAdapter(trackAdapter);
     }
 
-    /**
-     * Configures the search button and keyboard search action.
-     */
     private void setupActions() {
         searchButton.setOnClickListener(view -> performSearch());
 
@@ -112,9 +98,6 @@ public class SearchActivity extends AppCompatActivity {
         );
     }
 
-    /**
-     * Validates the entered query and starts a search request.
-     */
     private void performSearch() {
         String query = searchInput
                 .getText()
@@ -131,8 +114,6 @@ public class SearchActivity extends AppCompatActivity {
 
     /**
      * Searches tracks outside the UI thread.
-     *
-     * @param query search text entered by the user
      */
     private void searchTracks(String query) {
         showLoading();
@@ -166,11 +147,6 @@ public class SearchActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Displays the returned search results or an empty-state message.
-     *
-     * @param tracks tracks returned from the repository
-     */
     private void displayResults(List<Track> tracks) {
         progressBar.setVisibility(View.GONE);
         searchButton.setEnabled(true);
@@ -187,11 +163,6 @@ public class SearchActivity extends AppCompatActivity {
         trackAdapter.setTracks(tracks);
     }
 
-    /**
-     * Opens the details screen for the selected track.
-     *
-     * @param track selected track
-     */
     private void openTrackDetails(Track track) {
         if (track == null
                 || track.getId() == null
@@ -212,9 +183,6 @@ public class SearchActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    /**
-     * Shows the loading state while a search request is running.
-     */
     private void showLoading() {
         searchButton.setEnabled(false);
         progressBar.setVisibility(View.VISIBLE);
@@ -222,9 +190,6 @@ public class SearchActivity extends AppCompatActivity {
         resultsRecyclerView.setVisibility(View.GONE);
     }
 
-    /**
-     * Shows a search error without crashing the application.
-     */
     private void showSearchError() {
         progressBar.setVisibility(View.GONE);
         searchButton.setEnabled(true);
@@ -235,11 +200,6 @@ public class SearchActivity extends AppCompatActivity {
         stateTextView.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Shows a message when results are unavailable or input is invalid.
-     *
-     * @param messageResource string resource displayed to the user
-     */
     private void showEmptyState(int messageResource) {
         progressBar.setVisibility(View.GONE);
         resultsRecyclerView.setVisibility(View.GONE);
@@ -247,9 +207,6 @@ public class SearchActivity extends AppCompatActivity {
         stateTextView.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Releases background-thread resources when the activity is destroyed.
-     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
