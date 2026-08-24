@@ -13,8 +13,6 @@
         android:paddingTop="28dp"
         android:paddingEnd="24dp"
         android:paddingBottom="30dp">
-
-        <!-- Top Decorative Leaf -->
         <ImageView
             android:id="@+id/ivLeavesTop"
             android:layout_width="90dp"
@@ -25,8 +23,6 @@
             android:src="@drawable/ic_leaves_top"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Bottom Decorative Leaf -->
         <ImageView
             android:id="@+id/ivLeavesBottom"
             android:layout_width="95dp"
@@ -37,8 +33,6 @@
             android:src="@drawable/ic_leaves_bottom"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- Screen Header -->
         <TextView
             android:id="@+id/tvPlayerTitle"
             android:layout_width="0dp"
@@ -52,8 +46,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Album Cover Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardCover"
             android:layout_width="0dp"
@@ -77,8 +69,6 @@
                 android:src="@android:drawable/ic_menu_gallery" />
 
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- Track Metadata -->
         <TextView
             android:id="@+id/trackTitle"
             android:layout_width="0dp"
@@ -109,8 +99,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/trackTitle" />
-
-        <!-- Progress Bar & Duration -->
         <SeekBar
             android:id="@+id/seekBar"
             android:layout_width="0dp"
@@ -148,8 +136,6 @@
             android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/seekBar" />
-
-        <!-- Control Buttons -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/playPauseButton"
             android:layout_width="0dp"
