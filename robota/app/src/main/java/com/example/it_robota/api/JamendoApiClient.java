@@ -28,6 +28,9 @@ public class JamendoApiClient {
 
     private final Context context;
 
+    /**
+     * Initializes the client with application context.
+     */
     public JamendoApiClient(Context context) {
         this.context = context.getApplicationContext();
     }
@@ -144,6 +147,9 @@ public class JamendoApiClient {
         return parseTrack(trackObject);
     }
 
+    /**
+     * Sends an HTTP GET request to the specified URL.
+     */
     private String sendGetRequest(String requestUrl) throws Exception {
         Log.d(TAG, "Request URL: " + requestUrl);
 
@@ -185,6 +191,9 @@ public class JamendoApiClient {
         }
     }
 
+    /**
+     * Validates the Jamendo API response headers.
+     */
     private void checkApiHeader(JSONObject rootObject) throws Exception {
         JSONObject headersObject = rootObject.optJSONObject("headers");
 
@@ -201,6 +210,9 @@ public class JamendoApiClient {
         }
     }
 
+    /**
+     * Parses a single JSON track object into the local Track model.
+     */
     private Track parseTrack(JSONObject trackObject) {
         String id = trackObject.optString("id", "");
         String name = trackObject.optString("name", "");
@@ -234,6 +246,9 @@ public class JamendoApiClient {
         );
     }
 
+    /**
+     * Reads input stream contents and converts them to a single String.
+     */
     private String readStream(InputStream inputStream) throws Exception {
         if (inputStream == null) {
             return "";
