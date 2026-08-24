@@ -51,11 +51,15 @@ public class MainActivity extends AppCompatActivity {
     private JamendoApiClient jamendoApiClient;
     private ExecutorService executorService;
     private Handler mainHandler;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        sessionManager = new SessionManager(this);
+
         searchEditText = findViewById(R.id.searchEditText);
         trackIdEditText = findViewById(R.id.trackIdEditText);
         searchButton = findViewById(R.id.searchButton);
@@ -65,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         showFavoritesButton = findViewById(R.id.showFavoritesButton);
         trackImageView = findViewById(R.id.trackImageView);
         resultTextView = findViewById(R.id.resultTextView);
+
         logoutAuthButton = findViewById(R.id.logoutAuthButton);
         authButtonsLayout = findViewById(R.id.authButtonsLayout);
         authOnlyContentLayout = findViewById(R.id.authOnlyContentLayout);
@@ -74,19 +79,36 @@ public class MainActivity extends AppCompatActivity {
         jamendoApiClient = new JamendoApiClient(this);
         executorService = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
-        searchButton.setOnClickListener(v -> searchTracks());
-        detailsButton.setOnClickListener(v -> getTrackDetails());
-        saveFavoriteButton.setOnClickListener(v ->
-                Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show()
-        );
 
-        removeFavoriteButton.setOnClickListener(v ->
-                Toast.makeText(this, "Remove from favorites clicked", Toast.LENGTH_SHORT).show()
-        );
+        if (searchButton != null) {
+            searchButton.setOnClickListener(v -> searchTracks());
+        }
 
-        showFavoritesButton.setOnClickListener(v ->
-                Toast.makeText(this, "Show favorites clicked", Toast.LENGTH_SHORT).show()
-        );
+        if (detailsButton != null) {
+            detailsButton.setOnClickListener(v -> getTrackDetails());
+        }
+
+        if (saveFavoriteButton != null) {
+            saveFavoriteButton.setOnClickListener(v -> {
+                if (!checkLoggedIn()) return;
+                Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        if (removeFavoriteButton != null) {
+            removeFavoriteButton.setOnClickListener(v -> {
+                if (!checkLoggedIn()) return;
+                Toast.makeText(this, "Remove from favorites clicked", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        if (showFavoritesButton != null) {
+            showFavoritesButton.setOnClickListener(v -> {
+                if (!checkLoggedIn()) return;
+                Toast.makeText(this, "Show favorites clicked", Toast.LENGTH_SHORT).show();
+            });
+        }
+
         if (loginAuthButton != null) {
             loginAuthButton.setOnClickListener(v ->
                     startActivity(new Intent(MainActivity.this, LoginActivity.class))
@@ -101,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (logoutAuthButton != null) {
             logoutAuthButton.setOnClickListener(v -> {
-                SessionManager sessionManager = new SessionManager(this);
                 sessionManager.clearSession();
                 updateAuthButtonsVisibility();
                 Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
@@ -115,8 +136,16 @@ public class MainActivity extends AppCompatActivity {
         updateAuthButtonsVisibility();
     }
 
+    private boolean checkLoggedIn() {
+        if (!sessionManager.isLoggedIn()) {
+            Toast.makeText(this, "Please log in to use favorites", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            return false;
+        }
+        return true;
+    }
+
     private void updateAuthButtonsVisibility() {
-        SessionManager sessionManager = new SessionManager(this);
         boolean isLoggedIn = sessionManager.isLoggedIn();
 
         if (authButtonsLayout != null) {
@@ -126,12 +155,15 @@ public class MainActivity extends AppCompatActivity {
         if (logoutAuthButton != null) {
             logoutAuthButton.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
         }
+
+        // Блок з вмістом пошуку залишаємо завжди видимим для незареєстрованих
         if (authOnlyContentLayout != null) {
-            authOnlyContentLayout.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
+            authOnlyContentLayout.setVisibility(View.VISIBLE);
         }
     }
 
     private void searchTracks() {
+        if (searchEditText == null) return;
         String query = searchEditText.getText().toString().trim();
 
         if (query.isEmpty()) {
@@ -140,7 +172,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (trackImageView != null) trackImageView.setImageDrawable(null);
-        if (resultTextView != null) resultTextView.setText("Searching tracks...");
+        if (resultTextView != null) {
+            resultTextView.setVisibility(View.VISIBLE);
+            resultTextView.setText("Searching tracks...");
+        }
 
         executorService.execute(() -> {
             try {
@@ -149,7 +184,10 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 mainHandler.post(() -> {
-                    if (resultTextView != null) resultTextView.setText("Error: " + e.getMessage());
+                    if (resultTextView != null) {
+                        resultTextView.setVisibility(View.VISIBLE);
+                        resultTextView.setText("Error: " + e.getMessage());
+                    }
                     Toast.makeText(this, "Search error", Toast.LENGTH_SHORT).show();
                 });
             }
@@ -157,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getTrackDetails() {
+        if (trackIdEditText == null) return;
         String trackId = trackIdEditText.getText().toString().trim();
 
         if (trackId.isEmpty()) {
@@ -165,7 +204,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (trackImageView != null) trackImageView.setImageDrawable(null);
-        if (resultTextView != null) resultTextView.setText("Loading track details...");
+        if (resultTextView != null) {
+            resultTextView.setVisibility(View.VISIBLE);
+            resultTextView.setText("Loading track details...");
+        }
 
         executorService.execute(() -> {
             try {
@@ -174,7 +216,10 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 mainHandler.post(() -> {
-                    if (resultTextView != null) resultTextView.setText("Error: " + e.getMessage());
+                    if (resultTextView != null) {
+                        resultTextView.setVisibility(View.VISIBLE);
+                        resultTextView.setText("Error: " + e.getMessage());
+                    }
                     Toast.makeText(this, "Details error", Toast.LENGTH_SHORT).show();
                 });
             }
@@ -183,6 +228,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void showSearchResults(List<Track> tracks) {
         if (resultTextView == null) return;
+
+        resultTextView.setVisibility(View.VISIBLE);
 
         if (tracks == null || tracks.isEmpty()) {
             resultTextView.setText("No tracks found.");
@@ -206,6 +253,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void showTrackDetails(Track track) {
         if (resultTextView == null) return;
+
+        resultTextView.setVisibility(View.VISIBLE);
 
         if (track == null) {
             resultTextView.setText("Track details are empty.");

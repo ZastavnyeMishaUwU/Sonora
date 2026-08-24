@@ -149,9 +149,7 @@ public class SearchActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Reloads search data in the background on resume to sync changes to favorites.
-     */
+    // Reloads search data in the background on resume to sync changes to favorites
     private void refreshCurrentSearchResults() {
         String query = searchInput.getText().toString().trim();
         if (!query.isEmpty() && resultsRecyclerView.getVisibility() == View.VISIBLE) {

@@ -15,7 +15,6 @@ import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.repositories.AuthRepository;
-import com.example.it_robota.tracks.SearchActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
