@@ -134,8 +134,6 @@ public class PlayerActivity extends AppCompatActivity {
                         currentTrackUrl = track.getAudioUrl();
                         trackTitle.setText(track.getName() != null ? track.getName() : "Без назви");
                         artistName.setText(track.getArtistName() != null ? track.getArtistName() : "Невідомий виконавець");
-
-                        // Безопасне завантаження обкладинки Glide
                         if (track.getImageUrl() != null && !track.getImageUrl().trim().isEmpty()) {
                             Glide.with(PlayerActivity.this)
                                     .load(track.getImageUrl())
