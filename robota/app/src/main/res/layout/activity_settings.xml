@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -13,6 +14,7 @@
         android:paddingTop="28dp"
         android:paddingEnd="24dp"
         android:paddingBottom="30dp">
+
         <ImageView
             android:id="@+id/ivLeavesTop"
             android:layout_width="90dp"
@@ -34,11 +36,12 @@
             android:src="@drawable/ic_leaves_bottom"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
         <ImageView
             android:id="@+id/ivLogo"
             android:layout_width="78dp"
             android:layout_height="78dp"
-            android:layout_marginTop="35dp"
+            android:layout_marginTop="25dp"
             android:background="@drawable/bg_logo"
             android:padding="20dp"
             android:scaleType="centerInside"
@@ -48,55 +51,93 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tvLoginTitle"
+            android:id="@+id/titleTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="17dp"
             android:gravity="center"
-            android:text="Welcome Back"
+            android:text="Settings"
             android:textColor="#102016"
             android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ivLogo" />
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardEmail"
+
+        <TextView
+            android:id="@+id/subtitleTextView"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="24dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:gravity="center"
+            android:text="Your account information"
+            android:textColor="#536052"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleTextView" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardUsername"
+            android:layout_width="0dp"
+            android:layout_height="58dp"
+            android:layout_marginTop="22dp"
             app:cardBackgroundColor="#FCFCF7"
             app:cardCornerRadius="9dp"
             app:cardElevation="1dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvLoginTitle"
+            app:layout_constraintTop_toBottomOf="@id/subtitleTextView"
             app:strokeColor="#E1E4DA"
             app:strokeWidth="1dp">
 
-            <EditText
-                android:id="@+id/etLoginEmail"
+            <TextView
+                android:id="@+id/usernameText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@null"
-                android:drawableStart="@drawable/ic_person_green"
-                android:drawablePadding="11dp"
-                android:hint="@string/login_email_hint"
-                android:imeOptions="actionNext"
-                android:inputType="textEmailAddress"
-                android:maxLines="1"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Username: unavailable"
                 android:textColor="#273027"
-                android:textColorHint="#687067"
-                android:textSize="11sp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
         </com.google.android.material.card.MaterialCardView>
+
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardPassword"
+            android:id="@+id/cardEmail"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="58dp"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="#FCFCF7"
+            app:cardCornerRadius="9dp"
+            app:cardElevation="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cardUsername"
+            app:strokeColor="#E1E4DA"
+            app:strokeWidth="1dp">
+
+            <TextView
+                android:id="@+id/emailText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Email: unavailable"
+                android:textColor="#273027"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardAppInfo"
+            android:layout_width="0dp"
+            android:layout_height="58dp"
+            android:layout_marginTop="8dp"
             app:cardBackgroundColor="#FCFCF7"
             app:cardCornerRadius="9dp"
             app:cardElevation="1dp"
@@ -106,30 +147,25 @@
             app:strokeColor="#E1E4DA"
             app:strokeWidth="1dp">
 
-            <EditText
-                android:id="@+id/etLoginPassword"
+            <TextView
+                android:id="@+id/appVersionText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@null"
-                android:drawableStart="@drawable/ic_lock_green"
-                android:drawablePadding="11dp"
-                android:hint="@string/login_password_hint"
-                android:imeOptions="actionDone"
-                android:inputType="textPassword"
-                android:maxLines="1"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:textColor="#273027"
-                android:textColorHint="#687067"
-                android:textSize="11sp" />
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="App version 1.0"
+                android:textColor="#536052"
+                android:textSize="12sp" />
 
         </com.google.android.material.card.MaterialCardView>
+
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLogin"
+            android:id="@+id/logoutButton"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_marginTop="20dp"
-            android:text="@string/login_button"
+            android:text="Logout"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
@@ -139,45 +175,7 @@
             app:elevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardPassword" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnOpenRegister"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
-            android:text="@string/register_button"
-            android:textAllCaps="false"
-            android:textColor="#273027"
-            android:textSize="11sp"
-            app:cornerRadius="9dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnLogin"
-            app:strokeColor="#E1E4DA"
-            app:strokeWidth="1dp" />
-        <ProgressBar
-            android:id="@+id/loginProgress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:indeterminateTint="#B53229"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnOpenRegister" />
-        <TextView
-            android:id="@+id/tvLoginStatus"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center"
-            android:textColor="#536052"
-            android:textSize="12sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/loginProgress" />
+            app:layout_constraintTop_toBottomOf="@id/cardAppInfo" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
