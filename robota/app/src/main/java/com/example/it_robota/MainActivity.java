@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("TRACK_ID", trackId);
             startActivity(intent);
         });
+
         saveFavoriteButton.setOnClickListener(v ->
                 Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show()
         );
