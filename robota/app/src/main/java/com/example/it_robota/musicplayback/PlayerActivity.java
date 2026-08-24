@@ -151,8 +151,8 @@ public class PlayerActivity extends AppCompatActivity {
 
                     if (track != null) {
                         currentTrackUrl = track.getAudioUrl();
-                        trackTitle.setText(track.getName() != null ? track.getName() : "Без назви");
-                        artistName.setText(track.getArtistName() != null ? track.getArtistName() : "Невідомий виконавець");
+                        trackTitle.setText(track.getName() != null ? track.getName() : "Untitled");
+                        artistName.setText(track.getArtistName() != null ? track.getArtistName() : "Unknown artist");
                         if (track.getImageUrl() != null && !track.getImageUrl().trim().isEmpty()) {
                             Glide.with(PlayerActivity.this)
                                     .load(track.getImageUrl())
@@ -166,7 +166,7 @@ public class PlayerActivity extends AppCompatActivity {
                             playPauseButton.setText("Pause");
                             handler.post(updateProgressRunnable);
                         } else {
-                            Toast.makeText(PlayerActivity.this, "Помилка: відсутнє посилання на аудіо", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(PlayerActivity.this, "Error: Missing audio link", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         trackTitle.setText("Track not found");
