@@ -55,6 +55,9 @@
         <activity
             android:name=".tracks.DownloadedTracksActivity"
             android:exported="false" />
+        <activity
+            android:name=".auth.SettingsActivity"
+            android:exported="false" />
 
     </application>
 
