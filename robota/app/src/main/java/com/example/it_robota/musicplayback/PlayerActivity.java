@@ -20,6 +20,10 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Handles audio streaming playback and displays detailed track information.
+ */
+
 public class PlayerActivity extends AppCompatActivity {
 
     private ImageView trackCoverImage;
@@ -38,6 +42,11 @@ public class PlayerActivity extends AppCompatActivity {
     private String currentTrackUrl;
     private boolean isUserTracking = false;
 
+    /**
+     * Initializes components, view bindings, and starts fetching track details.
+     *
+     * @param savedInstanceState previously saved activity state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,17 +63,20 @@ public class PlayerActivity extends AppCompatActivity {
         }
 
         if (trackId != null && !trackId.trim().isEmpty()) {
-            trackTitle.setText("Завантаження...");
+            trackTitle.setText("Loading....");
             loadTrackAndPlay(trackId.trim());
         } else {
-            trackTitle.setText("ID треку відсутній");
-            Toast.makeText(this, "Помилка: не передано ID треку", Toast.LENGTH_SHORT).show();
+            trackTitle.setText("Track ID is missing");
+            Toast.makeText(this, "Error: track ID not provided", Toast.LENGTH_SHORT).show();
         }
 
         setupListeners();
         setupProgressUpdater();
     }
 
+    /**
+     * Finds and initializes view references from the layout.
+     */
     private void initViews() {
         trackCoverImage = findViewById(R.id.trackCoverImage);
         trackTitle = findViewById(R.id.trackTitle);
@@ -76,6 +88,9 @@ public class PlayerActivity extends AppCompatActivity {
         stopButton = findViewById(R.id.stopButton);
     }
 
+    /**
+     * Sets up click listeners for player controls and seek bar interactions.
+     */
     private void setupListeners() {
         playPauseButton.setOnClickListener(v -> {
             if (musicPlayer.isPlaying()) {
@@ -89,7 +104,7 @@ public class PlayerActivity extends AppCompatActivity {
                     }
                     playPauseButton.setText("Pause");
                 } else {
-                    Toast.makeText(this, "Аудіо-посилання недоступне", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Audio link unavailable", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -122,6 +137,11 @@ public class PlayerActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Fetches track metadata from API and starts playback off the main thread.
+     *
+     * @param id target track identifier
+     */
     private void loadTrackAndPlay(String id) {
         executorService.execute(() -> {
             try {
@@ -150,21 +170,24 @@ public class PlayerActivity extends AppCompatActivity {
                             Toast.makeText(PlayerActivity.this, "Помилка: відсутнє посилання на аудіо", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        trackTitle.setText("Трек не знайдено");
+                        trackTitle.setText("Track not found");
                     }
                 });
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
                     if (!isFinishing() && !isDestroyed()) {
-                        trackTitle.setText("Помилка завантаження");
-                        Toast.makeText(PlayerActivity.this, "Помилка мережі/API: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        trackTitle.setText("Loading error");
+                        Toast.makeText(PlayerActivity.this, "Network/API error " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
             }
         });
     }
 
+    /**
+     * Initializes the periodic progress bar update task.
+     */
     private void setupProgressUpdater() {
         updateProgressRunnable = new Runnable() {
             @Override
@@ -185,12 +208,21 @@ public class PlayerActivity extends AppCompatActivity {
         };
     }
 
+    /**
+     * Formats milliseconds into mm:ss string representation.
+     *
+     * @param milliseconds time duration in milliseconds
+     * @return formatted time string
+     */
     private String formatTime(int milliseconds) {
         int seconds = (milliseconds / 1000) % 60;
         int minutes = (milliseconds / (1000 * 60)) % 60;
         return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
     }
 
+    /**
+     * Cleans up player resources, handlers, and background executors on activity destruction.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();

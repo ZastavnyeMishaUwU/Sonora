@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="35dp"
             android:gravity="center"
-            android:text="ЗАРАЗ ГРАЄ"
+            android:text="NOW PLAYING"
             android:textColor="#102016"
             android:textSize="20sp"
             android:textStyle="bold"
