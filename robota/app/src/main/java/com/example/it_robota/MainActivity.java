@@ -21,6 +21,8 @@ import com.example.it_robota.auth.LoginActivity;
 import com.example.it_robota.auth.RegisterActivity;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
+import com.example.it_robota.musicplayback.PlayerActivity;
+import com.example.it_robota.tracks.TrackDetailsActivity;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -75,7 +77,20 @@ public class MainActivity extends AppCompatActivity {
         executorService = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
         searchButton.setOnClickListener(v -> searchTracks());
-        detailsButton.setOnClickListener(v -> getTrackDetails());
+
+        detailsButton.setOnClickListener(v -> {
+            String trackId = trackIdEditText.getText().toString().trim();
+
+            if (trackId.isEmpty()) {
+                Toast.makeText(MainActivity.this, "Введіть ID треку", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
+            intent.putExtra("TRACK_ID", trackId);
+            startActivity(intent);
+        });
+
         saveFavoriteButton.setOnClickListener(v ->
                 Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show()
         );
@@ -87,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         showFavoritesButton.setOnClickListener(v ->
                 Toast.makeText(this, "Show favorites clicked", Toast.LENGTH_SHORT).show()
         );
+
         if (loginAuthButton != null) {
             loginAuthButton.setOnClickListener(v ->
                     startActivity(new Intent(MainActivity.this, LoginActivity.class))

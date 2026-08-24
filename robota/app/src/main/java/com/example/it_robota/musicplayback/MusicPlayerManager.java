@@ -90,6 +90,47 @@ public class MusicPlayerManager {
     }
 
     /**
+     * Returns current playback position in milliseconds.
+     */
+    public int getCurrentPosition() {
+        if (mediaPlayer != null) {
+            try {
+                return mediaPlayer.getCurrentPosition();
+            } catch (IllegalStateException e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Returns total track duration in milliseconds.
+     */
+    public int getDuration() {
+        if (mediaPlayer != null) {
+            try {
+                return mediaPlayer.getDuration();
+            } catch (IllegalStateException e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Seeks to specified time position in milliseconds.
+     */
+    public void seekTo(int msec) {
+        if (mediaPlayer != null) {
+            try {
+                mediaPlayer.seekTo(msec);
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * Checks if audio is currently playing
      */
     public boolean isPlaying() {
