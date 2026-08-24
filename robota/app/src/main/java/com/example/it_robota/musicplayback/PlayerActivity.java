@@ -29,7 +29,7 @@ public class PlayerActivity extends AppCompatActivity {
 
     private MusicPlayerManager musicPlayer;
     private JamendoApiClient apiClient;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private ExecutorService executorService;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateProgressRunnable;
@@ -47,14 +47,18 @@ public class PlayerActivity extends AppCompatActivity {
 
         musicPlayer = new MusicPlayerManager();
         apiClient = new JamendoApiClient(this);
+        executorService = Executors.newSingleThreadExecutor();
 
         if (getIntent() != null) {
             trackId = getIntent().getStringExtra("TRACK_ID");
         }
 
-        if (trackId != null && !trackId.isEmpty()) {
-            trackTitle.setText("Loading...");
-            loadTrackAndPlay(trackId);
+        if (trackId != null && !trackId.trim().isEmpty()) {
+            trackTitle.setText("Завантаження...");
+            loadTrackAndPlay(trackId.trim());
+        } else {
+            trackTitle.setText("ID треку відсутній");
+            Toast.makeText(this, "Помилка: не передано ID треку", Toast.LENGTH_SHORT).show();
         }
 
         setupListeners();
@@ -78,11 +82,15 @@ public class PlayerActivity extends AppCompatActivity {
                 musicPlayer.pause();
                 playPauseButton.setText("Play");
             } else {
-                musicPlayer.resume();
-                if (!musicPlayer.isPlaying() && currentTrackUrl != null) {
-                    musicPlayer.play(currentTrackUrl);
+                if (currentTrackUrl != null && !currentTrackUrl.isEmpty()) {
+                    musicPlayer.resume();
+                    if (!musicPlayer.isPlaying()) {
+                        musicPlayer.play(currentTrackUrl);
+                    }
+                    playPauseButton.setText("Pause");
+                } else {
+                    Toast.makeText(this, "Аудіо-посилання недоступне", Toast.LENGTH_SHORT).show();
                 }
-                playPauseButton.setText("Pause");
             }
         });
 
@@ -120,13 +128,15 @@ public class PlayerActivity extends AppCompatActivity {
                 Track track = apiClient.getTrackDetails(id);
 
                 runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+
                     if (track != null) {
                         currentTrackUrl = track.getAudioUrl();
-                        trackTitle.setText(track.getName());
-                        artistName.setText(track.getArtistName());
+                        trackTitle.setText(track.getName() != null ? track.getName() : "Без назви");
+                        artistName.setText(track.getArtistName() != null ? track.getArtistName() : "Невідомий виконавець");
 
-                        // Завантаження обкладинки через Glide
-                        if (track.getImageUrl() != null && !track.getImageUrl().isEmpty()) {
+                        // Безопасне завантаження обкладинки Glide
+                        if (track.getImageUrl() != null && !track.getImageUrl().trim().isEmpty()) {
                             Glide.with(PlayerActivity.this)
                                     .load(track.getImageUrl())
                                     .placeholder(android.R.drawable.ic_menu_gallery)
@@ -134,21 +144,24 @@ public class PlayerActivity extends AppCompatActivity {
                                     .into(trackCoverImage);
                         }
 
-                        if (currentTrackUrl != null && !currentTrackUrl.isEmpty()) {
+                        if (currentTrackUrl != null && !currentTrackUrl.trim().isEmpty()) {
                             musicPlayer.play(currentTrackUrl);
                             playPauseButton.setText("Pause");
                             handler.post(updateProgressRunnable);
                         } else {
-                            Toast.makeText(PlayerActivity.this, "Audio URL is empty", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(PlayerActivity.this, "Помилка: відсутнє посилання на аудіо", Toast.LENGTH_SHORT).show();
                         }
+                    } else {
+                        trackTitle.setText("Трек не знайдено");
                     }
                 });
             } catch (Exception e) {
-                e.printStackTrace(); // Друкуємо детальну помилку в Logcat
+                e.printStackTrace();
                 runOnUiThread(() -> {
-                    trackTitle.setText("Error loading track");
-                    // Виводимо точний текст помилки на екран
-                    Toast.makeText(PlayerActivity.this, "Error: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    if (!isFinishing() && !isDestroyed()) {
+                        trackTitle.setText("Помилка завантаження");
+                        Toast.makeText(PlayerActivity.this, "Помилка мережі/API: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
                 });
             }
         });
@@ -187,6 +200,8 @@ public class PlayerActivity extends AppCompatActivity {
         if (musicPlayer != null) {
             musicPlayer.release();
         }
-        executorService.shutdown();
+        if (executorService != null) {
+            executorService.shutdownNow();
+        }
     }
 }
