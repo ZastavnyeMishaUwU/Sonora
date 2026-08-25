@@ -57,7 +57,12 @@ public class SessionManager {
      * @return true when a user is logged in
      */
     public boolean isLoggedIn() {
-        return sharedPreferences.getBoolean(KEY_LOGGED_IN, false);
+        try {
+            return sharedPreferences.getBoolean(KEY_LOGGED_IN, false);
+        } catch (ClassCastException exception) {
+            clearSession();
+            return false;
+        }
     }
 
     /**
