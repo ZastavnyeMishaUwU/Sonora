@@ -17,9 +17,9 @@
         android:theme="@style/Theme.ITrobota">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".auth.AppEntryActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:noHistory="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,6 +27,12 @@
             </intent-filter>
 
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".auth.LoginActivity"
             android:exported="false"

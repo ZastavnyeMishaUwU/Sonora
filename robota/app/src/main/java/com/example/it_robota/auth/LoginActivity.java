@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.repositories.AuthRepository;
@@ -216,7 +215,7 @@ public class LoginActivity extends AppCompatActivity {
      * Opens the main track search screen and removes login from history.
      */
     private void openSearchScreen() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, SearchActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
