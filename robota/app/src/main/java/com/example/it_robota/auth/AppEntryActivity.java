@@ -5,14 +5,14 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.it_robota.MainActivity;
 import com.example.it_robota.repositories.AuthRepository;
-import com.example.it_robota.tracks.SearchActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Routes application launches to authentication or track search based on session state.
+ * Routes application launches to authentication or the home screen based on session state.
  */
 public class AppEntryActivity extends AppCompatActivity {
 
@@ -43,23 +43,23 @@ public class AppEntryActivity extends AppCompatActivity {
                 userLoggedIn = false;
             }
 
-            boolean destinationIsSearch = userLoggedIn;
-            runOnUiThread(() -> openDestination(destinationIsSearch));
+            boolean destinationIsHome = userLoggedIn;
+            runOnUiThread(() -> openDestination(destinationIsHome));
         });
     }
 
     /**
-     * Opens Search for an authenticated user or Login for all other session states.
+     * Opens Home for an authenticated user or Login for all other session states.
      *
-     * @param destinationIsSearch true when the active session should open Search
+     * @param destinationIsHome true when the active session should open Home
      */
-    private void openDestination(boolean destinationIsSearch) {
+    private void openDestination(boolean destinationIsHome) {
         if (isFinishing() || isDestroyed()) {
             return;
         }
 
-        Class<?> destination = destinationIsSearch
-                ? SearchActivity.class
+        Class<?> destination = destinationIsHome
+                ? MainActivity.class
                 : LoginActivity.class;
         Intent intent = new Intent(this, destination);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
