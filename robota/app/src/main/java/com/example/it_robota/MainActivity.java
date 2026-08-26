@@ -210,10 +210,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (Track track : tracks) {
             result.append("ID: ").append(track.getId()).append("\n");
-            result.append("Title: ").append(track.getName()).append("\n");
-            result.append("Artist: ").append(track.getArtistName()).append("\n");
-            result.append("Album: ").append(track.getAlbumName()).append("\n");
-            result.append("Duration: ").append(track.getDuration()).append(" sec\n\n");
+            result.append("Title: ").append(track.getName()).append("\n\n");
         }
 
         result.append("Copy any ID and paste it into the details field.");
