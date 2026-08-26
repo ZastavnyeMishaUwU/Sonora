@@ -13,7 +13,6 @@
         android:paddingTop="28dp"
         android:paddingEnd="24dp"
         android:paddingBottom="30dp">
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/logoutAuthButton"
             style="@style/Widget.Material3.Button.TextButton"
@@ -219,7 +218,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/detailsButton">
+            app:layout_constraintTop_toBottomOf="@id/searchButton">
 
             <TextView
                 android:layout_width="match_parent"
@@ -291,6 +290,7 @@
 
             </LinearLayout>
 
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveFavoriteButton"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -336,38 +336,14 @@
                 app:cornerRadius="12dp"
                 app:strokeColor="#D9DDD2"
                 app:strokeWidth="1dp" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardImageContainer"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="20dp"
-                app:cardBackgroundColor="#FCFCF7"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="2dp"
-                app:strokeColor="#E1E4DA"
-                app:strokeWidth="1dp">
-
-                <ImageView
-                    android:id="@+id/trackImageView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:adjustViewBounds="true"
-                    android:contentDescription="Track image"
-                    android:scaleType="centerCrop" />
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                android:id="@+id/resultTextView"
+            <ListView
+                android:id="@+id/tracksListView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:gravity="center"
-                android:lineSpacingExtra="2dp"
-                android:text="Result will appear here"
-                android:textColor="#536052"
-                android:textSize="12sp" />
+                android:divider="#E1E4DA"
+                android:dividerHeight="1dp"
+                android:nestedScrollingEnabled="true" />
 
         </LinearLayout>
 

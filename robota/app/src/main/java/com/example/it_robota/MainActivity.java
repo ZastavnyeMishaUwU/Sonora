@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,11 +21,10 @@ import com.example.it_robota.api.JamendoApiClient;
 import com.example.it_robota.auth.LoginActivity;
 import com.example.it_robota.auth.RegisterActivity;
 import com.example.it_robota.auth.SessionManager;
-import com.example.it_robota.auth.SettingsActivity;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
 import com.example.it_robota.tracks.FavoritesActivity;
-import com.example.it_robota.tracks.SearchActivity;
+import com.example.it_robota.tracks.TrackDetailsActivity;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -35,25 +35,19 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity {
 
     private EditText searchEditText;
-    private EditText trackIdEditText;
+
 
     private Button searchButton;
-    private Button detailsButton;
     private Button saveFavoriteButton;
     private Button removeFavoriteButton;
     private Button showFavoritesButton;
 
-    private Button profileNavButton;
-    private Button searchNavButton;
-    private Button favoritesNavButton;
-
     private ImageView trackImageView;
-    private TextView resultTextView;
+    private ListView tracksListView;
 
     private Button loginAuthButton;
     private Button registerAuthButton;
     private Button logoutAuthButton;
-
     private LinearLayout authButtonsLayout;
     private LinearLayout authOnlyContentLayout;
 
@@ -67,20 +61,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         searchEditText = findViewById(R.id.searchEditText);
-        trackIdEditText = findViewById(R.id.trackIdEditText);
-
         searchButton = findViewById(R.id.searchButton);
-        detailsButton = findViewById(R.id.detailsButton);
         saveFavoriteButton = findViewById(R.id.saveFavoriteButton);
         removeFavoriteButton = findViewById(R.id.removeFavoriteButton);
         showFavoritesButton = findViewById(R.id.showFavoritesButton);
-
-        profileNavButton = findViewById(R.id.profileNavButton);
-        searchNavButton = findViewById(R.id.searchNavButton);
-        favoritesNavButton = findViewById(R.id.favoritesNavButton);
-
-        trackImageView = findViewById(R.id.trackImageView);
-        resultTextView = findViewById(R.id.resultTextView);
+        tracksListView = findViewById(R.id.tracksListView);
 
         logoutAuthButton = findViewById(R.id.logoutAuthButton);
         authButtonsLayout = findViewById(R.id.authButtonsLayout);
@@ -93,36 +78,9 @@ public class MainActivity extends AppCompatActivity {
         executorService = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
 
-        searchButton.setOnClickListener(v -> searchTracks());
-
-        detailsButton.setOnClickListener(v -> {
-            String trackId = trackIdEditText
-                    .getText()
-                    .toString()
-                    .trim();
-
-            if (trackId.isEmpty()) {
-                Toast.makeText(
-                        MainActivity.this,
-                        "Введіть ID треку",
-                        Toast.LENGTH_SHORT
-                ).show();
-
-                return;
-            }
-
-            Intent intent = new Intent(
-                    MainActivity.this,
-                    PlayerActivity.class
-            );
-
-            intent.putExtra(
-                    PlayerActivity.EXTRA_TRACK_ID,
-                    trackId
-            );
-
-            startActivity(intent);
-        });
+        searchButton.setOnClickListener(
+                v -> searchTracks()
+        );
 
         saveFavoriteButton.setOnClickListener(v ->
                 Toast.makeText(
@@ -140,41 +98,14 @@ public class MainActivity extends AppCompatActivity {
                 ).show()
         );
 
-        showFavoritesButton.setOnClickListener(v ->
-                startActivity(
-                        new Intent(
-                                MainActivity.this,
-                                FavoritesActivity.class
-                        )
-                )
-        );
+        showFavoritesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                    MainActivity.this,
+                    FavoritesActivity.class
+            );
 
-        profileNavButton.setOnClickListener(v ->
-                startActivity(
-                        new Intent(
-                                MainActivity.this,
-                                SettingsActivity.class
-                        )
-                )
-        );
-
-        searchNavButton.setOnClickListener(v ->
-                startActivity(
-                        new Intent(
-                                MainActivity.this,
-                                SearchActivity.class
-                        )
-                )
-        );
-
-        favoritesNavButton.setOnClickListener(v ->
-                startActivity(
-                        new Intent(
-                                MainActivity.this,
-                                FavoritesActivity.class
-                        )
-                )
-        );
+            startActivity(intent);
+        });
 
         if (loginAuthButton != null) {
             loginAuthButton.setOnClickListener(v ->
@@ -219,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         updateAuthButtonsVisibility();
     }
 
@@ -274,10 +206,8 @@ public class MainActivity extends AppCompatActivity {
             trackImageView.setImageDrawable(null);
         }
 
-        if (resultTextView != null) {
-            resultTextView.setText(
-                    "Searching tracks..."
-            );
+        if (tracksListView != null) {
+            tracksListView.setAdapter(null);
         }
 
         executorService.execute(() -> {
@@ -292,176 +222,71 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
 
-                mainHandler.post(() -> {
-                    if (resultTextView != null) {
-                        resultTextView.setText(
-                                "Error: " + e.getMessage()
-                        );
-                    }
-
-                    Toast.makeText(
-                            this,
-                            "Search error",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                });
+                mainHandler.post(() ->
+                        Toast.makeText(
+                                this,
+                                "Error: " + e.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show()
+                );
             }
         });
     }
 
-    private void getTrackDetails() {
-        String trackId = trackIdEditText
-                .getText()
-                .toString()
-                .trim();
+    private void showSearchResults(List<Track> tracks) {
+        if (tracksListView == null) {
+            return;
+        }
 
-        if (trackId.isEmpty()) {
+        if (tracks == null || tracks.isEmpty()) {
             Toast.makeText(
                     this,
-                    "Enter track ID",
+                    "No tracks found",
                     Toast.LENGTH_SHORT
             ).show();
 
             return;
         }
 
-        if (trackImageView != null) {
-            trackImageView.setImageDrawable(null);
-        }
-
-        if (resultTextView != null) {
-            resultTextView.setText(
-                    "Loading track details..."
-            );
-        }
-
-        executorService.execute(() -> {
-            try {
-                Track track =
-                        jamendoApiClient.getTrackDetails(
-                                trackId
-                        );
-
-                mainHandler.post(
-                        () -> showTrackDetails(track)
-                );
-
-            } catch (Exception e) {
-                e.printStackTrace();
-
-                mainHandler.post(() -> {
-                    if (resultTextView != null) {
-                        resultTextView.setText(
-                                "Error: " + e.getMessage()
-                        );
-                    }
-
-                    Toast.makeText(
-                            this,
-                            "Details error",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                });
-            }
-        });
-    }
-
-    private void showSearchResults(List<Track> tracks) {
-        if (resultTextView == null) {
-            return;
-        }
-
-        if (tracks == null || tracks.isEmpty()) {
-            resultTextView.setText(
-                    "No tracks found."
-            );
-
-            return;
-        }
-
-        StringBuilder result =
-                new StringBuilder();
-
-        result.append("Found tracks: ")
-                .append(tracks.size())
-                .append("\n\n");
+        java.util.List<String> displayItems =
+                new java.util.ArrayList<>();
 
         for (Track track : tracks) {
-            result.append("ID: ")
-                    .append(track.getId())
-                    .append("\n");
-
-            result.append("Title: ")
-                    .append(track.getName())
-                    .append("\n");
-
-            result.append("Artist: ")
-                    .append(track.getArtistName())
-                    .append("\n");
-
-            result.append("Album: ")
-                    .append(track.getAlbumName())
-                    .append("\n");
-
-            result.append("Duration: ")
-                    .append(track.getDuration())
-                    .append(" sec\n\n");
-        }
-
-        result.append(
-                "Copy any ID and paste it into the details field."
-        );
-
-        resultTextView.setText(
-                result.toString()
-        );
-    }
-
-    private void showTrackDetails(Track track) {
-        if (resultTextView == null) {
-            return;
-        }
-
-        if (track == null) {
-            resultTextView.setText(
-                    "Track details are empty."
+            displayItems.add(
+                    track.getName()
+                            + " — "
+                            + track.getArtistName()
             );
-
-            return;
         }
 
-        boolean isDownloaded =
-                track.getLocalFilePath() != null
-                        && !track.getLocalFilePath().isEmpty();
+        android.widget.ArrayAdapter<String> adapter =
+                new android.widget.ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        displayItems
+                );
 
-        loadTrackImage(
-                track.getImageUrl()
+        tracksListView.setAdapter(adapter);
+
+        tracksListView.setOnItemClickListener(
+                (parent, view, position, id) -> {
+
+                    Track selectedTrack =
+                            tracks.get(position);
+
+                    Intent intent = new Intent(
+                            MainActivity.this,
+                            PlayerActivity.class
+                    );
+
+                    intent.putExtra(
+                            "TRACK_ID",
+                            selectedTrack.getId()
+                    );
+
+                    startActivity(intent);
+                }
         );
-
-        String result =
-                "Track Details\n\n"
-                        + "ID: "
-                        + track.getId()
-                        + "\n"
-                        + "Title: "
-                        + track.getName()
-                        + "\n"
-                        + "Artist: "
-                        + track.getArtistName()
-                        + "\n"
-                        + "Album: "
-                        + track.getAlbumName()
-                        + "\n"
-                        + "Duration: "
-                        + track.getDuration()
-                        + " sec\n\n"
-                        + "Favorite: "
-                        + track.isFavorite()
-                        + "\n"
-                        + "Downloaded: "
-                        + isDownloaded;
-
-        resultTextView.setText(result);
     }
 
     private void loadTrackImage(String imageUrl) {
@@ -472,8 +297,7 @@ public class MainActivity extends AppCompatActivity {
 
         executorService.execute(() -> {
             try {
-                URL url =
-                        new URL(imageUrl);
+                URL url = new URL(imageUrl);
 
                 InputStream inputStream =
                         url.openStream();
