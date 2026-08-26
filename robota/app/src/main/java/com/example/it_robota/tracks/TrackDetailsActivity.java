@@ -42,6 +42,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
     private TextView downloadedStatusTextView;
     private Button favoriteButton;
     private Button downloadButton;
+    private boolean favoriteUpdateInProgress;
 
     /**
      * Initializes dependencies, view bindings, actions and track loading.
@@ -139,6 +140,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 ? R.string.track_details_favorite_yes : R.string.track_details_favorite_no);
         favoriteButton.setText(currentTrack.isFavorite()
                 ? R.string.track_details_remove_favorite : R.string.track_details_add_favorite);
+        favoriteButton.setEnabled(!favoriteUpdateInProgress);
 
         boolean downloaded = currentTrack.getLocalFilePath() != null
                 && !currentTrack.getLocalFilePath().trim().isEmpty();
@@ -172,21 +174,40 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * Adds or removes the current track from favorites and updates the screen.
      */
     private void toggleFavorite() {
-        if (currentTrack == null) {
+        if (currentTrack == null || favoriteUpdateInProgress) {
             return;
         }
-        try {
-            if (currentTrack.isFavorite()) {
-                trackRepository.removeFavorite(currentTrack.getId());
-                currentTrack.setFavorite(false);
-            } else {
-                trackRepository.saveFavorite(currentTrack);
-                currentTrack.setFavorite(true);
+
+        boolean removeFavorite = currentTrack.isFavorite();
+        favoriteUpdateInProgress = true;
+        favoriteButton.setEnabled(false);
+        executorService.execute(() -> {
+            try {
+                if (removeFavorite) {
+                    trackRepository.removeFavorite(currentTrack.getId());
+                } else {
+                    trackRepository.saveFavorite(currentTrack);
+                }
+                runOnUiThread(() -> {
+                    currentTrack.setFavorite(!removeFavorite);
+                    favoriteUpdateInProgress = false;
+                    updateStatuses();
+                    Toast.makeText(
+                            this,
+                            removeFavorite
+                                    ? R.string.track_details_favorite_removed
+                                    : R.string.track_details_favorite_saved,
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
+            } catch (Exception exception) {
+                runOnUiThread(() -> {
+                    favoriteUpdateInProgress = false;
+                    updateStatuses();
+                    Toast.makeText(this, R.string.track_details_favorite_error, Toast.LENGTH_SHORT).show();
+                });
             }
-            updateStatuses();
-        } catch (Exception exception) {
-            Toast.makeText(this, R.string.track_details_favorite_error, Toast.LENGTH_SHORT).show();
-        }
+        });
     }
 
     /**

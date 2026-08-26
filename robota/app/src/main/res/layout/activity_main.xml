@@ -177,40 +177,12 @@
                 app:elevation="2dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/saveFavoriteButton"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="7dp"
-                android:text="Save Last Track To Favorites"
-                android:textAllCaps="false"
-                android:textColor="#273027"
-                android:textSize="11sp"
-                app:cornerRadius="9dp"
-                app:strokeColor="#E1E4DA"
-                app:strokeWidth="1dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/removeFavoriteButton"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="7dp"
-                android:text="Remove Current Track From Favorites"
-                android:textAllCaps="false"
-                android:textColor="#273027"
-                android:textSize="11sp"
-                app:cornerRadius="9dp"
-                app:strokeColor="#E1E4DA"
-                app:strokeWidth="1dp" />
-
-            <com.google.android.material.button.MaterialButton
                 android:id="@+id/showFavoritesButton"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="7dp"
-                android:text="Show Favorite Tracks"
+                android:text="@string/favorites_title"
                 android:textAllCaps="false"
                 android:textColor="#273027"
                 android:textSize="11sp"

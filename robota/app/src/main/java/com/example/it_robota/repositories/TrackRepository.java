@@ -1,31 +1,27 @@
 package com.example.it_robota.repositories;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
 import com.example.it_robota.api.JamendoApiClient;
 import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.database.AppDatabase;
+import com.example.it_robota.database.FavoriteTrackDao;
+import com.example.it_robota.database.FavoriteTrackEntity;
+import com.example.it_robota.database.TrackEntity;
 import com.example.it_robota.models.Track;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
- * Repository for track-related logic.
- * Connects UI logic with Jamendo API and temporary local favorite storage.
+ * Repository for track search, details and user-specific favorite storage.
  */
 public class TrackRepository {
 
-    private static final String PREF_NAME = "track_repository_prefs";
-    private static final String FAVORITE_IDS_KEY = "favorite_track_ids";
-    private static final String FAVORITE_TRACK_PREFIX = "favorite_track_";
+    private static final long NO_USER_ID = -1L;
 
     private final JamendoApiClient jamendoApiClient;
-    private final SharedPreferences sharedPreferences;
+    private final FavoriteTrackDao favoriteTrackDao;
     private final SessionManager sessionManager;
 
     /**
@@ -34,9 +30,10 @@ public class TrackRepository {
      * @param context application or activity context
      */
     public TrackRepository(Context context) {
-        this.jamendoApiClient = new JamendoApiClient(context);
-        this.sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        this.sessionManager = new SessionManager(context);
+        Context applicationContext = context.getApplicationContext();
+        jamendoApiClient = new JamendoApiClient(applicationContext);
+        favoriteTrackDao = AppDatabase.getInstance(applicationContext).favoriteTrackDao();
+        sessionManager = new SessionManager(applicationContext);
     }
 
     /**
@@ -59,200 +56,148 @@ public class TrackRepository {
      */
     public Track getTrackDetails(String trackId) throws Exception {
         Track track = jamendoApiClient.getTrackDetails(trackId);
-
         if (track != null) {
             track.setFavorite(isTrackFavorite(track.getId()));
         }
-
         return track;
     }
 
     /**
-     * Returns locally saved favorite tracks.
+     * Returns favorite tracks saved for the active account.
      *
-     * @return list of favorite tracks
+     * @return current user's favorite tracks
      */
     public List<Track> getSavedTracks() {
+        long userId = getCurrentUserId();
         List<Track> tracks = new ArrayList<>();
-
-        if (getCurrentUserId() == -1L) {
+        if (userId == NO_USER_ID) {
             return tracks;
         }
 
-        Set<String> favoriteIds = getFavoriteIds();
-
-        for (String trackId : favoriteIds) {
-            String json = sharedPreferences.getString(getFavoriteTrackKey(trackId), null);
-
-            if (json == null || json.trim().isEmpty()) {
-                continue;
-            }
-
-            try {
-                Track track = jsonToTrack(json);
-                tracks.add(track);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        for (TrackEntity entity : favoriteTrackDao.getFavoriteTracksByUser(userId)) {
+            tracks.add(toTrack(entity));
         }
-
         return tracks;
     }
 
     /**
-     * Saves a track as favorite in temporary local storage.
+     * Saves a track as a favorite for the active account.
      *
-     * @param track track that should be saved as favorite
-     * @throws Exception if track data cannot be saved
+     * @param track track to save
+     * @throws Exception when the track is invalid or no user is logged in
      */
     public void saveFavorite(Track track) throws Exception {
-        if (track == null || track.getId() == null || track.getId().trim().isEmpty()) {
+        if (track == null || isBlank(track.getId())) {
             throw new Exception("Track is empty.");
         }
 
-        if (getCurrentUserId() == -1L) {
+        long userId = getCurrentUserId();
+        if (userId == NO_USER_ID) {
             throw new Exception("User is not logged in.");
         }
 
+        favoriteTrackDao.saveFavorite(
+                toTrackEntity(track),
+                new FavoriteTrackEntity(userId, track.getId())
+        );
         track.setFavorite(true);
-
-        Set<String> favoriteIds = getFavoriteIds();
-        favoriteIds.add(track.getId());
-
-        sharedPreferences.edit()
-                .putStringSet(getFavoriteIdsKey(), favoriteIds)
-                .putString(getFavoriteTrackKey(track.getId()), trackToJson(track).toString())
-                .apply();
     }
 
     /**
-     * Removes a track from favorite storage.
-     *
-     * @param trackId track ID that should be removed
-     */
-    public void removeFavorite(String trackId) {
-        if (getCurrentUserId() == -1L || trackId == null || trackId.trim().isEmpty()) {
-            return;
-        }
-
-        Set<String> favoriteIds = getFavoriteIds();
-        favoriteIds.remove(trackId);
-
-        sharedPreferences.edit()
-                .putStringSet(getFavoriteIdsKey(), favoriteIds)
-                .remove(getFavoriteTrackKey(trackId))
-                .apply();
-    }
-
-    /**
-     * Checks if a track is already saved as favorite.
-     *
-     * @param trackId track ID
-     * @return true if track is favorite, false otherwise
-     */
-    public boolean isTrackFavorite(String trackId) {
-        if (getCurrentUserId() == -1L || trackId == null || trackId.trim().isEmpty()) {
-            return false;
-        }
-
-        return getFavoriteIds().contains(trackId);
-    }
-
-    /**
-     * Reads favorite track IDs from SharedPreferences.
-     *
-     * @return copied set of favorite track IDs
-     */
-    private Set<String> getFavoriteIds() {
-        if (getCurrentUserId() == -1L) {
-            return new HashSet<>();
-        }
-
-        Set<String> savedIds = sharedPreferences.getStringSet(getFavoriteIdsKey(), new HashSet<>());
-        return new HashSet<>(savedIds);
-    }
-
-    /**
-     * Builds a favorites-list key scoped to the active user.
-     *
-     * @return user-scoped favorites key
-     */
-    private String getFavoriteIdsKey() {
-        return FAVORITE_IDS_KEY + "_" + getCurrentUserId();
-    }
-
-    /**
-     * Builds a stored-track key scoped to the active user.
+     * Removes a track from the active account's favorites.
      *
      * @param trackId track identifier
-     * @return user-scoped stored-track key
      */
-    private String getFavoriteTrackKey(String trackId) {
-        return FAVORITE_TRACK_PREFIX + getCurrentUserId() + "_" + trackId;
+    public void removeFavorite(String trackId) {
+        long userId = getCurrentUserId();
+        if (userId == NO_USER_ID || isBlank(trackId)) {
+            return;
+        }
+        favoriteTrackDao.deleteTrack(trackId, userId);
     }
 
     /**
-     * Returns the active session's user identifier.
+     * Checks whether a track is a favorite of the active account.
      *
-     * @return current user ID or -1
+     * @param trackId track identifier
+     * @return true when the current user saved the track
+     */
+    public boolean isTrackFavorite(String trackId) {
+        long userId = getCurrentUserId();
+        return userId != NO_USER_ID
+                && !isBlank(trackId)
+                && favoriteTrackDao.isTrackFavorite(trackId, userId);
+    }
+
+    /**
+     * Returns the valid active user identifier.
+     *
+     * @return user identifier, or -1 when no valid session exists
      */
     private long getCurrentUserId() {
-        return sessionManager.getCurrentUserId();
-    }
-
-    /**
-     * Converts a Track object into JSON for local storage.
-     *
-     * @param track track object
-     * @return JSON object with track fields
-     * @throws Exception if JSON creation fails
-     */
-    private JSONObject trackToJson(Track track) throws Exception {
-        JSONObject object = new JSONObject();
-
-        object.put("id", track.getId());
-        object.put("name", track.getName());
-        object.put("artistName", track.getArtistName());
-        object.put("albumName", track.getAlbumName());
-        object.put("duration", track.getDuration());
-        object.put("audioUrl", track.getAudioUrl());
-        object.put("downloadUrl", track.getDownloadUrl());
-        object.put("imageUrl", track.getImageUrl());
-        object.put("licenseUrl", track.getLicenseUrl());
-        object.put("isFavorite", track.isFavorite());
-        object.put("localFilePath", track.getLocalFilePath());
-
-        return object;
-    }
-
-    /**
-     * Converts stored JSON into a Track object.
-     *
-     * @param json stored track JSON
-     * @return restored Track object
-     * @throws Exception if JSON parsing fails
-     */
-    private Track jsonToTrack(String json) throws Exception {
-        JSONObject object = new JSONObject(json);
-
-        String localFilePath = null;
-
-        if (!object.isNull("localFilePath")) {
-            localFilePath = object.optString("localFilePath", null);
+        try {
+            if (!sessionManager.isLoggedIn()) {
+                return NO_USER_ID;
+            }
+            long userId = sessionManager.getCurrentUserId();
+            return userId >= 0L ? userId : NO_USER_ID;
+        } catch (ClassCastException exception) {
+            sessionManager.clearSession();
+            return NO_USER_ID;
         }
+    }
 
+    /**
+     * Converts a domain track to its Room representation.
+     *
+     * @param track source track
+     * @return database entity
+     */
+    private TrackEntity toTrackEntity(Track track) {
+        TrackEntity entity = new TrackEntity();
+        entity.setId(track.getId());
+        entity.setName(track.getName());
+        entity.setArtistName(track.getArtistName());
+        entity.setAlbumName(track.getAlbumName());
+        entity.setDuration(track.getDuration());
+        entity.setAudioUrl(track.getAudioUrl());
+        entity.setDownloadUrl(track.getDownloadUrl());
+        entity.setImageUrl(track.getImageUrl());
+        entity.setLicenseUrl(track.getLicenseUrl());
+        entity.setFavorite(true);
+        entity.setLocalFilePath(track.getLocalFilePath());
+        return entity;
+    }
+
+    /**
+     * Converts stored metadata back into a favorite track.
+     *
+     * @param entity stored track metadata
+     * @return favorite track
+     */
+    private Track toTrack(TrackEntity entity) {
         return new Track(
-                object.optString("id", ""),
-                object.optString("name", ""),
-                object.optString("artistName", ""),
-                object.optString("albumName", ""),
-                object.optInt("duration", 0),
-                object.optString("audioUrl", ""),
-                object.optString("downloadUrl", ""),
-                object.optString("imageUrl", ""),
-                object.optString("licenseUrl", ""),
-                object.optBoolean("isFavorite", true),
-                localFilePath
+                entity.getId(),
+                entity.getName(),
+                entity.getArtistName(),
+                entity.getAlbumName(),
+                entity.getDuration(),
+                entity.getAudioUrl(),
+                entity.getDownloadUrl(),
+                entity.getImageUrl(),
+                entity.getLicenseUrl(),
+                true,
+                entity.getLocalFilePath()
         );
+    }
+
+    /**
+     * Checks whether a text value is missing.
+     *
+     * @param value value to check
+     * @return true for null or blank values
+     */
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

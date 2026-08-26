@@ -21,6 +21,7 @@ import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
 import com.example.it_robota.tracks.DownloadedTracksActivity;
+import com.example.it_robota.tracks.FavoritesActivity;
 import com.example.it_robota.tracks.TrackDetailsActivity;
 
 import java.util.ArrayList;
@@ -32,8 +33,6 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText searchEditText;
     private Button searchButton;
-    private Button saveFavoriteButton;
-    private Button removeFavoriteButton;
     private Button showFavoritesButton;
     private Button showDownloadedTracksButton;
     private ListView tracksListView;
@@ -53,8 +52,6 @@ public class MainActivity extends AppCompatActivity {
 
         searchEditText = findViewById(R.id.searchEditText);
         searchButton = findViewById(R.id.searchButton);
-        saveFavoriteButton = findViewById(R.id.saveFavoriteButton);
-        removeFavoriteButton = findViewById(R.id.removeFavoriteButton);
         showFavoritesButton = findViewById(R.id.showFavoritesButton);
         showDownloadedTracksButton = findViewById(R.id.showDownloadedTracksButton);
         tracksListView = findViewById(R.id.tracksListView);
@@ -73,14 +70,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, DownloadedTracksActivity.class))
         );
 
-        saveFavoriteButton.setOnClickListener(view ->
-                Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show()
-        );
-        removeFavoriteButton.setOnClickListener(view ->
-                Toast.makeText(this, "Remove from favorites clicked", Toast.LENGTH_SHORT).show()
-        );
         showFavoritesButton.setOnClickListener(view ->
-                Toast.makeText(this, "Show favorites clicked", Toast.LENGTH_SHORT).show()
+                startActivity(new Intent(this, FavoritesActivity.class))
         );
 
         loginAuthButton.setOnClickListener(view ->

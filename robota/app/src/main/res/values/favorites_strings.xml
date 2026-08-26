@@ -6,6 +6,8 @@
     <string name="favorites_login_required">Log in to view your favorite tracks.</string>
     <string name="favorites_remove">Remove</string>
     <string name="favorites_removed">Removed from favorites.</string>
+    <string name="favorites_load_error">Could not load favorite tracks.</string>
+    <string name="favorites_remove_error">Could not remove this track.</string>
     <string name="favorites_details_unavailable">Track details are not available yet.</string>
     <string name="favorites_unknown_track">Unknown track</string>
     <string name="favorites_unknown_artist">Unknown artist</string>

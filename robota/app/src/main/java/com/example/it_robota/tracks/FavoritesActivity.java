@@ -1,6 +1,5 @@
 package com.example.it_robota.tracks;
 
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -29,9 +28,6 @@ import java.util.concurrent.Executors;
  * Lists favorite tracks saved for the currently logged-in user.
  */
 public class FavoritesActivity extends AppCompatActivity {
-
-    private static final String TRACK_DETAILS_CLASS = "com.example.it_robota.tracks.TrackDetailsActivity";
-    private static final String EXTRA_TRACK_ID = "trackId";
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final List<Track> favoriteTracks = new ArrayList<>();
@@ -83,16 +79,20 @@ public class FavoritesActivity extends AppCompatActivity {
 
         showLoading();
         executorService.execute(() -> {
-            List<Track> tracks = trackRepository.getSavedTracks();
-            runOnUiThread(() -> {
-                favoriteTracks.clear();
-                favoriteTracks.addAll(tracks);
-                favoritesAdapter.notifyDataSetChanged();
-                progressBar.setVisibility(View.GONE);
-                favoritesListView.setVisibility(tracks.isEmpty() ? View.GONE : View.VISIBLE);
-                emptyStateTextView.setVisibility(tracks.isEmpty() ? View.VISIBLE : View.GONE);
-                emptyStateTextView.setText(R.string.favorites_empty_state);
-            });
+            try {
+                List<Track> tracks = trackRepository.getSavedTracks();
+                runOnUiThread(() -> {
+                    favoriteTracks.clear();
+                    favoriteTracks.addAll(tracks);
+                    favoritesAdapter.notifyDataSetChanged();
+                    progressBar.setVisibility(View.GONE);
+                    favoritesListView.setVisibility(tracks.isEmpty() ? View.GONE : View.VISIBLE);
+                    emptyStateTextView.setVisibility(tracks.isEmpty() ? View.VISIBLE : View.GONE);
+                    emptyStateTextView.setText(R.string.favorites_empty_state);
+                });
+            } catch (RuntimeException exception) {
+                runOnUiThread(() -> showEmptyState(R.string.favorites_load_error));
+            }
         });
     }
 
@@ -103,15 +103,23 @@ public class FavoritesActivity extends AppCompatActivity {
      */
     private void removeFavorite(Track track) {
         executorService.execute(() -> {
-            trackRepository.removeFavorite(track.getId());
-            runOnUiThread(() -> {
-                favoriteTracks.remove(track);
-                favoritesAdapter.notifyDataSetChanged();
-                if (favoriteTracks.isEmpty()) {
-                    showEmptyState(R.string.favorites_empty_state);
-                }
-                Toast.makeText(this, R.string.favorites_removed, Toast.LENGTH_SHORT).show();
-            });
+            try {
+                trackRepository.removeFavorite(track.getId());
+                runOnUiThread(() -> {
+                    favoriteTracks.remove(track);
+                    favoritesAdapter.notifyDataSetChanged();
+                    if (favoriteTracks.isEmpty()) {
+                        showEmptyState(R.string.favorites_empty_state);
+                    }
+                    Toast.makeText(this, R.string.favorites_removed, Toast.LENGTH_SHORT).show();
+                });
+            } catch (RuntimeException exception) {
+                runOnUiThread(() -> Toast.makeText(
+                        this,
+                        R.string.favorites_remove_error,
+                        Toast.LENGTH_SHORT
+                ).show());
+            }
         });
     }
 
@@ -121,14 +129,9 @@ public class FavoritesActivity extends AppCompatActivity {
      * @param track selected favorite track
      */
     private void openTrackDetails(Track track) {
-        Intent intent = new Intent();
-        intent.setClassName(this, TRACK_DETAILS_CLASS);
-        intent.putExtra(EXTRA_TRACK_ID, track.getId());
-        try {
-            startActivity(intent);
-        } catch (ActivityNotFoundException exception) {
-            Toast.makeText(this, R.string.favorites_details_unavailable, Toast.LENGTH_SHORT).show();
-        }
+        Intent intent = new Intent(this, TrackDetailsActivity.class);
+        intent.putExtra(TrackDetailsActivity.EXTRA_TRACK_ID, track.getId());
+        startActivity(intent);
     }
 
     /**

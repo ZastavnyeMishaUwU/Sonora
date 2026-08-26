@@ -4,6 +4,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import java.util.List;
 
 /**
@@ -33,9 +34,22 @@ public interface FavoriteTrackDao {
     void insertFavoriteLink(FavoriteTrackEntity favorite);
 
     /**
+     * Stores track metadata and the user-specific favorite link atomically.
+     *
+     * @param track track metadata
+     * @param favorite user-to-track favorite link
+     */
+    @Transaction
+    default void saveFavorite(TrackEntity track, FavoriteTrackEntity favorite) {
+        insertTrack(track);
+        insertFavoriteLink(favorite);
+    }
+
+    /**
      * Retrieves all favorite tracks belonging to a specific user.
      */
-    @Query("SELECT * FROM tracks WHERE id IN (SELECT trackId FROM favorite_tracks WHERE userId = :userId)")
+    @Query("SELECT * FROM tracks WHERE id IN (SELECT trackId FROM favorite_tracks WHERE userId = :userId) "
+            + "ORDER BY name COLLATE NOCASE")
     List<TrackEntity> getFavoriteTracksByUser(long userId);
 
     /**
@@ -43,5 +57,13 @@ public interface FavoriteTrackDao {
      */
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_tracks WHERE trackId = :trackId AND userId = :userId)")
     boolean isTrackFavorite(String trackId, long userId);
+
+    /**
+     * Removes stored track metadata after its favorite links have been cleaned up.
+     *
+     * @param trackId track identifier
+     */
+    @Query("DELETE FROM tracks WHERE id = :trackId")
+    void deleteTrackRecord(String trackId);
 
 }
