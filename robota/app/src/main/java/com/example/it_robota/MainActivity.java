@@ -22,6 +22,8 @@ import com.example.it_robota.auth.RegisterActivity;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
+import com.example.it_robota.tracks.SearchActivity;
+import com.example.it_robota.tracks.TrackDetailsActivity;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -29,6 +31,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Main activity of the application providing track search and track details preview.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private EditText searchEditText;
@@ -52,15 +57,16 @@ public class MainActivity extends AppCompatActivity {
     private JamendoApiClient jamendoApiClient;
     private ExecutorService executorService;
     private Handler mainHandler;
-    private SessionManager sessionManager;
 
+    /**
+     * Initializes views, dependencies and click listeners.
+     *
+     * @param savedInstanceState previously saved activity state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        sessionManager = new SessionManager(this);
-
         searchEditText = findViewById(R.id.searchEditText);
         trackIdEditText = findViewById(R.id.trackIdEditText);
         searchButton = findViewById(R.id.searchButton);
@@ -70,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
         showFavoritesButton = findViewById(R.id.showFavoritesButton);
         trackImageView = findViewById(R.id.trackImageView);
         resultTextView = findViewById(R.id.resultTextView);
-
         logoutAuthButton = findViewById(R.id.logoutAuthButton);
         authButtonsLayout = findViewById(R.id.authButtonsLayout);
         authOnlyContentLayout = findViewById(R.id.authOnlyContentLayout);
@@ -81,46 +86,32 @@ public class MainActivity extends AppCompatActivity {
         executorService = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
 
-        if (searchButton != null) {
-            searchButton.setOnClickListener(v -> searchTracks());
-        }
+        searchButton.setOnClickListener(v -> searchTracks());
 
-        if (detailsButton != null) {
-            detailsButton.setOnClickListener(v -> {
-                if (trackIdEditText == null) return;
-                String trackId = trackIdEditText.getText().toString().trim();
+        detailsButton.setOnClickListener(v -> {
+            String trackId = trackIdEditText.getText().toString().trim();
 
-                if (trackId.isEmpty()) {
-                    Toast.makeText(MainActivity.this, "Введіть ID треку", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+            if (trackId.isEmpty()) {
+                Toast.makeText(MainActivity.this, "Введіть ID треку", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
-                intent.putExtra("TRACK_ID", trackId);
-                startActivity(intent);
-            });
-        }
+            Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
+            intent.putExtra("TRACK_ID", trackId);
+            startActivity(intent);
+        });
 
-        if (saveFavoriteButton != null) {
-            saveFavoriteButton.setOnClickListener(v -> {
-                if (!checkLoggedIn()) return;
-                Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show();
-            });
-        }
+        saveFavoriteButton.setOnClickListener(v ->
+                Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show()
+        );
 
-        if (removeFavoriteButton != null) {
-            removeFavoriteButton.setOnClickListener(v -> {
-                if (!checkLoggedIn()) return;
-                Toast.makeText(this, "Remove from favorites clicked", Toast.LENGTH_SHORT).show();
-            });
-        }
+        removeFavoriteButton.setOnClickListener(v ->
+                Toast.makeText(this, "Remove from favorites clicked", Toast.LENGTH_SHORT).show()
+        );
 
-        if (showFavoritesButton != null) {
-            showFavoritesButton.setOnClickListener(v -> {
-                if (!checkLoggedIn()) return;
-                Toast.makeText(this, "Show favorites clicked", Toast.LENGTH_SHORT).show();
-            });
-        }
+        showFavoritesButton.setOnClickListener(v ->
+                Toast.makeText(this, "Show favorites clicked", Toast.LENGTH_SHORT).show()
+        );
 
         if (loginAuthButton != null) {
             loginAuthButton.setOnClickListener(v ->
@@ -136,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (logoutAuthButton != null) {
             logoutAuthButton.setOnClickListener(v -> {
+                SessionManager sessionManager = new SessionManager(this);
                 sessionManager.clearSession();
                 updateAuthButtonsVisibility();
                 Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
@@ -143,22 +135,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Updates authentication button visibility state when activity resumes.
+     */
     @Override
     protected void onResume() {
         super.onResume();
         updateAuthButtonsVisibility();
     }
 
-    private boolean checkLoggedIn() {
-        if (!sessionManager.isLoggedIn()) {
-            Toast.makeText(this, "Please log in to use favorites", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, LoginActivity.class));
-            return false;
-        }
-        return true;
-    }
-
+    /**
+     * Updates UI elements visibility based on user authorization state.
+     */
     private void updateAuthButtonsVisibility() {
+        SessionManager sessionManager = new SessionManager(this);
         boolean isLoggedIn = sessionManager.isLoggedIn();
 
         if (authButtonsLayout != null) {
@@ -172,10 +162,26 @@ public class MainActivity extends AppCompatActivity {
         if (authOnlyContentLayout != null) {
             authOnlyContentLayout.setVisibility(View.VISIBLE);
         }
+
+        int favoritesVisibility = isLoggedIn ? View.VISIBLE : View.GONE;
+
+        if (saveFavoriteButton != null) {
+            saveFavoriteButton.setVisibility(favoritesVisibility);
+        }
+
+        if (removeFavoriteButton != null) {
+            removeFavoriteButton.setVisibility(favoritesVisibility);
+        }
+
+        if (showFavoritesButton != null) {
+            showFavoritesButton.setVisibility(favoritesVisibility);
+        }
     }
 
+    /**
+     * Executes track search via Jamendo API regardless of login state.
+     */
     private void searchTracks() {
-        if (searchEditText == null) return;
         String query = searchEditText.getText().toString().trim();
 
         if (query.isEmpty()) {
@@ -206,6 +212,45 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Loads full details for the specified track ID.
+     */
+    private void getTrackDetails() {
+        String trackId = trackIdEditText.getText().toString().trim();
+
+        if (trackId.isEmpty()) {
+            Toast.makeText(this, "Enter track ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (trackImageView != null) trackImageView.setImageDrawable(null);
+        if (resultTextView != null) {
+            resultTextView.setVisibility(View.VISIBLE);
+            resultTextView.setText("Loading track details...");
+        }
+
+        executorService.execute(() -> {
+            try {
+                Track track = jamendoApiClient.getTrackDetails(trackId);
+                mainHandler.post(() -> showTrackDetails(track));
+            } catch (Exception e) {
+                e.printStackTrace();
+                mainHandler.post(() -> {
+                    if (resultTextView != null) {
+                        resultTextView.setVisibility(View.VISIBLE);
+                        resultTextView.setText("Error: " + e.getMessage());
+                    }
+                    Toast.makeText(this, "Details error", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+
+    /**
+     * Renders search results returned from Jamendo API.
+     *
+     * @param tracks list of matching tracks
+     */
     private void showSearchResults(List<Track> tracks) {
         if (resultTextView == null) return;
 
@@ -231,6 +276,11 @@ public class MainActivity extends AppCompatActivity {
         resultTextView.setText(result.toString());
     }
 
+    /**
+     * Renders track details information.
+     *
+     * @param track track object returned from API
+     */
     private void showTrackDetails(Track track) {
         if (resultTextView == null) return;
 
@@ -257,6 +307,11 @@ public class MainActivity extends AppCompatActivity {
         resultTextView.setText(result);
     }
 
+    /**
+     * Downloads and displays track artwork image.
+     *
+     * @param imageUrl URL string pointing to track artwork
+     */
     private void loadTrackImage(String imageUrl) {
         if (imageUrl == null || imageUrl.trim().isEmpty()) return;
 
@@ -276,6 +331,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Releases background thread resources when activity is destroyed.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
