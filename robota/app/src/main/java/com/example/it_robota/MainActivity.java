@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,16 +34,15 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity {
 
     private EditText searchEditText;
-    private EditText trackIdEditText;
+
 
     private Button searchButton;
-    private Button detailsButton;
     private Button saveFavoriteButton;
     private Button removeFavoriteButton;
     private Button showFavoritesButton;
 
     private ImageView trackImageView;
-    private TextView resultTextView;
+    private ListView tracksListView;
 
     private Button loginAuthButton;
     private Button registerAuthButton;
@@ -59,14 +59,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         searchEditText = findViewById(R.id.searchEditText);
-        trackIdEditText = findViewById(R.id.trackIdEditText);
         searchButton = findViewById(R.id.searchButton);
-        detailsButton = findViewById(R.id.detailsButton);
         saveFavoriteButton = findViewById(R.id.saveFavoriteButton);
         removeFavoriteButton = findViewById(R.id.removeFavoriteButton);
         showFavoritesButton = findViewById(R.id.showFavoritesButton);
-        trackImageView = findViewById(R.id.trackImageView);
-        resultTextView = findViewById(R.id.resultTextView);
+        tracksListView = findViewById(R.id.tracksListView);
         logoutAuthButton = findViewById(R.id.logoutAuthButton);
         authButtonsLayout = findViewById(R.id.authButtonsLayout);
         authOnlyContentLayout = findViewById(R.id.authOnlyContentLayout);
@@ -78,18 +75,6 @@ public class MainActivity extends AppCompatActivity {
         mainHandler = new Handler(Looper.getMainLooper());
         searchButton.setOnClickListener(v -> searchTracks());
 
-        detailsButton.setOnClickListener(v -> {
-            String trackId = trackIdEditText.getText().toString().trim();
-
-            if (trackId.isEmpty()) {
-                Toast.makeText(MainActivity.this, "Введіть ID треку", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
-            intent.putExtra("TRACK_ID", trackId);
-            startActivity(intent);
-        });
 
         saveFavoriteButton.setOnClickListener(v ->
                 Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show()
@@ -156,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (trackImageView != null) trackImageView.setImageDrawable(null);
-        if (resultTextView != null) resultTextView.setText("Searching tracks...");
+        if (tracksListView != null) tracksListView.setAdapter(null);
 
         executorService.execute(() -> {
             try {
@@ -165,83 +150,67 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 mainHandler.post(() -> {
-                    if (resultTextView != null) resultTextView.setText("Error: " + e.getMessage());
-                    Toast.makeText(this, "Search error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
             }
         });
     }
 
-    private void getTrackDetails() {
-        String trackId = trackIdEditText.getText().toString().trim();
-
-        if (trackId.isEmpty()) {
-            Toast.makeText(this, "Enter track ID", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (trackImageView != null) trackImageView.setImageDrawable(null);
-        if (resultTextView != null) resultTextView.setText("Loading track details...");
-
-        executorService.execute(() -> {
-            try {
-                Track track = jamendoApiClient.getTrackDetails(trackId);
-                mainHandler.post(() -> showTrackDetails(track));
-            } catch (Exception e) {
-                e.printStackTrace();
-                mainHandler.post(() -> {
-                    if (resultTextView != null) resultTextView.setText("Error: " + e.getMessage());
-                    Toast.makeText(this, "Details error", Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
-    }
+//    private void getTrackDetails() {
+//        String trackId = trackIdEditText.getText().toString().trim();
+//
+//        if (trackId.isEmpty()) {
+//            Toast.makeText(this, "Enter track ID", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        if (trackImageView != null) trackImageView.setImageDrawable(null);
+//        Toast.makeText(this, "Loading track details...", Toast.LENGTH_SHORT).show();
+//
+//        executorService.execute(() -> {
+//            try {
+//                Track track = jamendoApiClient.getTrackDetails(trackId);
+//                mainHandler.post(() -> {
+//                    Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
+//                    intent.putExtra("TRACK_ID", track.getId());
+//                    startActivity(intent);
+//                });
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                mainHandler.post(() -> {
+//                    Toast.makeText(this, "Details error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+//                });
+//            }
+//        });
+//    }
 
     private void showSearchResults(List<Track> tracks) {
-        if (resultTextView == null) return;
+        if (tracksListView == null) return;
 
         if (tracks == null || tracks.isEmpty()) {
-            resultTextView.setText("No tracks found.");
+            Toast.makeText(this, "No tracks found", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        StringBuilder result = new StringBuilder();
-        result.append("Found tracks: ").append(tracks.size()).append("\n\n");
-
+        java.util.List<String> displayItems = new java.util.ArrayList<>();
         for (Track track : tracks) {
-            result.append("ID: ").append(track.getId()).append("\n");
-            result.append("Title: ").append(track.getName()).append("\n");
-            result.append("Artist: ").append(track.getArtistName()).append("\n");
-            result.append("Album: ").append(track.getAlbumName()).append("\n");
-            result.append("Duration: ").append(track.getDuration()).append(" sec\n\n");
+            displayItems.add(track.getName() + " — " + track.getArtistName());
         }
 
-        result.append("Copy any ID and paste it into the details field.");
-        resultTextView.setText(result.toString());
-    }
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                displayItems
+        );
 
-    private void showTrackDetails(Track track) {
-        if (resultTextView == null) return;
+        tracksListView.setAdapter(adapter);
 
-        if (track == null) {
-            resultTextView.setText("Track details are empty.");
-            return;
-        }
-
-        boolean isDownloaded = track.getLocalFilePath() != null && !track.getLocalFilePath().isEmpty();
-        loadTrackImage(track.getImageUrl());
-
-        String result =
-                "Track Details\n\n" +
-                        "ID: " + track.getId() + "\n" +
-                        "Title: " + track.getName() + "\n" +
-                        "Artist: " + track.getArtistName() + "\n" +
-                        "Album: " + track.getAlbumName() + "\n" +
-                        "Duration: " + track.getDuration() + " sec\n\n" +
-                        "Favorite: " + track.isFavorite() + "\n" +
-                        "Downloaded: " + isDownloaded;
-
-        resultTextView.setText(result);
+        tracksListView.setOnItemClickListener((parent, view, position, id) -> {
+            Track selectedTrack = tracks.get(position);
+            Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
+            intent.putExtra("TRACK_ID", selectedTrack.getId());
+            startActivity(intent);
+        });
     }
 
     private void loadTrackImage(String imageUrl) {

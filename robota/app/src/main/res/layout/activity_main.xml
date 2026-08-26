@@ -153,52 +153,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cardSearch" />
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardTrackId"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            app:cardBackgroundColor="#FCFCF7"
-            app:cardCornerRadius="9dp"
-            app:cardElevation="1dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/searchButton"
-            app:strokeColor="#E1E4DA"
-            app:strokeWidth="1dp">
-
-            <EditText
-                android:id="@+id/trackIdEditText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@null"
-                android:drawableStart="@drawable/ic_lock_green"
-                android:drawablePadding="11dp"
-                android:hint="Enter track ID for details"
-                android:inputType="text"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:textColor="#273027"
-                android:textColorHint="#687067"
-                android:textSize="11sp" />
-
-        </com.google.android.material.card.MaterialCardView>
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/detailsButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="7dp"
-            android:text="Get Track Details"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:backgroundTint="#B53229"
-            app:cornerRadius="9dp"
-            app:elevation="2dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardTrackId" />
         <LinearLayout
             android:id="@+id/authOnlyContentLayout"
             android:layout_width="0dp"
@@ -207,7 +161,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/detailsButton">
+            app:layout_constraintTop_toBottomOf="@id/searchButton">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveFavoriteButton"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -249,36 +203,14 @@
                 app:cornerRadius="9dp"
                 app:strokeColor="#E1E4DA"
                 app:strokeWidth="1dp" />
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardImageContainer"
+            <ListView
+                android:id="@+id/tracksListView"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="20dp"
-                app:cardBackgroundColor="#FCFCF7"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:strokeColor="#E1E4DA"
-                app:strokeWidth="1dp">
-
-                <ImageView
-                    android:id="@+id/trackImageView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:adjustViewBounds="true"
-                    android:contentDescription="Track image"
-                    android:scaleType="centerCrop" />
-
-            </com.google.android.material.card.MaterialCardView>
-            <TextView
-                android:id="@+id/resultTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="320dp"
                 android:layout_marginTop="16dp"
-                android:gravity="center"
-                android:lineSpacingExtra="2dp"
-                android:text="Result will appear here"
-                android:textColor="#536052"
-                android:textSize="12sp" />
+                android:divider="#E1E4DA"
+                android:dividerHeight="1dp"
+                android:nestedScrollingEnabled="true" />
 
         </LinearLayout>
 
