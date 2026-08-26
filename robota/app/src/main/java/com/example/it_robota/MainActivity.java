@@ -21,7 +21,7 @@ import com.example.it_robota.auth.LoginActivity;
 import com.example.it_robota.auth.RegisterActivity;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
-import com.example.it_robota.musicplayback.PlayerActivity;
+import com.example.it_robota.tracks.DownloadedTracksActivity;
 import com.example.it_robota.tracks.TrackDetailsActivity;
 
 import java.io.InputStream;
@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Button saveFavoriteButton;
     private Button removeFavoriteButton;
     private Button showFavoritesButton;
+    private Button showDownloadedTracksButton;
 
     private ImageView trackImageView;
     private TextView resultTextView;
@@ -65,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         saveFavoriteButton = findViewById(R.id.saveFavoriteButton);
         removeFavoriteButton = findViewById(R.id.removeFavoriteButton);
         showFavoritesButton = findViewById(R.id.showFavoritesButton);
+        showDownloadedTracksButton = findViewById(R.id.showDownloadedTracksButton);
         trackImageView = findViewById(R.id.trackImageView);
         resultTextView = findViewById(R.id.resultTextView);
         logoutAuthButton = findViewById(R.id.logoutAuthButton);
@@ -86,10 +88,14 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
-            intent.putExtra("TRACK_ID", trackId);
+            Intent intent = new Intent(MainActivity.this, TrackDetailsActivity.class);
+            intent.putExtra(TrackDetailsActivity.EXTRA_TRACK_ID, trackId);
             startActivity(intent);
         });
+
+        showDownloadedTracksButton.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, DownloadedTracksActivity.class))
+        );
 
         saveFavoriteButton.setOnClickListener(v ->
                 Toast.makeText(this, "Save to favorites clicked", Toast.LENGTH_SHORT).show()

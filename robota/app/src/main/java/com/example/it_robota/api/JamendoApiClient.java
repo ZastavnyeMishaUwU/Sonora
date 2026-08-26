@@ -72,6 +72,7 @@ public class JamendoApiClient {
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
                 "&limit=" + ApiConfig.DEFAULT_LIMIT +
                 "&audioformat=" + ApiConfig.DEFAULT_AUDIO_FORMAT +
+                "&audiodlformat=" + ApiConfig.DEFAULT_AUDIO_FORMAT +
                 "&search=" + encodedQuery;
 
         String response = sendGetRequest(requestUrl);
@@ -128,7 +129,8 @@ public class JamendoApiClient {
                 "&format=" + ApiConfig.DEFAULT_FORMAT +
                 "&limit=1" +
                 "&audioformat=" + ApiConfig.DEFAULT_AUDIO_FORMAT +
-                "&id[]=" + encodedTrackId;
+                "&audiodlformat=" + ApiConfig.DEFAULT_AUDIO_FORMAT +
+                "&id=" + encodedTrackId;
 
         String response = sendGetRequest(requestUrl);
 

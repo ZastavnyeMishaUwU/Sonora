@@ -40,6 +40,16 @@ public interface DownloadedTrackDao {
     List<DownloadedTrackEntity> getDownloadedTracks(long userId);
 
     /**
+     * Returns one downloaded track record for the active user.
+     *
+     * @param trackId track identifier
+     * @param userId user identifier
+     * @return matching record, or null when none exists
+     */
+    @Query("SELECT * FROM downloaded_tracks WHERE trackId = :trackId AND userId = :userId LIMIT 1")
+    DownloadedTrackEntity getDownloadedTrack(String trackId, long userId);
+
+    /**
      * Checks whether a track has already been downloaded by a user.
      *
      * @param trackId track identifier

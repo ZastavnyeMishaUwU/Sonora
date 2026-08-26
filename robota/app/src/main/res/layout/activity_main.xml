@@ -209,11 +209,25 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/detailsButton">
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/showDownloadedTracksButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:text="@string/downloaded_tracks_title"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:backgroundTint="#B53229"
+                app:cornerRadius="9dp"
+                app:elevation="2dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveFavoriteButton"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="7dp"
                 android:text="Save Last Track To Favorites"
                 android:textAllCaps="false"
                 android:textColor="#273027"
