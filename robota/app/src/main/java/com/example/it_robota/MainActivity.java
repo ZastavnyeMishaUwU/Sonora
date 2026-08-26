@@ -156,34 +156,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-//    private void getTrackDetails() {
-//        String trackId = trackIdEditText.getText().toString().trim();
-//
-//        if (trackId.isEmpty()) {
-//            Toast.makeText(this, "Enter track ID", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-//
-//        if (trackImageView != null) trackImageView.setImageDrawable(null);
-//        Toast.makeText(this, "Loading track details...", Toast.LENGTH_SHORT).show();
-//
-//        executorService.execute(() -> {
-//            try {
-//                Track track = jamendoApiClient.getTrackDetails(trackId);
-//                mainHandler.post(() -> {
-//                    Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
-//                    intent.putExtra("TRACK_ID", track.getId());
-//                    startActivity(intent);
-//                });
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                mainHandler.post(() -> {
-//                    Toast.makeText(this, "Details error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-//                });
-//            }
-//        });
-//    }
-
     private void showSearchResults(List<Track> tracks) {
         if (tracksListView == null) return;
 
