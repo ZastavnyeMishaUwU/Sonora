@@ -21,12 +21,14 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             android:text="Logout"
+            android:textAllCaps="false"
             android:textColor="#B53229"
             android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
         <LinearLayout
             android:id="@+id/authButtonsLayout"
             android:layout_width="wrap_content"
@@ -43,6 +45,7 @@
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
                 android:text="Login"
+                android:textAllCaps="false"
                 android:textColor="#B53229"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -55,11 +58,13 @@
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
                 android:text="Register"
+                android:textAllCaps="false"
                 android:textColor="#B53229"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
+
         <ImageView
             android:id="@+id/ivLeavesTop"
             android:layout_width="90dp"
@@ -81,6 +86,7 @@
             android:src="@drawable/ic_leaves_bottom"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
         <ImageView
             android:id="@+id/ivLogo"
             android:layout_width="78dp"
@@ -107,13 +113,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ivLogo" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardSearch"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_marginTop="20dp"
             app:cardBackgroundColor="#FCFCF7"
-            app:cardCornerRadius="9dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="1dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -130,29 +137,79 @@
                 android:drawablePadding="11dp"
                 android:hint="Enter track or artist name"
                 android:inputType="text"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:textColor="#273027"
                 android:textColorHint="#687067"
                 android:textSize="11sp" />
 
         </com.google.android.material.card.MaterialCardView>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/searchButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="7dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
             android:text="Search in Jamendo"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold"
             app:backgroundTint="#B53229"
-            app:cornerRadius="9dp"
+            app:cornerRadius="12dp"
             app:elevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cardSearch" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardTrackId"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="#FCFCF7"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/searchButton"
+            app:strokeColor="#E1E4DA"
+            app:strokeWidth="1dp">
+
+            <EditText
+                android:id="@+id/trackIdEditText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_lock_green"
+                android:drawablePadding="11dp"
+                android:hint="Enter track ID"
+                android:inputType="text"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textColor="#273027"
+                android:textColorHint="#687067"
+                android:textSize="11sp" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/detailsButton"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:text="Open Player  →"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:backgroundTint="#536052"
+            app:cornerRadius="12dp"
+            app:elevation="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cardTrackId" />
+
         <LinearLayout
             android:id="@+id/authOnlyContentLayout"
             android:layout_width="0dp"
@@ -162,18 +219,91 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/searchButton">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="QUICK NAVIGATION"
+                android:textColor="#687067"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/profileNavButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:minWidth="0dp"
+                    android:text="Profile"
+                    android:textAllCaps="false"
+                    android:textColor="#273027"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="#FCFCF7"
+                    app:cornerRadius="12dp"
+                    app:elevation="0dp"
+                    app:strokeColor="#D9DDD2"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/searchNavButton"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="7dp"
+                    android:layout_weight="1"
+                    android:minWidth="0dp"
+                    android:text="Search"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="#B53229"
+                    app:cornerRadius="12dp"
+                    app:elevation="2dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/favoritesNavButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="7dp"
+                    android:layout_weight="1"
+                    android:minWidth="0dp"
+                    android:text="Favorites"
+                    android:textAllCaps="false"
+                    android:textColor="#273027"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="#FCFCF7"
+                    app:cornerRadius="12dp"
+                    app:elevation="0dp"
+                    app:strokeColor="#D9DDD2"
+                    app:strokeWidth="1dp" />
+
+            </LinearLayout>
+
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveFavoriteButton"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="16dp"
                 android:text="Save Last Track To Favorites"
                 android:textAllCaps="false"
                 android:textColor="#273027"
                 android:textSize="11sp"
-                app:cornerRadius="9dp"
-                app:strokeColor="#E1E4DA"
+                app:backgroundTint="#FCFCF7"
+                app:cornerRadius="12dp"
+                app:strokeColor="#D9DDD2"
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -181,13 +311,14 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="7dp"
+                android:layout_marginTop="8dp"
                 android:text="Remove Current Track From Favorites"
                 android:textAllCaps="false"
                 android:textColor="#273027"
                 android:textSize="11sp"
-                app:cornerRadius="9dp"
-                app:strokeColor="#E1E4DA"
+                app:backgroundTint="#FCFCF7"
+                app:cornerRadius="12dp"
+                app:strokeColor="#D9DDD2"
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -195,18 +326,20 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="7dp"
-                android:text="Show Favorite Tracks"
+                android:layout_marginTop="8dp"
+                android:text="Show Favorite Tracks  →"
                 android:textAllCaps="false"
-                android:textColor="#273027"
+                android:textColor="#536052"
                 android:textSize="11sp"
-                app:cornerRadius="9dp"
-                app:strokeColor="#E1E4DA"
+                android:textStyle="bold"
+                app:backgroundTint="#FCFCF7"
+                app:cornerRadius="12dp"
+                app:strokeColor="#D9DDD2"
                 app:strokeWidth="1dp" />
             <ListView
                 android:id="@+id/tracksListView"
                 android:layout_width="match_parent"
-                android:layout_height="320dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:divider="#E1E4DA"
                 android:dividerHeight="1dp"

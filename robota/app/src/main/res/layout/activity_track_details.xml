@@ -8,14 +8,18 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:paddingTop="72dp">
 
         <LinearLayout
             android:id="@+id/trackDetailsContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp"
+            android:paddingStart="24dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="28dp"
             android:visibility="gone">
 
             <TextView
@@ -43,13 +47,61 @@
                 android:textColor="#DDD6FE"
                 android:textSize="19sp" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="end|center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnToggleTrackFavorite"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="10dp"
+                    android:text=""
+                    app:backgroundTint="@android:color/transparent"
+                    app:cornerRadius="26dp"
+                    app:icon="@drawable/ic_heart_outline"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="26dp"
+                    app:iconTint="@null"
+                    app:strokeColor="#64748B"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDownloadTrack"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="10dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="10dp"
+                    android:text=""
+                    app:backgroundTint="@android:color/transparent"
+                    app:cornerRadius="26dp"
+                    app:icon="@drawable/ic_download"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="26dp"
+                    app:iconTint="@null"
+                    app:strokeColor="#64748B"
+                    app:strokeWidth="1dp" />
+
+            </LinearLayout>
+
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="20dp"
                 app:cardBackgroundColor="#F8FAFC"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="8dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="6dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -62,37 +114,41 @@
                         android:layout_height="wrap_content"
                         android:text="@string/track_details_album_label"
                         android:textColor="#64748B"
+                        android:textSize="12sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvTrackDetailsAlbum"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="5dp"
                         android:textColor="#0F172A"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
+                        android:layout_marginTop="20dp"
                         android:text="@string/track_details_duration_label"
                         android:textColor="#64748B"
+                        android:textSize="12sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvTrackDetailsDuration"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="5dp"
                         android:textColor="#0F172A"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvTrackDetailsFavorite"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
+                        android:layout_marginTop="22dp"
                         android:textColor="#9D174D"
                         android:textStyle="bold" />
 
@@ -103,29 +159,49 @@
                         android:layout_marginTop="8dp"
                         android:textColor="#047857"
                         android:textStyle="bold" />
+
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPlayTrack"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="24dp"
-                android:text="@string/track_details_play" />
+                android:text="@string/track_details_play"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:backgroundTint="#B53229"
+                app:cornerRadius="12dp" />
 
-            <Button
-                android:id="@+id/btnToggleTrackFavorite"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="10dp" />
-
-            <Button
-                android:id="@+id/btnDownloadTrack"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="10dp" />
         </LinearLayout>
+
     </ScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTrackDetailsBack"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="44dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:minWidth="0dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="16dp"
+        android:text="←  Back"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:backgroundTint="#334155"
+        app:cornerRadius="12dp"
+        app:elevation="0dp"
+        app:strokeColor="#64748B"
+        app:strokeWidth="1dp" />
 
     <ProgressBar
         android:id="@+id/trackDetailsProgress"
@@ -144,4 +220,5 @@
         android:textColor="@color/white"
         android:textSize="17sp"
         android:visibility="gone" />
+
 </FrameLayout>

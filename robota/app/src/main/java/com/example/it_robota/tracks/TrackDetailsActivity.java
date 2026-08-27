@@ -2,7 +2,6 @@ package com.example.it_robota.tracks;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,6 +13,7 @@ import com.example.it_robota.downloader.TrackDownloadManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.MusicPlayerManager;
 import com.example.it_robota.repositories.TrackRepository;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -26,13 +26,19 @@ public class TrackDetailsActivity extends AppCompatActivity {
 
     public static final String EXTRA_TRACK_ID = "trackId";
 
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService executorService =
+            Executors.newSingleThreadExecutor();
+
     private TrackRepository trackRepository;
     private MusicPlayerManager musicPlayerManager;
     private TrackDownloadManager trackDownloadManager;
+
     private Track currentTrack;
+
     private View contentView;
+
     private ProgressBar progressBar;
+
     private TextView stateTextView;
     private TextView trackNameTextView;
     private TextView artistNameTextView;
@@ -40,8 +46,10 @@ public class TrackDetailsActivity extends AppCompatActivity {
     private TextView durationTextView;
     private TextView favoriteStatusTextView;
     private TextView downloadedStatusTextView;
-    private Button favoriteButton;
-    private Button downloadButton;
+
+    private MaterialButton favoriteButton;
+    private MaterialButton downloadButton;
+    private MaterialButton backButton;
 
     /**
      * Initializes dependencies, view bindings, actions and track loading.
@@ -51,22 +59,45 @@ public class TrackDetailsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_track_details);
+
         bindViews();
 
         trackRepository = new TrackRepository(this);
         musicPlayerManager = new MusicPlayerManager();
         trackDownloadManager = new TrackDownloadManager(this);
 
-        findViewById(R.id.btnPlayTrack).setOnClickListener(view -> playTrack());
-        favoriteButton.setOnClickListener(view -> toggleFavorite());
-        downloadButton.setOnClickListener(view -> downloadTrack());
+        backButton.setOnClickListener(
+                view -> finish()
+        );
 
-        String trackId = getIntent().getStringExtra(EXTRA_TRACK_ID);
-        if (trackId == null || trackId.trim().isEmpty()) {
-            showError(R.string.track_details_missing_id);
+        findViewById(R.id.btnPlayTrack)
+                .setOnClickListener(
+                        view -> playTrack()
+                );
+
+        favoriteButton.setOnClickListener(
+                view -> toggleFavorite()
+        );
+
+        downloadButton.setOnClickListener(
+                view -> downloadTrack()
+        );
+
+        String trackId =
+                getIntent().getStringExtra(EXTRA_TRACK_ID);
+
+        if (trackId == null
+                || trackId.trim().isEmpty()) {
+
+            showError(
+                    R.string.track_details_missing_id
+            );
+
             return;
         }
+
         loadTrack(trackId.trim());
     }
 
@@ -74,17 +105,65 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * Resolves and stores all views used by the screen.
      */
     private void bindViews() {
-        contentView = findViewById(R.id.trackDetailsContent);
-        progressBar = findViewById(R.id.trackDetailsProgress);
-        stateTextView = findViewById(R.id.tvTrackDetailsState);
-        trackNameTextView = findViewById(R.id.tvTrackDetailsName);
-        artistNameTextView = findViewById(R.id.tvTrackDetailsArtist);
-        albumNameTextView = findViewById(R.id.tvTrackDetailsAlbum);
-        durationTextView = findViewById(R.id.tvTrackDetailsDuration);
-        favoriteStatusTextView = findViewById(R.id.tvTrackDetailsFavorite);
-        downloadedStatusTextView = findViewById(R.id.tvTrackDetailsDownloaded);
-        favoriteButton = findViewById(R.id.btnToggleTrackFavorite);
-        downloadButton = findViewById(R.id.btnDownloadTrack);
+        backButton =
+                findViewById(
+                        R.id.btnTrackDetailsBack
+                );
+
+        contentView =
+                findViewById(
+                        R.id.trackDetailsContent
+                );
+
+        progressBar =
+                findViewById(
+                        R.id.trackDetailsProgress
+                );
+
+        stateTextView =
+                findViewById(
+                        R.id.tvTrackDetailsState
+                );
+
+        trackNameTextView =
+                findViewById(
+                        R.id.tvTrackDetailsName
+                );
+
+        artistNameTextView =
+                findViewById(
+                        R.id.tvTrackDetailsArtist
+                );
+
+        albumNameTextView =
+                findViewById(
+                        R.id.tvTrackDetailsAlbum
+                );
+
+        durationTextView =
+                findViewById(
+                        R.id.tvTrackDetailsDuration
+                );
+
+        favoriteStatusTextView =
+                findViewById(
+                        R.id.tvTrackDetailsFavorite
+                );
+
+        downloadedStatusTextView =
+                findViewById(
+                        R.id.tvTrackDetailsDownloaded
+                );
+
+        favoriteButton =
+                findViewById(
+                        R.id.btnToggleTrackFavorite
+                );
+
+        downloadButton =
+                findViewById(
+                        R.id.btnDownloadTrack
+                );
     }
 
     /**
@@ -94,22 +173,41 @@ public class TrackDetailsActivity extends AppCompatActivity {
      */
     private void loadTrack(String trackId) {
         showLoading();
+
         executorService.execute(() -> {
             try {
-                Track track = trackRepository.getTrackDetails(trackId);
-                if (track != null && trackDownloadManager.isTrackDownloaded(trackId)) {
-                    track.setLocalFilePath(trackDownloadManager.getLocalFilePath(trackId));
+                Track track =
+                        trackRepository.getTrackDetails(
+                                trackId
+                        );
+
+                if (track != null
+                        && trackDownloadManager
+                        .isTrackDownloaded(trackId)) {
+
+                    track.setLocalFilePath(
+                            trackDownloadManager
+                                    .getLocalFilePath(trackId)
+                    );
                 }
+
                 runOnUiThread(() -> {
                     if (track == null) {
-                        showError(R.string.track_details_not_found);
+                        showError(
+                                R.string.track_details_not_found
+                        );
                     } else {
                         currentTrack = track;
                         renderTrack();
                     }
                 });
+
             } catch (Exception exception) {
-                runOnUiThread(() -> showError(R.string.track_details_load_error));
+                runOnUiThread(
+                        () -> showError(
+                                R.string.track_details_load_error
+                        )
+                );
             }
         });
     }
@@ -121,71 +219,189 @@ public class TrackDetailsActivity extends AppCompatActivity {
         progressBar.setVisibility(View.GONE);
         stateTextView.setVisibility(View.GONE);
         contentView.setVisibility(View.VISIBLE);
-        trackNameTextView.setText(valueOrFallback(currentTrack.getName(), R.string.track_details_unknown_track));
-        artistNameTextView.setText(valueOrFallback(
-                currentTrack.getArtistName(),
-                R.string.track_details_unknown_artist
-        ));
-        albumNameTextView.setText(valueOrFallback(currentTrack.getAlbumName(), R.string.track_details_unknown_album));
-        durationTextView.setText(formatDuration(currentTrack.getDuration()));
+
+        trackNameTextView.setText(
+                valueOrFallback(
+                        currentTrack.getName(),
+                        R.string.track_details_unknown_track
+                )
+        );
+
+        artistNameTextView.setText(
+                valueOrFallback(
+                        currentTrack.getArtistName(),
+                        R.string.track_details_unknown_artist
+                )
+        );
+
+        albumNameTextView.setText(
+                valueOrFallback(
+                        currentTrack.getAlbumName(),
+                        R.string.track_details_unknown_album
+                )
+        );
+
+        durationTextView.setText(
+                formatDuration(
+                        currentTrack.getDuration()
+                )
+        );
+
         updateStatuses();
     }
 
     /**
-     * Refreshes favorite and downloaded labels and button states.
+     * Refreshes favorite and downloaded states and their icons.
      */
     private void updateStatuses() {
-        favoriteStatusTextView.setText(currentTrack.isFavorite()
-                ? R.string.track_details_favorite_yes : R.string.track_details_favorite_no);
-        favoriteButton.setText(currentTrack.isFavorite()
-                ? R.string.track_details_remove_favorite : R.string.track_details_add_favorite);
 
-        boolean downloaded = currentTrack.getLocalFilePath() != null
-                && !currentTrack.getLocalFilePath().trim().isEmpty();
-        downloadedStatusTextView.setText(downloaded
-                ? R.string.track_details_downloaded_yes : R.string.track_details_downloaded_no);
-        downloadButton.setEnabled(!downloaded);
-        downloadButton.setText(downloaded
-                ? R.string.track_details_downloaded_button : R.string.track_details_download);
+        if (currentTrack.isFavorite()) {
+
+            favoriteButton.setIconResource(
+                    R.drawable.ic_heart_filled
+            );
+
+            favoriteButton.setContentDescription(
+                    "Remove from favorites"
+            );
+
+            favoriteStatusTextView.setText(
+                    R.string.track_details_favorite_yes
+            );
+
+        } else {
+
+            favoriteButton.setIconResource(
+                    R.drawable.ic_heart_outline
+            );
+
+            favoriteButton.setContentDescription(
+                    "Add to favorites"
+            );
+
+            favoriteStatusTextView.setText(
+                    R.string.track_details_favorite_no
+            );
+        }
+
+        boolean downloaded =
+                currentTrack.getLocalFilePath() != null
+                        && !currentTrack
+                        .getLocalFilePath()
+                        .trim()
+                        .isEmpty();
+
+        if (downloaded) {
+
+            downloadButton.setIconResource(
+                    R.drawable.ic_download_done
+            );
+
+            downloadButton.setEnabled(false);
+
+            downloadButton.setContentDescription(
+                    "Downloaded"
+            );
+
+            downloadedStatusTextView.setText(
+                    R.string.track_details_downloaded_yes
+            );
+
+        } else {
+
+            downloadButton.setIconResource(
+                    R.drawable.ic_download
+            );
+
+            downloadButton.setEnabled(true);
+
+            downloadButton.setContentDescription(
+                    "Download track"
+            );
+
+            downloadedStatusTextView.setText(
+                    R.string.track_details_downloaded_no
+            );
+        }
     }
 
     /**
      * Starts playback using a downloaded file when available, otherwise streaming audio.
      */
     private void playTrack() {
+
         if (currentTrack == null) {
             return;
         }
-        String audioSource = currentTrack.getLocalFilePath();
-        if (audioSource == null || audioSource.trim().isEmpty()) {
-            audioSource = currentTrack.getAudioUrl();
+
+        String audioSource =
+                currentTrack.getLocalFilePath();
+
+        if (audioSource == null
+                || audioSource.trim().isEmpty()) {
+
+            audioSource =
+                    currentTrack.getAudioUrl();
         }
-        if (audioSource == null || audioSource.trim().isEmpty()) {
-            Toast.makeText(this, R.string.track_details_audio_unavailable, Toast.LENGTH_SHORT).show();
+
+        if (audioSource == null
+                || audioSource.trim().isEmpty()) {
+
+            Toast.makeText(
+                    this,
+                    R.string.track_details_audio_unavailable,
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
+
         musicPlayerManager.play(audioSource);
-        Toast.makeText(this, R.string.track_details_playing, Toast.LENGTH_SHORT).show();
+
+        Toast.makeText(
+                this,
+                R.string.track_details_playing,
+                Toast.LENGTH_SHORT
+        ).show();
     }
 
     /**
      * Adds or removes the current track from favorites and updates the screen.
      */
     private void toggleFavorite() {
+
         if (currentTrack == null) {
             return;
         }
+
         try {
+
             if (currentTrack.isFavorite()) {
-                trackRepository.removeFavorite(currentTrack.getId());
+
+                trackRepository.removeFavorite(
+                        currentTrack.getId()
+                );
+
                 currentTrack.setFavorite(false);
+
             } else {
-                trackRepository.saveFavorite(currentTrack);
+
+                trackRepository.saveFavorite(
+                        currentTrack
+                );
+
                 currentTrack.setFavorite(true);
             }
+
             updateStatuses();
+
         } catch (Exception exception) {
-            Toast.makeText(this, R.string.track_details_favorite_error, Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(
+                    this,
+                    R.string.track_details_favorite_error,
+                    Toast.LENGTH_SHORT
+            ).show();
         }
     }
 
@@ -193,23 +409,53 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * Downloads the current track in the background and refreshes its status.
      */
     private void downloadTrack() {
+
         if (currentTrack == null) {
             return;
         }
+
         downloadButton.setEnabled(false);
-        downloadButton.setText(R.string.track_details_downloading);
+
         executorService.execute(() -> {
+
             try {
-                trackDownloadManager.downloadTrack(currentTrack);
+
+                trackDownloadManager.downloadTrack(
+                        currentTrack
+                );
+
+                String localPath =
+                        trackDownloadManager
+                                .getLocalFilePath(
+                                        currentTrack.getId()
+                                );
+
+                currentTrack.setLocalFilePath(
+                        localPath
+                );
+
                 runOnUiThread(() -> {
+
                     updateStatuses();
-                    Toast.makeText(this, R.string.track_details_download_success, Toast.LENGTH_SHORT).show();
+
+                    Toast.makeText(
+                            this,
+                            R.string.track_details_download_success,
+                            Toast.LENGTH_SHORT
+                    ).show();
                 });
+
             } catch (Exception exception) {
+
                 runOnUiThread(() -> {
+
                     downloadButton.setEnabled(true);
-                    downloadButton.setText(R.string.track_details_download);
-                    Toast.makeText(this, R.string.track_details_download_error, Toast.LENGTH_SHORT).show();
+
+                    Toast.makeText(
+                            this,
+                            R.string.track_details_download_error,
+                            Toast.LENGTH_SHORT
+                    ).show();
                 });
             }
         });
@@ -219,9 +465,18 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * Shows the loading indicator while hiding content and messages.
      */
     private void showLoading() {
-        contentView.setVisibility(View.GONE);
-        stateTextView.setVisibility(View.GONE);
-        progressBar.setVisibility(View.VISIBLE);
+
+        contentView.setVisibility(
+                View.GONE
+        );
+
+        stateTextView.setVisibility(
+                View.GONE
+        );
+
+        progressBar.setVisibility(
+                View.VISIBLE
+        );
     }
 
     /**
@@ -230,10 +485,22 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * @param messageResource string resource describing the error
      */
     private void showError(int messageResource) {
-        contentView.setVisibility(View.GONE);
-        progressBar.setVisibility(View.GONE);
-        stateTextView.setText(messageResource);
-        stateTextView.setVisibility(View.VISIBLE);
+
+        contentView.setVisibility(
+                View.GONE
+        );
+
+        progressBar.setVisibility(
+                View.GONE
+        );
+
+        stateTextView.setText(
+                messageResource
+        );
+
+        stateTextView.setVisibility(
+                View.VISIBLE
+        );
     }
 
     /**
@@ -243,8 +510,15 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * @param fallbackResource string resource used when the value is missing
      * @return original value or localized fallback text
      */
-    private String valueOrFallback(String value, int fallbackResource) {
-        return value == null || value.trim().isEmpty() ? getString(fallbackResource) : value;
+    private String valueOrFallback(
+            String value,
+            int fallbackResource
+    ) {
+
+        return value == null
+                || value.trim().isEmpty()
+                ? getString(fallbackResource)
+                : value;
     }
 
     /**
@@ -254,8 +528,16 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * @return duration formatted as m:ss
      */
     private String formatDuration(int seconds) {
-        int safeSeconds = Math.max(seconds, 0);
-        return String.format(Locale.ROOT, "%d:%02d", safeSeconds / 60, safeSeconds % 60);
+
+        int safeSeconds =
+                Math.max(seconds, 0);
+
+        return String.format(
+                Locale.ROOT,
+                "%d:%02d",
+                safeSeconds / 60,
+                safeSeconds % 60
+        );
     }
 
     /**
@@ -263,8 +545,11 @@ public class TrackDetailsActivity extends AppCompatActivity {
      */
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
+
         musicPlayerManager.release();
+
         executorService.shutdownNow();
     }
 }
