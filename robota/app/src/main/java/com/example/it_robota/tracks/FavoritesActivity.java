@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.it_robota.R;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
+import com.example.it_robota.musicplayback.PlayerActivity;
 import com.example.it_robota.repositories.TrackRepository;
 
 import java.util.ArrayList;
@@ -38,15 +39,11 @@ public class FavoritesActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView emptyStateTextView;
 
-    /**
-     * Initializes dependencies, view bindings and list interactions.
-     *
-     * @param savedInstanceState previously saved activity state, or null
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
+
         trackRepository = new TrackRepository(this);
         sessionManager = new SessionManager(this);
         favoritesListView = findViewById(R.id.lvFavorites);
@@ -54,14 +51,10 @@ public class FavoritesActivity extends AppCompatActivity {
         emptyStateTextView = findViewById(R.id.tvFavoritesEmptyState);
         favoritesAdapter = new FavoritesAdapter();
         favoritesListView.setAdapter(favoritesAdapter);
-        favoritesListView.setOnItemClickListener((parent, view, position, id) -> {
-            openTrackDetails(favoriteTracks.get(position));
-        });
+
+        findViewById(R.id.btnBackFavorites).setOnClickListener(view -> finish());
     }
 
-    /**
-     * Reloads favorites whenever the screen becomes active.
-     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -81,25 +74,25 @@ public class FavoritesActivity extends AppCompatActivity {
         executorService.execute(() -> {
             try {
                 List<Track> tracks = trackRepository.getSavedTracks();
-                runOnUiThread(() -> {
-                    favoriteTracks.clear();
-                    favoriteTracks.addAll(tracks);
-                    favoritesAdapter.notifyDataSetChanged();
-                    progressBar.setVisibility(View.GONE);
-                    favoritesListView.setVisibility(tracks.isEmpty() ? View.GONE : View.VISIBLE);
-                    emptyStateTextView.setVisibility(tracks.isEmpty() ? View.VISIBLE : View.GONE);
-                    emptyStateTextView.setText(R.string.favorites_empty_state);
-                });
+                runOnUiThread(() -> showTracks(tracks));
             } catch (RuntimeException exception) {
                 runOnUiThread(() -> showEmptyState(R.string.favorites_load_error));
             }
         });
     }
 
+    private void showTracks(List<Track> tracks) {
+        favoriteTracks.clear();
+        favoriteTracks.addAll(tracks);
+        favoritesAdapter.notifyDataSetChanged();
+        progressBar.setVisibility(View.GONE);
+        favoritesListView.setVisibility(tracks.isEmpty() ? View.GONE : View.VISIBLE);
+        emptyStateTextView.setVisibility(tracks.isEmpty() ? View.VISIBLE : View.GONE);
+        emptyStateTextView.setText(R.string.favorites_empty_state);
+    }
+
     /**
-     * Removes a track from the current user's favorites and refreshes the list.
-     *
-     * @param track favorite track to remove
+     * Removes a track from the current user's favorites in the background.
      */
     private void removeFavorite(Track track) {
         executorService.execute(() -> {
@@ -123,31 +116,21 @@ public class FavoritesActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Opens the details screen for a selected track when that screen is available.
-     *
-     * @param track selected favorite track
-     */
-    private void openTrackDetails(Track track) {
-        Intent intent = new Intent(this, TrackDetailsActivity.class);
-        intent.putExtra(TrackDetailsActivity.EXTRA_TRACK_ID, track.getId());
+    private void openPlayer(Track track) {
+        if (track == null || track.getId() == null || track.getId().trim().isEmpty()) {
+            return;
+        }
+        Intent intent = new Intent(this, PlayerActivity.class);
+        intent.putExtra(PlayerActivity.EXTRA_TRACK_ID, track.getId());
         startActivity(intent);
     }
 
-    /**
-     * Shows the loading indicator while hiding list content and messages.
-     */
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
         favoritesListView.setVisibility(View.GONE);
         emptyStateTextView.setVisibility(View.GONE);
     }
 
-    /**
-     * Shows a message in place of the favorites list.
-     *
-     * @param messageResource string resource to display
-     */
     private void showEmptyState(int messageResource) {
         progressBar.setVisibility(View.GONE);
         favoritesListView.setVisibility(View.GONE);
@@ -155,60 +138,29 @@ public class FavoritesActivity extends AppCompatActivity {
         emptyStateTextView.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Stops pending background work when the activity is destroyed.
-     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
         executorService.shutdownNow();
     }
 
-    /**
-     * Binds favorite tracks and their remove actions to ListView rows.
-     */
     private class FavoritesAdapter extends BaseAdapter {
 
-        /**
-         * Returns the number of favorite tracks currently displayed.
-         *
-         * @return favorite track count
-         */
         @Override
         public int getCount() {
             return favoriteTracks.size();
         }
 
-        /**
-         * Returns the favorite track at a list position.
-         *
-         * @param position item position
-         * @return favorite track at the position
-         */
         @Override
         public Track getItem(int position) {
             return favoriteTracks.get(position);
         }
 
-        /**
-         * Returns a stable list identifier for an item position.
-         *
-         * @param position item position
-         * @return item identifier
-         */
         @Override
         public long getItemId(int position) {
             return position;
         }
 
-        /**
-         * Creates or reuses a list row and binds its track data and remove action.
-         *
-         * @param position item position
-         * @param convertView reusable row view, or null
-         * @param parent parent list view
-         * @return bound favorite-track row
-         */
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View itemView = convertView;
@@ -222,19 +174,16 @@ public class FavoritesActivity extends AppCompatActivity {
             TextView artistTextView = itemView.findViewById(R.id.tvFavoriteTrackArtist);
             Button removeButton = itemView.findViewById(R.id.btnRemoveFavorite);
             nameTextView.setText(valueOrFallback(track.getName(), R.string.favorites_unknown_track));
-            artistTextView.setText(valueOrFallback(track.getArtistName(), R.string.favorites_unknown_artist));
+            artistTextView.setText(valueOrFallback(
+                    track.getArtistName(),
+                    R.string.favorites_unknown_artist
+            ));
+            itemView.setOnClickListener(view -> openPlayer(track));
             removeButton.setOnClickListener(view -> removeFavorite(track));
             return itemView;
         }
     }
 
-    /**
-     * Returns a display-safe value for optional track text.
-     *
-     * @param value track text value
-     * @param fallbackResource string resource used when the value is missing
-     * @return original value or localized fallback text
-     */
     private String valueOrFallback(String value, int fallbackResource) {
         return value == null || value.trim().isEmpty() ? getString(fallbackResource) : value;
     }

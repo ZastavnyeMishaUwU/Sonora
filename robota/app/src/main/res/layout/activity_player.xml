@@ -10,9 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingStart="24dp"
-        android:paddingTop="28dp"
+        android:paddingTop="20dp"
         android:paddingEnd="24dp"
         android:paddingBottom="30dp">
+
         <ImageView
             android:id="@+id/ivLeavesTop"
             android:layout_width="90dp"
@@ -23,6 +24,7 @@
             android:src="@drawable/ic_leaves_top"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
         <ImageView
             android:id="@+id/ivLeavesBottom"
             android:layout_width="95dp"
@@ -33,27 +35,50 @@
             android:src="@drawable/ic_leaves_bottom"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/playerBackButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:minWidth="0dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:text="←  Back"
+            android:textAllCaps="false"
+            android:textColor="#102016"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:backgroundTint="#FCFCF7"
+            app:cornerRadius="12dp"
+            app:elevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeColor="#D9DDD2"
+            app:strokeWidth="1dp" />
+
         <TextView
             android:id="@+id/tvPlayerTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="35dp"
+            android:layout_marginTop="24dp"
             android:gravity="center"
             android:text="NOW PLAYING"
-            android:textColor="#102016"
-            android:textSize="20sp"
+            android:textColor="#687067"
+            android:textSize="12sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/playerBackButton" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardCover"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             app:cardBackgroundColor="#FCFCF7"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="3dp"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -69,17 +94,18 @@
                 android:src="@android:drawable/ic_menu_gallery" />
 
         </com.google.android.material.card.MaterialCardView>
+
         <TextView
             android:id="@+id/trackTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:gravity="center"
             android:ellipsize="end"
+            android:gravity="center"
             android:maxLines="1"
             android:text="Loading..."
             android:textColor="#102016"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -89,9 +115,9 @@
             android:id="@+id/artistName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:gravity="center"
+            android:layout_marginTop="5dp"
             android:ellipsize="end"
+            android:gravity="center"
             android:maxLines="1"
             android:text="Artist"
             android:textColor="#687067"
@@ -99,11 +125,12 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/trackTitle" />
+
         <SeekBar
             android:id="@+id/seekBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="26dp"
             android:maxHeight="4dp"
             android:minHeight="4dp"
             android:paddingStart="0dp"
@@ -136,18 +163,19 @@
             android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/seekBar" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/playPauseButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_marginTop="24dp"
             android:text="Pause"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             app:backgroundTint="#B53229"
-            app:cornerRadius="9dp"
+            app:cornerRadius="12dp"
             app:elevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -157,18 +185,38 @@
             android:id="@+id/stopButton"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="50dp"
             android:layout_marginTop="10dp"
             android:text="Stop"
             android:textAllCaps="false"
             android:textColor="#273027"
-            android:textSize="11sp"
-            app:cornerRadius="9dp"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:backgroundTint="#FCFCF7"
+            app:cornerRadius="12dp"
+            app:elevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/playPauseButton"
-            app:strokeColor="#E1E4DA"
+            app:strokeColor="#D9DDD2"
             app:strokeWidth="1dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/playerDetailsButton"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="10dp"
+            android:text="View track details  →"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:backgroundTint="#536052"
+            app:cornerRadius="12dp"
+            app:elevation="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/stopButton" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

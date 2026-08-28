@@ -2,7 +2,6 @@ package com.example.it_robota.tracks;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,6 +13,7 @@ import com.example.it_robota.downloader.TrackDownloadManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.MusicPlayerManager;
 import com.example.it_robota.repositories.TrackRepository;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -40,15 +40,11 @@ public class TrackDetailsActivity extends AppCompatActivity {
     private TextView durationTextView;
     private TextView favoriteStatusTextView;
     private TextView downloadedStatusTextView;
-    private Button favoriteButton;
-    private Button downloadButton;
+    private MaterialButton favoriteButton;
+    private MaterialButton downloadButton;
     private boolean favoriteUpdateInProgress;
+    private boolean downloadInProgress;
 
-    /**
-     * Initializes dependencies, view bindings, actions and track loading.
-     *
-     * @param savedInstanceState previously saved activity state, or null
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +55,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
         musicPlayerManager = new MusicPlayerManager();
         trackDownloadManager = new TrackDownloadManager(this);
 
+        findViewById(R.id.btnTrackDetailsBack).setOnClickListener(view -> finish());
         findViewById(R.id.btnPlayTrack).setOnClickListener(view -> playTrack());
         favoriteButton.setOnClickListener(view -> toggleFavorite());
         downloadButton.setOnClickListener(view -> downloadTrack());
@@ -71,9 +68,6 @@ public class TrackDetailsActivity extends AppCompatActivity {
         loadTrack(trackId.trim());
     }
 
-    /**
-     * Resolves and stores all views used by the screen.
-     */
     private void bindViews() {
         contentView = findViewById(R.id.trackDetailsContent);
         progressBar = findViewById(R.id.trackDetailsProgress);
@@ -89,9 +83,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Loads track details and downloaded state outside the UI thread.
-     *
-     * @param trackId identifier of the track to load
+     * Loads track details and local states outside the UI thread.
      */
     private void loadTrack(String trackId) {
         showLoading();
@@ -115,45 +107,55 @@ public class TrackDetailsActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Displays the loaded track and its current action states.
-     */
     private void renderTrack() {
         progressBar.setVisibility(View.GONE);
         stateTextView.setVisibility(View.GONE);
         contentView.setVisibility(View.VISIBLE);
-        trackNameTextView.setText(valueOrFallback(currentTrack.getName(), R.string.track_details_unknown_track));
+        trackNameTextView.setText(valueOrFallback(
+                currentTrack.getName(),
+                R.string.track_details_unknown_track
+        ));
         artistNameTextView.setText(valueOrFallback(
                 currentTrack.getArtistName(),
                 R.string.track_details_unknown_artist
         ));
-        albumNameTextView.setText(valueOrFallback(currentTrack.getAlbumName(), R.string.track_details_unknown_album));
+        albumNameTextView.setText(valueOrFallback(
+                currentTrack.getAlbumName(),
+                R.string.track_details_unknown_album
+        ));
         durationTextView.setText(formatDuration(currentTrack.getDuration()));
         updateStatuses();
     }
 
     /**
-     * Refreshes favorite and downloaded labels and button states.
+     * Refreshes favorite and download states using the latest Master icons.
      */
     private void updateStatuses() {
-        favoriteStatusTextView.setText(currentTrack.isFavorite()
-                ? R.string.track_details_favorite_yes : R.string.track_details_favorite_no);
-        favoriteButton.setText(currentTrack.isFavorite()
-                ? R.string.track_details_remove_favorite : R.string.track_details_add_favorite);
+        if (currentTrack.isFavorite()) {
+            favoriteButton.setIconResource(R.drawable.ic_heart_filled);
+            favoriteButton.setContentDescription(getString(R.string.track_details_remove_favorite));
+            favoriteStatusTextView.setText(R.string.track_details_favorite_yes);
+        } else {
+            favoriteButton.setIconResource(R.drawable.ic_heart_outline);
+            favoriteButton.setContentDescription(getString(R.string.track_details_add_favorite));
+            favoriteStatusTextView.setText(R.string.track_details_favorite_no);
+        }
         favoriteButton.setEnabled(!favoriteUpdateInProgress);
 
         boolean downloaded = currentTrack.getLocalFilePath() != null
                 && !currentTrack.getLocalFilePath().trim().isEmpty();
+        downloadButton.setIconResource(downloaded
+                ? R.drawable.ic_download_done
+                : R.drawable.ic_download);
+        downloadButton.setEnabled(!downloaded && !downloadInProgress);
+        downloadButton.setContentDescription(getString(downloaded
+                ? R.string.track_details_downloaded_button
+                : R.string.track_details_download));
         downloadedStatusTextView.setText(downloaded
-                ? R.string.track_details_downloaded_yes : R.string.track_details_downloaded_no);
-        downloadButton.setEnabled(!downloaded);
-        downloadButton.setText(downloaded
-                ? R.string.track_details_downloaded_button : R.string.track_details_download);
+                ? R.string.track_details_downloaded_yes
+                : R.string.track_details_downloaded_no);
     }
 
-    /**
-     * Starts playback using a downloaded file when available, otherwise streaming audio.
-     */
     private void playTrack() {
         if (currentTrack == null) {
             return;
@@ -171,7 +173,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Adds or removes the current track from favorites and updates the screen.
+     * Adds or removes the track in Room without blocking the UI thread.
      */
     private void toggleFavorite() {
         if (currentTrack == null || favoriteUpdateInProgress) {
@@ -204,52 +206,57 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     favoriteUpdateInProgress = false;
                     updateStatuses();
-                    Toast.makeText(this, R.string.track_details_favorite_error, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(
+                            this,
+                            R.string.track_details_favorite_error,
+                            Toast.LENGTH_SHORT
+                    ).show();
                 });
             }
         });
     }
 
-    /**
-     * Downloads the current track in the background and refreshes its status.
-     */
     private void downloadTrack() {
-        if (currentTrack == null) {
+        if (currentTrack == null || downloadInProgress) {
             return;
         }
+        downloadInProgress = true;
         downloadButton.setEnabled(false);
-        downloadButton.setText(R.string.track_details_downloading);
         executorService.execute(() -> {
             try {
                 trackDownloadManager.downloadTrack(currentTrack);
+                currentTrack.setLocalFilePath(
+                        trackDownloadManager.getLocalFilePath(currentTrack.getId())
+                );
                 runOnUiThread(() -> {
+                    downloadInProgress = false;
                     updateStatuses();
-                    Toast.makeText(this, R.string.track_details_download_success, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(
+                            this,
+                            R.string.track_details_download_success,
+                            Toast.LENGTH_SHORT
+                    ).show();
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
-                    downloadButton.setEnabled(true);
-                    downloadButton.setText(R.string.track_details_download);
-                    Toast.makeText(this, R.string.track_details_download_error, Toast.LENGTH_SHORT).show();
+                    downloadInProgress = false;
+                    updateStatuses();
+                    Toast.makeText(
+                            this,
+                            R.string.track_details_download_error,
+                            Toast.LENGTH_SHORT
+                    ).show();
                 });
             }
         });
     }
 
-    /**
-     * Shows the loading indicator while hiding content and messages.
-     */
     private void showLoading() {
         contentView.setVisibility(View.GONE);
         stateTextView.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Shows an error message while hiding content and progress.
-     *
-     * @param messageResource string resource describing the error
-     */
     private void showError(int messageResource) {
         contentView.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
@@ -257,31 +264,15 @@ public class TrackDetailsActivity extends AppCompatActivity {
         stateTextView.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Returns a display-safe value for an optional text field.
-     *
-     * @param value value returned by the track API
-     * @param fallbackResource string resource used when the value is missing
-     * @return original value or localized fallback text
-     */
     private String valueOrFallback(String value, int fallbackResource) {
         return value == null || value.trim().isEmpty() ? getString(fallbackResource) : value;
     }
 
-    /**
-     * Formats a duration in seconds as minutes and seconds.
-     *
-     * @param seconds duration in seconds
-     * @return duration formatted as m:ss
-     */
     private String formatDuration(int seconds) {
         int safeSeconds = Math.max(seconds, 0);
         return String.format(Locale.ROOT, "%d:%02d", safeSeconds / 60, safeSeconds % 60);
     }
 
-    /**
-     * Releases playback and background-thread resources when the activity is destroyed.
-     */
     @Override
     protected void onDestroy() {
         super.onDestroy();

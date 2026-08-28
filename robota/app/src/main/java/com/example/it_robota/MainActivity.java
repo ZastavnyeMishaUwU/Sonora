@@ -18,10 +18,12 @@ import com.example.it_robota.api.JamendoApiClient;
 import com.example.it_robota.auth.LoginActivity;
 import com.example.it_robota.auth.RegisterActivity;
 import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.auth.SettingsActivity;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
 import com.example.it_robota.tracks.DownloadedTracksActivity;
 import com.example.it_robota.tracks.FavoritesActivity;
+import com.example.it_robota.tracks.SearchActivity;
 import com.example.it_robota.tracks.TrackDetailsActivity;
 
 import java.util.ArrayList;
@@ -29,12 +31,18 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Home screen for authenticated navigation and track search.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private EditText searchEditText;
     private Button searchButton;
-    private Button showFavoritesButton;
     private Button showDownloadedTracksButton;
+    private Button showFavoritesButton;
+    private Button profileNavButton;
+    private Button searchNavButton;
+    private Button favoritesNavButton;
     private ListView tracksListView;
     private Button loginAuthButton;
     private Button registerAuthButton;
@@ -52,8 +60,11 @@ public class MainActivity extends AppCompatActivity {
 
         searchEditText = findViewById(R.id.searchEditText);
         searchButton = findViewById(R.id.searchButton);
-        showFavoritesButton = findViewById(R.id.showFavoritesButton);
         showDownloadedTracksButton = findViewById(R.id.showDownloadedTracksButton);
+        showFavoritesButton = findViewById(R.id.showFavoritesButton);
+        profileNavButton = findViewById(R.id.profileNavButton);
+        searchNavButton = findViewById(R.id.searchNavButton);
+        favoritesNavButton = findViewById(R.id.favoritesNavButton);
         tracksListView = findViewById(R.id.tracksListView);
         logoutAuthButton = findViewById(R.id.logoutAuthButton);
         authButtonsLayout = findViewById(R.id.authButtonsLayout);
@@ -69,11 +80,14 @@ public class MainActivity extends AppCompatActivity {
         showDownloadedTracksButton.setOnClickListener(view ->
                 startActivity(new Intent(this, DownloadedTracksActivity.class))
         );
-
-        showFavoritesButton.setOnClickListener(view ->
-                startActivity(new Intent(this, FavoritesActivity.class))
+        showFavoritesButton.setOnClickListener(view -> openFavorites());
+        profileNavButton.setOnClickListener(view ->
+                startActivity(new Intent(this, SettingsActivity.class))
         );
-
+        searchNavButton.setOnClickListener(view ->
+                startActivity(new Intent(this, SearchActivity.class))
+        );
+        favoritesNavButton.setOnClickListener(view -> openFavorites());
         loginAuthButton.setOnClickListener(view ->
                 startActivity(new Intent(this, LoginActivity.class))
         );
@@ -98,6 +112,10 @@ public class MainActivity extends AppCompatActivity {
         authButtonsLayout.setVisibility(isLoggedIn ? View.GONE : View.VISIBLE);
         logoutAuthButton.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
         authOnlyContentLayout.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
+    }
+
+    private void openFavorites() {
+        startActivity(new Intent(this, FavoritesActivity.class));
     }
 
     private void searchTracks() {
@@ -142,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         tracksListView.setOnItemClickListener((parent, view, position, id) -> {
             Track selectedTrack = tracks.get(position);
             Intent intent = new Intent(this, PlayerActivity.class);
-            intent.putExtra("TRACK_ID", selectedTrack.getId());
+            intent.putExtra(PlayerActivity.EXTRA_TRACK_ID, selectedTrack.getId());
             startActivity(intent);
         });
 
