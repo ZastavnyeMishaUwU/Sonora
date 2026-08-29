@@ -8,11 +8,11 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.UserDao;
 import com.example.it_robota.repositories.AuthRepository;
+import com.example.it_robota.tracks.SearchActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -110,7 +110,7 @@ public class RegisterActivity extends AppCompatActivity {
                     setLoading(false);
 
                     if (result != null && result.isSuccess()) {
-                        navigateToMainScreen();
+                        navigateToSearchScreen();
                     } else if (result != null
                             && result.getMessage() != null
                             && !result.getMessage().trim().isEmpty()) {
@@ -155,12 +155,12 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /*
-     * Navigates to MainActivity and clears task stack
+     * Navigates to SearchActivity and clears the task stack.
      */
-    private void navigateToMainScreen() {
+    private void navigateToSearchScreen() {
         Intent intent = new Intent(
                 this,
-                MainActivity.class
+                SearchActivity.class
         );
 
         intent.setFlags(
