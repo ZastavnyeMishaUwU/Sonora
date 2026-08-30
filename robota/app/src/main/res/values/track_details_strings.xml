@@ -22,6 +22,8 @@
     <string name="track_details_audio_unavailable">Audio is unavailable.</string>
     <string name="track_details_playing">Playback started.</string>
     <string name="track_details_favorite_error">Could not update favorite status.</string>
+    <string name="track_details_favorite_saved">Added to favorites.</string>
+    <string name="track_details_favorite_removed">Removed from favorites.</string>
     <string name="track_details_download_success">Track downloaded successfully.</string>
     <string name="track_details_download_error">Could not download this track.</string>
 </resources>
