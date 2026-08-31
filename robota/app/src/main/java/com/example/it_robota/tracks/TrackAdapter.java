@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Displays a simple list of tracks with track and artist names.
+ * Displays a simple list containing track titles.
  */
 public class TrackAdapter
         extends RecyclerView.Adapter<TrackAdapter.TrackViewHolder> {
@@ -123,7 +123,6 @@ public class TrackAdapter
     class TrackViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView trackNameTextView;
-        private final TextView artistNameTextView;
 
         /**
          * Creates a track view holder.
@@ -135,9 +134,6 @@ public class TrackAdapter
 
             trackNameTextView =
                     itemView.findViewById(R.id.tvTrackName);
-
-            artistNameTextView =
-                    itemView.findViewById(R.id.tvArtistName);
         }
 
         /**
@@ -151,15 +147,6 @@ public class TrackAdapter
                             track.getName(),
                             itemView.getContext().getString(
                                     R.string.search_unknown_track
-                            )
-                    )
-            );
-
-            artistNameTextView.setText(
-                    valueOrFallback(
-                            track.getArtistName(),
-                            itemView.getContext().getString(
-                                    R.string.search_unknown_artist
                             )
                     )
             );
