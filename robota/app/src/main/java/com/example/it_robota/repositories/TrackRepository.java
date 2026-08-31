@@ -35,6 +35,11 @@ public class TrackRepository {
         favoriteTrackDao = AppDatabase.getInstance(applicationContext).favoriteTrackDao();
         sessionManager = new SessionManager(applicationContext);
     }
+    public TrackRepository(JamendoApiClient jamendoApiClient, FavoriteTrackDao favoriteTrackDao, SessionManager sessionManager) {
+        this.jamendoApiClient = jamendoApiClient;
+        this.favoriteTrackDao = favoriteTrackDao;
+        this.sessionManager = sessionManager;
+    }
 
     /**
      * Searches tracks through the Jamendo API.
