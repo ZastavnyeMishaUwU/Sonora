@@ -6,13 +6,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.UserDao;
 import com.example.it_robota.repositories.AuthRepository;
-import com.example.it_robota.tracks.SearchActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,22 +40,49 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
 
-        AppDatabase db = AppDatabase.getInstance(this);
-        UserDao userDao = db.userDao();
-        SessionManager sessionManager = new SessionManager(this);
+        setContentView(
+                R.layout.activity_register
+        );
+
+        AppDatabase db =
+                AppDatabase.getInstance(this);
+
+        UserDao userDao =
+                db.userDao();
+
+        SessionManager sessionManager =
+                new SessionManager(this);
 
         authRepository = new AuthRepository(
                 userDao,
                 sessionManager
         );
 
-        etUsername = findViewById(R.id.etUsername);
-        etEmail = findViewById(R.id.etEmail);
-        etPassword = findViewById(R.id.etPassword);
-        btnRegister = findViewById(R.id.btnRegister);
-        tvStatus = findViewById(R.id.tvStatus);
+        etUsername =
+                findViewById(
+                        R.id.etUsername
+                );
+
+        etEmail =
+                findViewById(
+                        R.id.etEmail
+                );
+
+        etPassword =
+                findViewById(
+                        R.id.etPassword
+                );
+
+        btnRegister =
+                findViewById(
+                        R.id.btnRegister
+                );
+
+        tvStatus =
+                findViewById(
+                        R.id.tvStatus
+                );
 
         btnRegister.setOnClickListener(
                 v -> performRegistration()
@@ -82,17 +110,35 @@ public class RegisterActivity extends AppCompatActivity {
         showStatus("");
 
         if (username.isEmpty()) {
-            showStatus("Username cannot be empty");
+            showStatus(
+                    "Username cannot be empty"
+            );
+
             return;
         }
 
         if (email.isEmpty()) {
-            showStatus("Email cannot be empty");
+            showStatus(
+                    "Email cannot be empty"
+            );
+
             return;
         }
 
         if (password.isEmpty()) {
-            showStatus("Password cannot be empty");
+            showStatus(
+                    "Password cannot be empty"
+            );
+
+            return;
+        }
+
+        if (password.chars().anyMatch(Character::isWhitespace)) {
+            new AlertDialog.Builder(this)
+                    .setMessage("Space character detected")
+                    .setPositiveButton("OK", null)
+                    .show();
+
             return;
         }
 
@@ -100,32 +146,48 @@ public class RegisterActivity extends AppCompatActivity {
 
         executorService.execute(() -> {
             try {
-                AuthResult result = authRepository.register(
-                        username,
-                        email,
-                        password
-                );
+                AuthResult result =
+                        authRepository.register(
+                                username,
+                                email,
+                                password
+                        );
 
                 runOnUiThread(() -> {
                     setLoading(false);
 
-                    if (result != null && result.isSuccess()) {
-                        navigateToSearchScreen();
+                    if (result != null
+                            && result.isSuccess()) {
+
+                        navigateToMainScreen();
+
                     } else if (result != null
                             && result.getMessage() != null
-                            && !result.getMessage().trim().isEmpty()) {
+                            && !result
+                            .getMessage()
+                            .trim()
+                            .isEmpty()) {
 
-                        showStatus(result.getMessage());
+                        showStatus(
+                                result.getMessage()
+                        );
 
                     } else {
-                        showStatus("Registration failed");
+
+                        showStatus(
+                                "Registration failed"
+                        );
                     }
                 });
 
             } catch (Exception exception) {
+
                 runOnUiThread(() -> {
                     setLoading(false);
-                    showStatus("Registration failed");
+
+                    showStatus(
+                            "Registration failed"
+                    );
                 });
             }
         });
@@ -141,9 +203,13 @@ public class RegisterActivity extends AppCompatActivity {
         etPassword.setEnabled(!loading);
 
         if (loading) {
-            btnRegister.setText("Registering...");
+            btnRegister.setText(
+                    "Registering..."
+            );
         } else {
-            btnRegister.setText("Register");
+            btnRegister.setText(
+                    "Register"
+            );
         }
     }
 
@@ -155,12 +221,13 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /*
-     * Navigates to SearchActivity and clears the task stack.
+     * Navigates to MainActivity after successful registration
+     * and clears authentication screens from the task stack.
      */
-    private void navigateToSearchScreen() {
+    private void navigateToMainScreen() {
         Intent intent = new Intent(
                 this,
-                SearchActivity.class
+                MainActivity.class
         );
 
         intent.setFlags(
@@ -178,6 +245,7 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         executorService.shutdownNow();
     }
 }
