@@ -39,10 +39,10 @@ public class MainActivity extends AppCompatActivity {
     private EditText searchEditText;
     private Button searchButton;
     private Button showDownloadedTracksButton;
-    private Button showFavoritesButton;
     private Button profileNavButton;
     private Button searchNavButton;
     private Button favoritesNavButton;
+    private View bottomNavigationBar;
     private ListView tracksListView;
     private Button loginAuthButton;
     private Button registerAuthButton;
@@ -61,10 +61,10 @@ public class MainActivity extends AppCompatActivity {
         searchEditText = findViewById(R.id.searchEditText);
         searchButton = findViewById(R.id.searchButton);
         showDownloadedTracksButton = findViewById(R.id.showDownloadedTracksButton);
-        showFavoritesButton = findViewById(R.id.showFavoritesButton);
         profileNavButton = findViewById(R.id.profileNavButton);
         searchNavButton = findViewById(R.id.searchNavButton);
         favoritesNavButton = findViewById(R.id.favoritesNavButton);
+        bottomNavigationBar = findViewById(R.id.bottomNavigationBar);
         tracksListView = findViewById(R.id.tracksListView);
         logoutAuthButton = findViewById(R.id.logoutAuthButton);
         authButtonsLayout = findViewById(R.id.authButtonsLayout);
@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
         showDownloadedTracksButton.setOnClickListener(view ->
                 startActivity(new Intent(this, DownloadedTracksActivity.class))
         );
-        showFavoritesButton.setOnClickListener(view -> openFavorites());
         profileNavButton.setOnClickListener(view ->
                 startActivity(new Intent(this, SettingsActivity.class))
         );
@@ -112,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         authButtonsLayout.setVisibility(isLoggedIn ? View.GONE : View.VISIBLE);
         logoutAuthButton.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
         authOnlyContentLayout.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
+        bottomNavigationBar.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
     }
 
     private void openFavorites() {
