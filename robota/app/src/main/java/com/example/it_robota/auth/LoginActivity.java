@@ -11,10 +11,10 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.repositories.AuthRepository;
-import com.example.it_robota.tracks.SearchActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
         );
 
         if (authRepository.isUserLoggedIn()) {
-            openSearchScreen();
+            openMainScreen();
             return;
         }
 
@@ -80,9 +80,13 @@ public class LoginActivity extends AppCompatActivity {
      * Configures login and registration actions.
      */
     private void setupActions() {
-        loginButton.setOnClickListener(view -> performLogin());
+        loginButton.setOnClickListener(
+                view -> performLogin()
+        );
 
-        registerButton.setOnClickListener(view -> openRegisterScreen());
+        registerButton.setOnClickListener(
+                view -> openRegisterScreen()
+        );
 
         passwordEditText.setOnEditorActionListener(
                 (textView, actionId, event) -> {
@@ -135,9 +139,14 @@ public class LoginActivity extends AppCompatActivity {
 
         executorService.execute(() -> {
             AuthResult result =
-                    authRepository.login(email, password);
+                    authRepository.login(
+                            email,
+                            password
+                    );
 
-            runOnUiThread(() -> handleLoginResult(result));
+            runOnUiThread(
+                    () -> handleLoginResult(result)
+            );
         });
     }
 
@@ -150,19 +159,25 @@ public class LoginActivity extends AppCompatActivity {
         showLoading(false);
 
         if (result != null && result.isSuccess()) {
-            openSearchScreen();
+            openMainScreen();
             return;
         }
 
         if (result == null
                 || result.getMessage() == null
                 || result.getMessage().trim().isEmpty()) {
+
             showStatus(R.string.login_error);
             return;
         }
 
-        statusTextView.setText(result.getMessage());
-        statusTextView.setVisibility(View.VISIBLE);
+        statusTextView.setText(
+                result.getMessage()
+        );
+
+        statusTextView.setVisibility(
+                View.VISIBLE
+        );
     }
 
     /**
@@ -172,7 +187,9 @@ public class LoginActivity extends AppCompatActivity {
      */
     private void showLoading(boolean loading) {
         progressBar.setVisibility(
-                loading ? View.VISIBLE : View.GONE
+                loading
+                        ? View.VISIBLE
+                        : View.GONE
         );
 
         loginButton.setEnabled(!loading);
@@ -187,8 +204,13 @@ public class LoginActivity extends AppCompatActivity {
      * @param messageResource message string resource
      */
     private void showStatus(int messageResource) {
-        statusTextView.setText(messageResource);
-        statusTextView.setVisibility(View.VISIBLE);
+        statusTextView.setText(
+                messageResource
+        );
+
+        statusTextView.setVisibility(
+                View.VISIBLE
+        );
     }
 
     /**
@@ -196,7 +218,10 @@ public class LoginActivity extends AppCompatActivity {
      */
     private void clearStatus() {
         statusTextView.setText("");
-        statusTextView.setVisibility(View.GONE);
+
+        statusTextView.setVisibility(
+                View.GONE
+        );
     }
 
     /**
@@ -212,11 +237,20 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Opens the main track search screen and removes login from history.
+     * Opens the main Home screen after successful authentication
+     * and removes authentication screens from the task history.
      */
-    private void openSearchScreen() {
-        Intent intent = new Intent(this, SearchActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+    private void openMainScreen() {
+        Intent intent = new Intent(
+                this,
+                MainActivity.class
+        );
+
+        intent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TASK
+        );
+
         startActivity(intent);
         finish();
     }
@@ -227,6 +261,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         executorService.shutdownNow();
     }
 }
