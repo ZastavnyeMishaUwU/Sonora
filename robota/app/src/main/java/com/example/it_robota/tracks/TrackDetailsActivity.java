@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
+import com.example.it_robota.auth.AuthenticationGuard;
 import com.example.it_robota.downloader.TrackDownloadManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.MusicPlayerManager;
@@ -48,6 +49,11 @@ public class TrackDetailsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!AuthenticationGuard.requireLoggedIn(this)) {
+            return;
+        }
+
         setContentView(R.layout.activity_track_details);
         bindViews();
 
@@ -276,7 +282,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        musicPlayerManager.release();
+        if (musicPlayerManager != null) {
+            musicPlayerManager.release();
+        }
         executorService.shutdownNow();
     }
 }

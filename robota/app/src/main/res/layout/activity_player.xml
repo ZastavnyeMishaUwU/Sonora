@@ -211,6 +211,7 @@
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold"
+            android:visibility="gone"
             app:backgroundTint="#536052"
             app:cornerRadius="12dp"
             app:elevation="1dp"

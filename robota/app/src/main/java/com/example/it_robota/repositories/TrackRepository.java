@@ -46,7 +46,7 @@ public class TrackRepository {
      *
      * @param query search text entered by the user
      * @return list of found tracks
-     * @throws Exception if API request or parsing fails
+     * @throws Exception if the API request or parsing fails
      */
     public List<Track> searchTracks(String query) throws Exception {
         return jamendoApiClient.searchTracks(query);

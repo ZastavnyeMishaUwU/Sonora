@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
+import com.example.it_robota.auth.AuthenticationGuard;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
@@ -42,6 +43,11 @@ public class FavoritesActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!AuthenticationGuard.requireLoggedIn(this)) {
+            return;
+        }
+
         setContentView(R.layout.activity_favorites);
 
         trackRepository = new TrackRepository(this);
@@ -58,6 +64,11 @@ public class FavoritesActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (sessionManager == null) {
+            return;
+        }
+
         loadFavorites();
     }
 

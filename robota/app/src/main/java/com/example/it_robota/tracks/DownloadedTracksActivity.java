@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
+import com.example.it_robota.auth.AuthenticationGuard;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.DownloadedTrackDao;
@@ -49,6 +50,11 @@ public class DownloadedTracksActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!AuthenticationGuard.requireLoggedIn(this)) {
+            return;
+        }
+
         setContentView(R.layout.activity_downloaded_tracks);
 
         downloadedTrackDao = AppDatabase.getInstance(this).downloadedTrackDao();
@@ -65,6 +71,11 @@ public class DownloadedTracksActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (sessionManager == null) {
+            return;
+        }
+
         loadDownloadedTracks();
     }
 
@@ -268,7 +279,9 @@ public class DownloadedTracksActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        musicPlayerManager.release();
+        if (musicPlayerManager != null) {
+            musicPlayerManager.release();
+        }
         executorService.shutdownNow();
     }
 

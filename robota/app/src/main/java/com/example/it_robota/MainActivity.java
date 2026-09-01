@@ -14,13 +14,13 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.it_robota.api.JamendoApiClient;
 import com.example.it_robota.auth.LoginActivity;
 import com.example.it_robota.auth.RegisterActivity;
 import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.auth.SettingsActivity;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
+import com.example.it_robota.repositories.TrackRepository;
 import com.example.it_robota.tracks.DownloadedTracksActivity;
 import com.example.it_robota.tracks.FavoritesActivity;
 import com.example.it_robota.tracks.SearchActivity;
@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText searchEditText;
     private Button searchButton;
+    private View searchCard;
     private Button showDownloadedTracksButton;
     private Button profileNavButton;
     private Button searchNavButton;
@@ -49,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private Button logoutAuthButton;
     private LinearLayout authButtonsLayout;
     private LinearLayout authOnlyContentLayout;
-    private JamendoApiClient jamendoApiClient;
+    private SessionManager sessionManager;
+    private TrackRepository trackRepository;
     private ExecutorService executorService;
     private Handler mainHandler;
 
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
         searchEditText = findViewById(R.id.searchEditText);
         searchButton = findViewById(R.id.searchButton);
+        searchCard = findViewById(R.id.cardSearch);
         showDownloadedTracksButton = findViewById(R.id.showDownloadedTracksButton);
         profileNavButton = findViewById(R.id.profileNavButton);
         searchNavButton = findViewById(R.id.searchNavButton);
@@ -72,7 +75,8 @@ public class MainActivity extends AppCompatActivity {
         loginAuthButton = findViewById(R.id.loginAuthButton);
         registerAuthButton = findViewById(R.id.registerAuthButton);
 
-        jamendoApiClient = new JamendoApiClient(this);
+        sessionManager = new SessionManager(this);
+        trackRepository = new TrackRepository(this);
         executorService = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
 
@@ -94,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, RegisterActivity.class))
         );
         logoutAuthButton.setOnClickListener(view -> {
-            new SessionManager(this).clearSession();
+            sessionManager.clearSession();
             updateAuthButtonsVisibility();
             Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
         });
@@ -107,9 +111,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateAuthButtonsVisibility() {
-        boolean isLoggedIn = new SessionManager(this).isLoggedIn();
+        boolean isLoggedIn = sessionManager.isLoggedIn();
         authButtonsLayout.setVisibility(isLoggedIn ? View.GONE : View.VISIBLE);
         logoutAuthButton.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
+        searchCard.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
+        searchButton.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
         authOnlyContentLayout.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
         bottomNavigationBar.setVisibility(isLoggedIn ? View.VISIBLE : View.GONE);
     }
@@ -119,6 +125,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void searchTracks() {
+        if (!sessionManager.isLoggedIn()) {
+            tracksListView.setAdapter(null);
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
+        }
+
         String query = searchEditText.getText().toString().trim();
         if (query.isEmpty()) {
             Toast.makeText(this, "Enter track or artist name", Toast.LENGTH_SHORT).show();
@@ -128,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         tracksListView.setAdapter(null);
         executorService.execute(() -> {
             try {
-                List<Track> tracks = jamendoApiClient.searchTracks(query);
+                List<Track> tracks = trackRepository.searchTracks(query);
                 mainHandler.post(() -> showSearchResults(tracks));
             } catch (Exception exception) {
                 mainHandler.post(() -> Toast.makeText(
@@ -148,7 +160,10 @@ public class MainActivity extends AppCompatActivity {
 
         List<String> displayItems = new ArrayList<>();
         for (Track track : tracks) {
-            displayItems.add(track.getName() + " — " + track.getArtistName());
+            String title = track.getName();
+            displayItems.add(title == null || title.trim().isEmpty()
+                    ? getString(R.string.search_unknown_track)
+                    : title);
         }
 
         tracksListView.setAdapter(new ArrayAdapter<>(

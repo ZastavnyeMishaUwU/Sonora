@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.example.it_robota.R;
 import com.example.it_robota.api.JamendoApiClient;
+import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.tracks.TrackDetailsActivity;
 import com.google.android.material.button.MaterialButton;
@@ -46,6 +48,7 @@ public class PlayerActivity extends AppCompatActivity {
 
     private MusicPlayerManager musicPlayer;
     private JamendoApiClient apiClient;
+    private SessionManager sessionManager;
     private ExecutorService executorService;
 
     private final Handler handler =
@@ -80,6 +83,11 @@ public class PlayerActivity extends AppCompatActivity {
 
         apiClient =
                 new JamendoApiClient(this);
+
+        sessionManager =
+                new SessionManager(this);
+
+        updateDetailsAvailability();
 
         executorService =
                 Executors.newSingleThreadExecutor();
@@ -277,6 +285,10 @@ public class PlayerActivity extends AppCompatActivity {
      * Opens the details screen for the currently playing track.
      */
     private void openTrackDetails() {
+        if (!sessionManager.isLoggedIn()) {
+            return;
+        }
+
         if (trackId == null
                 || trackId.trim().isEmpty()) {
 
@@ -300,6 +312,26 @@ public class PlayerActivity extends AppCompatActivity {
         );
 
         startActivity(intent);
+    }
+
+    /**
+     * Keeps the separate details screen unavailable in guest mode.
+     */
+    private void updateDetailsAvailability() {
+        detailsButton.setVisibility(
+                sessionManager.isLoggedIn()
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (sessionManager != null) {
+            updateDetailsAvailability();
+        }
     }
 
     /**
