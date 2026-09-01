@@ -46,13 +46,9 @@ public class TrackRepository {
      *
      * @param query search text entered by the user
      * @return list of found tracks
-     * @throws Exception if no user is logged in or the API request fails
+     * @throws Exception if the API request or parsing fails
      */
     public List<Track> searchTracks(String query) throws Exception {
-        if (getCurrentUserId() == NO_USER_ID) {
-            throw new IllegalStateException("User is not logged in.");
-        }
-
         return jamendoApiClient.searchTracks(query);
     }
 

@@ -40,6 +40,10 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (!AuthenticationGuard.requireLoggedIn(this)) {
+            return;
+        }
+
         setContentView(R.layout.activity_settings);
 
         AppDatabase database = AppDatabase.getInstance(this);

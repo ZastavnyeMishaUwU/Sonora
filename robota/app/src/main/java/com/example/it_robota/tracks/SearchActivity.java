@@ -14,8 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.it_robota.R;
-import com.example.it_robota.auth.LoginActivity;
-import com.example.it_robota.auth.SessionManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
 import com.example.it_robota.repositories.TrackRepository;
@@ -35,8 +33,6 @@ public class SearchActivity extends AppCompatActivity {
 
     private TrackRepository trackRepository;
     private TrackAdapter trackAdapter;
-    private SessionManager sessionManager;
-    private boolean redirectingToLogin;
 
     private EditText searchInput;
     private Button searchButton;
@@ -53,11 +49,6 @@ public class SearchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        sessionManager = new SessionManager(this);
-        if (redirectToLoginIfRequired()) {
-            return;
-        }
 
         setContentView(R.layout.activity_search);
 
@@ -144,10 +135,6 @@ public class SearchActivity extends AppCompatActivity {
      * Validates the entered query and starts a search request.
      */
     private void performSearch() {
-        if (redirectToLoginIfRequired()) {
-            return;
-        }
-
         String query = searchInput
                 .getText()
                 .toString()
@@ -324,41 +311,6 @@ public class SearchActivity extends AppCompatActivity {
         stateTextView.setVisibility(
                 View.VISIBLE
         );
-    }
-
-    /**
-     * Prevents unauthenticated access to track search.
-     *
-     * @return true when the user is being redirected to Login
-     */
-    private boolean redirectToLoginIfRequired() {
-        if (sessionManager.isLoggedIn()) {
-            return false;
-        }
-
-        if (!redirectingToLogin) {
-            redirectingToLogin = true;
-
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK
-                            | Intent.FLAG_ACTIVITY_CLEAR_TASK
-            );
-
-            startActivity(intent);
-            finish();
-        }
-
-        return true;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (sessionManager != null) {
-            redirectToLoginIfRequired();
-        }
     }
 
     /**

@@ -15,6 +15,7 @@ import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.repositories.AuthRepository;
+import com.example.it_robota.tracks.SearchActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +34,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private Button loginButton;
     private Button registerButton;
+    private Button guestButton;
     private TextView statusTextView;
     private ProgressBar progressBar;
 
@@ -72,6 +74,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.etLoginPassword);
         loginButton = findViewById(R.id.btnLogin);
         registerButton = findViewById(R.id.btnOpenRegister);
+        guestButton = findViewById(R.id.btnContinueAsGuest);
         statusTextView = findViewById(R.id.tvLoginStatus);
         progressBar = findViewById(R.id.loginProgress);
     }
@@ -86,6 +89,10 @@ public class LoginActivity extends AppCompatActivity {
 
         registerButton.setOnClickListener(
                 view -> openRegisterScreen()
+        );
+
+        guestButton.setOnClickListener(
+                view -> openGuestSearchScreen()
         );
 
         passwordEditText.setOnEditorActionListener(
@@ -194,6 +201,7 @@ public class LoginActivity extends AppCompatActivity {
 
         loginButton.setEnabled(!loading);
         registerButton.setEnabled(!loading);
+        guestButton.setEnabled(!loading);
         emailEditText.setEnabled(!loading);
         passwordEditText.setEnabled(!loading);
     }
@@ -234,6 +242,13 @@ public class LoginActivity extends AppCompatActivity {
         );
 
         startActivity(intent);
+    }
+
+    /**
+     * Opens Search without creating an authenticated session.
+     */
+    private void openGuestSearchScreen() {
+        startActivity(new Intent(this, SearchActivity.class));
     }
 
     /**
