@@ -4,6 +4,8 @@ import android.content.Context;
 
 import com.example.it_robota.auth.AuthResult;
 import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.auth.validation.PasswordValidationResult;
+import com.example.it_robota.auth.validation.PasswordValidator;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.UserDao;
 import com.example.it_robota.database.UserEntity;
@@ -18,7 +20,6 @@ import java.util.regex.Pattern;
  */
 public class AuthRepository {
 
-    private static final int MIN_PASSWORD_LENGTH = 6;
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$",
             Pattern.CASE_INSENSITIVE
@@ -26,6 +27,7 @@ public class AuthRepository {
 
     private final UserDao userDao;
     private final SessionManager sessionManager;
+    private final PasswordValidator passwordValidator;
 
     /**
      * Creates a repository using the application's database and session storage.
@@ -46,8 +48,22 @@ public class AuthRepository {
      * @param sessionManager storage for the active user session
      */
     public AuthRepository(UserDao userDao, SessionManager sessionManager) {
+        this(userDao, sessionManager, new PasswordValidator());
+    }
+
+    /**
+     * Creates a repository with an explicit reusable password validator.
+     *
+     * @param userDao data access object for local users
+     * @param sessionManager storage for the active user session
+     * @param passwordValidator registration password rules
+     */
+    public AuthRepository(UserDao userDao,
+                          SessionManager sessionManager,
+                          PasswordValidator passwordValidator) {
         this.userDao = userDao;
         this.sessionManager = sessionManager;
+        this.passwordValidator = passwordValidator;
     }
 
     /**
@@ -70,8 +86,11 @@ public class AuthRepository {
             return failure("Email is not valid.");
         }
 
-        if (!isPasswordValid(password)) {
-            return failure("Password must contain at least 6 characters.");
+        PasswordValidationResult passwordValidation =
+                passwordValidator.validate(password);
+
+        if (!passwordValidation.isValid()) {
+            return failure(passwordValidation.getMessage());
         }
 
         try {
@@ -182,16 +201,6 @@ public class AuthRepository {
      */
     private boolean isEmailValid(String email) {
         return !email.isEmpty() && EMAIL_PATTERN.matcher(email).matches();
-    }
-
-    /**
-     * Checks whether a password meets the minimum length requirement.
-     *
-     * @param password raw password value
-     * @return true when the password is valid
-     */
-    private boolean isPasswordValid(String password) {
-        return password != null && password.length() >= MIN_PASSWORD_LENGTH;
     }
 
     /**
