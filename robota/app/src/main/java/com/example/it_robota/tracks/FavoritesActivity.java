@@ -12,11 +12,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
 import com.example.it_robota.auth.AuthenticationGuard;
-import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.auth.AccountActivity;
+import com.example.it_robota.auth.AccountSession;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
 import com.example.it_robota.repositories.TrackRepository;
@@ -29,17 +29,21 @@ import java.util.concurrent.Executors;
 /**
  * Lists favorite tracks saved for the currently logged-in user.
  */
-public class FavoritesActivity extends AppCompatActivity {
+public class FavoritesActivity extends AccountActivity {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final List<Track> favoriteTracks = new ArrayList<>();
     private TrackRepository trackRepository;
-    private SessionManager sessionManager;
     private FavoritesAdapter favoritesAdapter;
     private ListView favoritesListView;
     private ProgressBar progressBar;
     private TextView emptyStateTextView;
 
+    /**
+     * Requires a login and prepares the list before enabling account refreshes.
+     *
+     * @param savedInstanceState previously saved activity state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +55,6 @@ public class FavoritesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_favorites);
 
         trackRepository = new TrackRepository(this);
-        sessionManager = new SessionManager(this);
         favoritesListView = findViewById(R.id.lvFavorites);
         progressBar = findViewById(R.id.favoritesProgress);
         emptyStateTextView = findViewById(R.id.tvFavoritesEmptyState);
@@ -59,24 +62,27 @@ public class FavoritesActivity extends AppCompatActivity {
         favoritesListView.setAdapter(favoritesAdapter);
 
         findViewById(R.id.btnBackFavorites).setOnClickListener(view -> finish());
+        accountUiReady();
     }
 
+    /** Clears the visible favorites without removing saved links from the database. */
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (sessionManager == null) {
-            return;
-        }
-
-        loadFavorites();
+    protected void clearAccountContent() {
+        favoriteTracks.clear();
+        favoritesAdapter.notifyDataSetChanged();
+        favoritesListView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
     }
 
     /**
-     * Loads favorites for the current user outside the UI thread.
+     * Loads favorites in the background and ignores results from an older session or revision.
+     *
+     * @param account session to display, or null to show the login-required message
+     * @param revision content revision captured for this load
      */
-    private void loadFavorites() {
-        if (!sessionManager.isLoggedIn()) {
+    @Override
+    protected void loadAccountContent(AccountSession account, int revision) {
+        if (account == null) {
             showEmptyState(R.string.favorites_login_required);
             return;
         }
@@ -84,14 +90,23 @@ public class FavoritesActivity extends AppCompatActivity {
         showLoading();
         executorService.execute(() -> {
             try {
-                List<Track> tracks = trackRepository.getSavedTracks();
-                runOnUiThread(() -> showTracks(tracks));
+                List<Track> tracks = trackRepository.getSavedTracks(account);
+                runOnUiThread(() -> {
+                    if (acceptsResult(account, revision)) { showTracks(tracks); }
+                });
             } catch (RuntimeException exception) {
-                runOnUiThread(() -> showEmptyState(R.string.favorites_load_error));
+                runOnUiThread(() -> {
+                    if (acceptsResult(account, revision)) { showEmptyState(R.string.favorites_load_error); }
+                });
             }
         });
     }
 
+    /**
+     * Replaces the visible list on the UI thread after the caller has checked the session.
+     *
+     * @param tracks favorites to display
+     */
     private void showTracks(List<Track> tracks) {
         favoriteTracks.clear();
         favoriteTracks.addAll(tracks);
@@ -103,13 +118,20 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     /**
-     * Removes a track from the current user's favorites in the background.
+     * Removes a favorite for the displayed account in the background.
+     * The result is applied only while the captured session and revision still match.
+     *
+     * @param track favorite selected for removal
      */
     private void removeFavorite(Track track) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (!acceptsResult(account, revision)) { return; }
         executorService.execute(() -> {
             try {
-                trackRepository.removeFavorite(track.getId());
+                trackRepository.removeFavorite(track.getId(), account);
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     favoriteTracks.remove(track);
                     favoritesAdapter.notifyDataSetChanged();
                     if (favoriteTracks.isEmpty()) {
@@ -118,17 +140,23 @@ public class FavoritesActivity extends AppCompatActivity {
                     Toast.makeText(this, R.string.favorites_removed, Toast.LENGTH_SHORT).show();
                 });
             } catch (RuntimeException exception) {
-                runOnUiThread(() -> Toast.makeText(
-                        this,
-                        R.string.favorites_remove_error,
-                        Toast.LENGTH_SHORT
-                ).show());
+                runOnUiThread(() -> {
+                    if (acceptsResult(account, revision)) {
+                        Toast.makeText(this, R.string.favorites_remove_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
     }
 
+    /**
+     * Opens the selected track in the player if the displayed account is still current.
+     *
+     * @param track selected favorite; missing tracks or IDs are ignored
+     */
     private void openPlayer(Track track) {
-        if (track == null || track.getId() == null || track.getId().trim().isEmpty()) {
+        if (!acceptsResult(displayedAccount, accountRevision())
+                || track == null || track.getId() == null || track.getId().trim().isEmpty()) {
             return;
         }
         Intent intent = new Intent(this, PlayerActivity.class);
@@ -136,19 +164,28 @@ public class FavoritesActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    /** Shows the loading indicator and hides the previous list and state message. */
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
         favoritesListView.setVisibility(View.GONE);
         emptyStateTextView.setVisibility(View.GONE);
     }
 
+    /**
+     * Clears the visible list and shows an empty, error or login-required message.
+     *
+     * @param messageResource string resource to display
+     */
     private void showEmptyState(int messageResource) {
+        favoriteTracks.clear();
+        favoritesAdapter.notifyDataSetChanged();
         progressBar.setVisibility(View.GONE);
         favoritesListView.setVisibility(View.GONE);
         emptyStateTextView.setText(messageResource);
         emptyStateTextView.setVisibility(View.VISIBLE);
     }
 
+    /** Invalidates account callbacks and shuts down the screen's background executor. */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -157,21 +194,42 @@ public class FavoritesActivity extends AppCompatActivity {
 
     private class FavoritesAdapter extends BaseAdapter {
 
+        /** @return number of favorites in the visible list */
         @Override
         public int getCount() {
             return favoriteTracks.size();
         }
 
+        /**
+         * Returns a favorite at the given list position.
+         *
+         * @param position zero-based list position
+         * @return selected favorite
+         */
         @Override
         public Track getItem(int position) {
             return favoriteTracks.get(position);
         }
 
+        /**
+         * Uses the current list position as the row identifier.
+         *
+         * @param position zero-based list position
+         * @return row identifier
+         */
         @Override
         public long getItemId(int position) {
             return position;
         }
 
+        /**
+         * Creates or reuses a row and binds its metadata, playback and removal actions.
+         *
+         * @param position zero-based list position
+         * @param convertView reusable row, or null
+         * @param parent parent list
+         * @return populated favorite row
+         */
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View itemView = convertView;
@@ -195,6 +253,13 @@ public class FavoritesActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Supplies display text when optional track metadata is missing.
+     *
+     * @param value metadata value, or null
+     * @param fallbackResource string resource used for null or blank values
+     * @return original value or the fallback text
+     */
     private String valueOrFallback(String value, int fallbackResource) {
         return value == null || value.trim().isEmpty() ? getString(fallbackResource) : value;
     }

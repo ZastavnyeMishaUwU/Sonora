@@ -3,17 +3,33 @@ package com.example.it_robota.database;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.ColumnInfo;
 
 /**
  * Entity for storing downloaded track information.
  */
 @Entity(
         tableName = "downloaded_tracks",
-        primaryKeys = {"userId", "trackId"}
+        primaryKeys = {"userId", "ownerEmail", "trackId"}
 )
 public class DownloadedTrackEntity {
 
     private long userId;
+
+    @NonNull
+    @ColumnInfo(defaultValue = "''")
+    private String ownerEmail = "";
+
+    /** @return owner email, or an empty string for an unassigned record */
+    @NonNull
+    public String getOwnerEmail() { return ownerEmail; }
+
+    /**
+     * Sets the email used with the user ID to identify the download's owner.
+     *
+     * @param ownerEmail normalized email, or an empty string for an unassigned record
+     */
+    public void setOwnerEmail(@NonNull String ownerEmail) { this.ownerEmail = ownerEmail; }
 
     @NonNull
     private String trackId = "";

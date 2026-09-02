@@ -12,11 +12,13 @@ import androidx.room.Query;
 public interface UserDao {
 
     /**
-     * Inserts a user into the local database.
+     * Inserts a user without replacing an existing account on a primary-key conflict.
+     * An ID of 0 lets Room generate a new identifier for the stored row.
      *
      * @param userEntity user entity to insert
+     * @throws android.database.sqlite.SQLiteConstraintException if the primary key already exists
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     void insertUser(UserEntity userEntity);
 
     /**

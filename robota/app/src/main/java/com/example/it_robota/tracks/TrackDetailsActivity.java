@@ -6,10 +6,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
 import com.example.it_robota.auth.AuthenticationGuard;
+import com.example.it_robota.auth.AccountActivity;
+import com.example.it_robota.auth.AccountSession;
 import com.example.it_robota.downloader.TrackDownloadManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.MusicPlayerManager;
@@ -23,7 +24,7 @@ import java.util.concurrent.Executors;
 /**
  * Displays track information and delegates track actions to their existing managers.
  */
-public class TrackDetailsActivity extends AppCompatActivity {
+public class TrackDetailsActivity extends AccountActivity {
 
     public static final String EXTRA_TRACK_ID = "trackId";
 
@@ -45,7 +46,13 @@ public class TrackDetailsActivity extends AppCompatActivity {
     private MaterialButton downloadButton;
     private boolean favoriteUpdateInProgress;
     private boolean downloadInProgress;
+    private String trackId;
 
+    /**
+     * Requires a login and prepares track actions before enabling account refreshes.
+     *
+     * @param savedInstanceState previously saved activity state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,14 +73,41 @@ public class TrackDetailsActivity extends AppCompatActivity {
         favoriteButton.setOnClickListener(view -> toggleFavorite());
         downloadButton.setOnClickListener(view -> downloadTrack());
 
-        String trackId = getIntent().getStringExtra(EXTRA_TRACK_ID);
+        trackId = getIntent().getStringExtra(EXTRA_TRACK_ID);
+        accountUiReady();
+    }
+
+    /** Clears account-specific track state, stops playback and hides the previous content. */
+    @Override
+    protected void clearAccountContent() {
+        currentTrack = null;
+        favoriteUpdateInProgress = false;
+        downloadInProgress = false;
+        musicPlayerManager.stop();
+        contentView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
+    }
+
+    /**
+     * Checks the session and track ID before starting a details request.
+     *
+     * @param account session to display, or null to show the login-required message
+     * @param revision content revision captured for this load
+     */
+    @Override
+    protected void loadAccountContent(AccountSession account, int revision) {
+        if (account == null) {
+            showError(R.string.track_details_login_required);
+            return;
+        }
         if (trackId == null || trackId.trim().isEmpty()) {
             showError(R.string.track_details_missing_id);
             return;
         }
-        loadTrack(trackId.trim());
+        loadTrack(trackId.trim(), account, revision);
     }
 
+    /** Binds content, status and action views from the track-details layout. */
     private void bindViews() {
         contentView = findViewById(R.id.trackDetailsContent);
         progressBar = findViewById(R.id.trackDetailsProgress);
@@ -89,18 +123,23 @@ public class TrackDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Loads track details and local states outside the UI thread.
+     * Loads details and account-owned favorite and download states outside the UI thread.
+     * Results from an older session or content revision are discarded.
+     *
+     * @param trackId track identifier
+     * @param account session captured before the request
+     * @param revision content revision captured with the session
      */
-    private void loadTrack(String trackId) {
+    private void loadTrack(String trackId, AccountSession account, int revision) {
         showLoading();
         executorService.execute(() -> {
             try {
-                Track track = trackRepository.getTrackDetails(trackId);
-                if (track != null && trackDownloadManager.isTrackDownloaded(trackId)) {
-                    track.setLocalFilePath(trackDownloadManager.getLocalFilePath(trackId));
+                Track track = trackRepository.getTrackDetails(trackId, account);
+                if (track != null) {
+                    track.setLocalFilePath(trackDownloadManager.getLocalFilePath(trackId, account));
                 }
                 runOnUiThread(() -> {
-                    if (isFinishing() || isDestroyed()) {
+                    if (!acceptsResult(account, revision)) {
                         return;
                     }
                     if (track == null) {
@@ -112,7 +151,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
-                    if (!isFinishing() && !isDestroyed()) {
+                    if (acceptsResult(account, revision)) {
                         showError(R.string.track_details_load_error);
                     }
                 });
@@ -120,6 +159,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /** Displays the loaded track and refreshes its account-specific action states. */
     private void renderTrack() {
         progressBar.setVisibility(View.GONE);
         stateTextView.setVisibility(View.GONE);
@@ -141,7 +181,8 @@ public class TrackDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Refreshes favorite and download states using the latest Master icons.
+     * Updates status labels, icons and accessibility descriptions from the current track.
+     * Disables action buttons while their operations are in progress.
      */
     private void updateStatuses() {
         if (currentTrack.isFavorite()) {
@@ -169,8 +210,12 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 : R.string.track_details_downloaded_no);
     }
 
+    /**
+     * Plays the current account's local download, falling back to the track's streaming URL.
+     * Ignores the action if the displayed session is no longer current.
+     */
     private void playTrack() {
-        if (currentTrack == null) {
+        if (currentTrack == null || !acceptsResult(displayedAccount, accountRevision())) {
             return;
         }
         String audioSource = currentTrack.getLocalFilePath();
@@ -186,24 +231,29 @@ public class TrackDetailsActivity extends AppCompatActivity {
     }
 
     /**
-     * Adds or removes the track in Room without blocking the UI thread.
+     * Updates the captured account's favorite link without blocking the UI thread.
+     * Ignores repeated clicks while a write is pending and discards stale UI callbacks.
      */
     private void toggleFavorite() {
-        if (currentTrack == null || favoriteUpdateInProgress) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (currentTrack == null || favoriteUpdateInProgress || !acceptsResult(account, revision)) {
             return;
         }
 
         boolean removeFavorite = currentTrack.isFavorite();
+        Track track = currentTrack;
         favoriteUpdateInProgress = true;
         favoriteButton.setEnabled(false);
         executorService.execute(() -> {
             try {
                 if (removeFavorite) {
-                    trackRepository.removeFavorite(currentTrack.getId());
+                    trackRepository.removeFavorite(track.getId(), account);
                 } else {
-                    trackRepository.saveFavorite(currentTrack);
+                    trackRepository.saveFavorite(track, account);
                 }
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     currentTrack.setFavorite(!removeFavorite);
                     favoriteUpdateInProgress = false;
                     updateStatuses();
@@ -217,6 +267,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     favoriteUpdateInProgress = false;
                     updateStatuses();
                     Toast.makeText(
@@ -229,19 +280,27 @@ public class TrackDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Starts a download for the displayed account and disables repeated requests while pending.
+     * Completion updates the screen only if the captured session and revision still match.
+     */
     private void downloadTrack() {
-        if (currentTrack == null || downloadInProgress) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (currentTrack == null || downloadInProgress || !acceptsResult(account, revision)) {
             return;
         }
         downloadInProgress = true;
+        Track track = currentTrack;
         downloadButton.setEnabled(false);
         executorService.execute(() -> {
             try {
-                trackDownloadManager.downloadTrack(currentTrack);
-                currentTrack.setLocalFilePath(
-                        trackDownloadManager.getLocalFilePath(currentTrack.getId())
+                trackDownloadManager.downloadTrack(track, account);
+                track.setLocalFilePath(
+                        trackDownloadManager.getLocalFilePath(track.getId(), account)
                 );
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     downloadInProgress = false;
                     updateStatuses();
                     Toast.makeText(
@@ -252,6 +311,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     downloadInProgress = false;
                     updateStatuses();
                     Toast.makeText(
@@ -264,12 +324,18 @@ public class TrackDetailsActivity extends AppCompatActivity {
         });
     }
 
+    /** Hides track content and messages while showing the loading indicator. */
     private void showLoading() {
         contentView.setVisibility(View.GONE);
         stateTextView.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Replaces the track content with an error or login-required message.
+     *
+     * @param messageResource string resource to display
+     */
     private void showError(int messageResource) {
         contentView.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
@@ -277,15 +343,29 @@ public class TrackDetailsActivity extends AppCompatActivity {
         stateTextView.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Supplies display text for optional track metadata.
+     *
+     * @param value metadata value, or null
+     * @param fallbackResource string resource used for null or blank values
+     * @return original value or the fallback text
+     */
     private String valueOrFallback(String value, int fallbackResource) {
         return value == null || value.trim().isEmpty() ? getString(fallbackResource) : value;
     }
 
+    /**
+     * Formats a duration as minutes and seconds, treating negative values as zero.
+     *
+     * @param seconds duration in seconds
+     * @return duration in m:ss format
+     */
     private String formatDuration(int seconds) {
         int safeSeconds = Math.max(seconds, 0);
         return String.format(Locale.ROOT, "%d:%02d", safeSeconds / 60, safeSeconds % 60);
     }
 
+    /** Invalidates account callbacks, releases playback and shuts down background work. */
     @Override
     protected void onDestroy() {
         super.onDestroy();

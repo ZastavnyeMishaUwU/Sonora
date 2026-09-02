@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -93,7 +94,7 @@ public class TrackDownloadManagerInstrumentedTest {
         TrackDownloadManager downloadManager = new TrackDownloadManager(context);
         downloadManager.downloadTrack(track);
 
-        String localPath = storageManager.buildFilePath(SUCCESS_TRACK_ID);
+        String localPath = storageManager.buildFilePath("download-test@example.com", SUCCESS_TRACK_ID);
         File localFile = new File(localPath);
         DownloadedTrackEntity record = downloadedTrackDao.getDownloadedTrack(
                 SUCCESS_TRACK_ID,
@@ -122,7 +123,7 @@ public class TrackDownloadManagerInstrumentedTest {
 
         assertThrows(Exception.class, () -> downloadManager.downloadTrack(track));
 
-        String localPath = storageManager.buildFilePath(FAILURE_TRACK_ID);
+        String localPath = storageManager.buildFilePath("download-test@example.com", FAILURE_TRACK_ID);
         assertFalse(new File(localPath).exists());
         assertFalse(new File(localPath + ".part").exists());
         assertNull(downloadedTrackDao.getDownloadedTrack(FAILURE_TRACK_ID, TEST_USER_ID));
@@ -141,7 +142,7 @@ public class TrackDownloadManagerInstrumentedTest {
 
         assertThrows(Exception.class, () -> downloadManager.downloadTrack(track));
 
-        String localPath = storageManager.buildFilePath(INVALID_TRACK_ID);
+        String localPath = storageManager.buildFilePath("download-test@example.com", INVALID_TRACK_ID);
         assertFalse(new File(localPath).exists());
         assertFalse(new File(localPath + ".part").exists());
         assertNull(downloadedTrackDao.getDownloadedTrack(INVALID_TRACK_ID, TEST_USER_ID));
@@ -163,9 +164,63 @@ public class TrackDownloadManagerInstrumentedTest {
         );
     }
 
+    @Test
+    public void sameTrackIsPrivateToEachEmailAndRemovingOnePreservesOtherFile() throws Exception {
+        TrackDownloadManager manager = new TrackDownloadManager(context);
+        byte[] audio = new byte[]{73, 68, 51, 4, 0};
+        manager.downloadTrack(createTrack(SUCCESS_TRACK_ID, startSingleResponseServer(200, "audio/mpeg", audio)));
+        String firstPath = manager.getLocalFilePath(SUCCESS_TRACK_ID);
+        sessionManager.saveSession(TEST_USER_ID + 1, "second-download@example.com");
+        assertNull(manager.getLocalFilePath(SUCCESS_TRACK_ID));
+        manager.downloadTrack(createTrack(SUCCESS_TRACK_ID, startSingleResponseServer(200, "audio/mpeg", audio)));
+        String secondPath = manager.getLocalFilePath(SUCCESS_TRACK_ID);
+        assertNotEquals(firstPath, secondPath);
+        sessionManager.clearSession();
+        assertNull(manager.getLocalFilePath(SUCCESS_TRACK_ID));
+        sessionManager.saveSession(TEST_USER_ID, "download-test@example.com");
+        manager.removeDownload(SUCCESS_TRACK_ID, sessionManager.getAccount());
+        assertFalse(new File(firstPath).exists());
+        sessionManager.saveSession(TEST_USER_ID + 1, "second-download@example.com");
+        assertEquals(secondPath, manager.getLocalFilePath(SUCCESS_TRACK_ID));
+        assertTrue(new File(secondPath).isFile());
+    }
+
+    @Test
+    public void sessionChangeDuringDownloadKeepsOriginalOwner() throws Exception {
+        TrackDownloadManager manager = new TrackDownloadManager(context);
+        String url = startSingleResponseServer(200, "audio/mpeg", new byte[]{73, 68, 51, 4, 0},
+                () -> sessionManager.saveSession(TEST_USER_ID + 1, "second-download@example.com"));
+        manager.downloadTrack(createTrack(SUCCESS_TRACK_ID, url));
+        assertNull(manager.getLocalFilePath(SUCCESS_TRACK_ID));
+        assertNotNull(downloadedTrackDao.getDownloadByAccount(SUCCESS_TRACK_ID, TEST_USER_ID, "download-test@example.com"));
+        assertTrue(manager.getDownloadedTracks(sessionManager.getAccount()).isEmpty());
+        sessionManager.saveSession(TEST_USER_ID, "download-test@example.com");
+        assertNotNull(manager.getLocalFilePath(SUCCESS_TRACK_ID));
+    }
+
+    @Test
+    public void removalPreservesLegacyFileReferencedByAnotherAccount() throws Exception {
+        String path = storageManager.buildFilePath("download-test@example.com", SUCCESS_TRACK_ID);
+        try (java.io.FileOutputStream output = new java.io.FileOutputStream(path)) { output.write(new byte[]{73, 68, 51}); }
+        DownloadedTrackEntity first = new DownloadedTrackEntity(TEST_USER_ID, SUCCESS_TRACK_ID, path);
+        first.setOwnerEmail("download-test@example.com");
+        DownloadedTrackEntity second = new DownloadedTrackEntity(TEST_USER_ID + 1, SUCCESS_TRACK_ID, path);
+        second.setOwnerEmail("second-download@example.com");
+        downloadedTrackDao.insertDownloadedTrack(first);
+        downloadedTrackDao.insertDownloadedTrack(second);
+        new TrackDownloadManager(context).removeDownload(SUCCESS_TRACK_ID, sessionManager.getAccount());
+        assertTrue(new File(path).isFile());
+        assertNotNull(downloadedTrackDao.getDownloadByAccount(SUCCESS_TRACK_ID, TEST_USER_ID + 1, "second-download@example.com"));
+    }
+
     private String startSingleResponseServer(int statusCode,
                                              String contentType,
                                              byte[] body) throws IOException {
+        return startSingleResponseServer(statusCode, contentType, body, () -> {});
+    }
+
+    private String startSingleResponseServer(int statusCode, String contentType, byte[] body,
+                                             Runnable onRequest) throws IOException {
         ServerSocket serverSocket = new ServerSocket(
                 0,
                 1,
@@ -176,6 +231,7 @@ public class TrackDownloadManagerInstrumentedTest {
             try (ServerSocket server = serverSocket;
                  Socket socket = server.accept();
                  OutputStream output = socket.getOutputStream()) {
+                onRequest.run();
                 String reason = statusCode >= 200 && statusCode < 300 ? "OK" : "Error";
                 String headers = "HTTP/1.1 " + statusCode + " " + reason + "\r\n"
                         + "Content-Type: " + contentType + "\r\n"
@@ -207,7 +263,9 @@ public class TrackDownloadManagerInstrumentedTest {
 
     private void removeTestTrack(String trackId) {
         downloadedTrackDao.deleteDownloadedTrack(trackId, TEST_USER_ID);
-        storageManager.deleteFile(storageManager.buildFilePath(trackId));
-        storageManager.deleteFile(storageManager.buildFilePath(trackId) + ".part");
+        downloadedTrackDao.deleteDownloadedTrack(trackId, TEST_USER_ID + 1);
+        storageManager.deleteFile(storageManager.buildFilePath("second-download@example.com", trackId));
+        storageManager.deleteFile(storageManager.buildFilePath("download-test@example.com", trackId));
+        storageManager.deleteFile(storageManager.buildFilePath("download-test@example.com", trackId) + ".part");
     }
 }

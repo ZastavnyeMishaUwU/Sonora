@@ -20,10 +20,48 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 FavoriteTrackEntity.class,
                 DownloadedTrackEntity.class
         },
-        version = 2,
+        version = 3,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
+
+    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        /**
+         * Enables generated user IDs and adds email ownership to favorites and downloads.
+         * Existing rows are preserved; records with the reused user ID 0 remain unassigned.
+         *
+         * @param database database being upgraded
+         */
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE users_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                    + "username TEXT, email TEXT, passwordHash TEXT, createdAt INTEGER NOT NULL)");
+            database.execSQL("INSERT INTO users_new SELECT id, username, email, passwordHash, createdAt FROM users");
+            database.execSQL("DROP TABLE users");
+            database.execSQL("ALTER TABLE users_new RENAME TO users");
+            database.execSQL("ALTER TABLE favorite_tracks ADD COLUMN ownerEmail TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE downloaded_tracks ADD COLUMN ownerEmail TEXT NOT NULL DEFAULT ''");
+            // Old registrations reused ID 0. Its mixed records cannot safely be attributed
+            // to the last account, so keep them unassigned rather than expose another user's data.
+            for (String table : new String[]{"favorite_tracks", "downloaded_tracks"}) {
+                database.execSQL("UPDATE " + table + " SET ownerEmail = COALESCE((SELECT lower(trim(email)) "
+                        + "FROM users WHERE users.id = " + table + ".userId), '') WHERE userId > 0");
+            }
+            database.execSQL("CREATE TABLE favorite_tracks_new (userId INTEGER NOT NULL, "
+                    + "ownerEmail TEXT NOT NULL DEFAULT '', trackId TEXT NOT NULL, "
+                    + "PRIMARY KEY(userId, ownerEmail, trackId))");
+            database.execSQL("INSERT INTO favorite_tracks_new SELECT userId, ownerEmail, trackId FROM favorite_tracks");
+            database.execSQL("DROP TABLE favorite_tracks");
+            database.execSQL("ALTER TABLE favorite_tracks_new RENAME TO favorite_tracks");
+            database.execSQL("CREATE TABLE downloaded_tracks_new (userId INTEGER NOT NULL, "
+                    + "ownerEmail TEXT NOT NULL DEFAULT '', trackId TEXT NOT NULL, trackName TEXT, "
+                    + "artistName TEXT, localPath TEXT, PRIMARY KEY(userId, ownerEmail, trackId))");
+            database.execSQL("INSERT INTO downloaded_tracks_new SELECT userId, ownerEmail, trackId, "
+                    + "trackName, artistName, localPath FROM downloaded_tracks");
+            database.execSQL("DROP TABLE downloaded_tracks");
+            database.execSQL("ALTER TABLE downloaded_tracks_new RENAME TO downloaded_tracks");
+        }
+    };
 
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
 
@@ -76,8 +114,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "jamendo_music_db"
                             )
-                            .addMigrations(MIGRATION_1_2)
-                            .fallbackToDestructiveMigration()
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                             .build();
                 }
             }
