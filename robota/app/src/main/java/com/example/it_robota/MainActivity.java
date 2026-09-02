@@ -192,7 +192,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /** Prevents queued long-clicks from opening duplicate details screens. */
+    /** 
+    * Prevents queued long-clicks from opening duplicate details screens. 
+    */
     private void openTrackDetails(Track track) {
         if (trackDetailsOpening || isFinishing() || isDestroyed()
                 || !sessionManager.isLoggedIn()
