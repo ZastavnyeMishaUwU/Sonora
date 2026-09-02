@@ -6,11 +6,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.MainActivity;
 import com.example.it_robota.R;
+import com.example.it_robota.auth.validation.PasswordValidationResult;
+import com.example.it_robota.auth.validation.PasswordValidator;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.UserDao;
 import com.example.it_robota.repositories.AuthRepository;
@@ -24,6 +25,8 @@ import java.util.concurrent.Executors;
 public class RegisterActivity extends AppCompatActivity {
 
     private AuthRepository authRepository;
+    private final PasswordValidator passwordValidator =
+            new PasswordValidator();
 
     private final ExecutorService executorService =
             Executors.newSingleThreadExecutor();
@@ -125,19 +128,11 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        if (password.isEmpty()) {
-            showStatus(
-                    "Password cannot be empty"
-            );
+        PasswordValidationResult passwordValidation =
+                passwordValidator.validate(password);
 
-            return;
-        }
-
-        if (password.chars().anyMatch(Character::isWhitespace)) {
-            new AlertDialog.Builder(this)
-                    .setMessage("Space character detected")
-                    .setPositiveButton("OK", null)
-                    .show();
+        if (!passwordValidation.isValid()) {
+            showStatus(passwordValidation.getMessage());
 
             return;
         }

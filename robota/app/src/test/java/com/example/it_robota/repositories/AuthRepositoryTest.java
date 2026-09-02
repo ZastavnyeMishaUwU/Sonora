@@ -12,6 +12,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import com.example.it_robota.auth.AuthResult;
 import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.auth.validation.PasswordValidator;
 import com.example.it_robota.database.UserDao;
 import com.example.it_robota.database.UserEntity;
 
@@ -59,6 +60,54 @@ public class AuthRepositoryTest {
         verifyNoInteractions(userDao);
     }
 
+    @Test
+    public void register_emptyPassword_returnsFailure() {
+        assertRegistrationPasswordFailure(
+                "",
+                PasswordValidator.EMPTY_MESSAGE
+        );
+    }
+
+    @Test
+    public void register_passwordContainingOnlySpaces_returnsFailure() {
+        assertRegistrationPasswordFailure(
+                "      ",
+                PasswordValidator.WHITESPACE_ONLY_MESSAGE
+        );
+    }
+
+    @Test
+    public void register_passwordStartingWithSpace_returnsFailure() {
+        assertRegistrationPasswordFailure(
+                " Password1!",
+                PasswordValidator.BOUNDARY_SPACE_MESSAGE
+        );
+    }
+
+    @Test
+    public void register_passwordEndingWithSpace_returnsFailure() {
+        assertRegistrationPasswordFailure(
+                "Password1! ",
+                PasswordValidator.BOUNDARY_SPACE_MESSAGE
+        );
+    }
+
+    @Test
+    public void register_passwordWithoutUppercase_returnsFailure() {
+        assertRegistrationPasswordFailure(
+                "password1!",
+                PasswordValidator.UPPERCASE_MESSAGE
+        );
+    }
+
+    @Test
+    public void register_passwordWithoutSpecialCharacter_returnsFailure() {
+        assertRegistrationPasswordFailure(
+                "Password1",
+                PasswordValidator.SPECIAL_CHARACTER_MESSAGE
+        );
+    }
+
     /**
      * Verifies that registration fails when the username contains only whitespace characters.
      */
@@ -91,7 +140,7 @@ public class AuthRepositoryTest {
         String email = "test@example.com";
         when(userDao.checkUserExists(email)).thenReturn(true);
 
-        AuthResult result = authRepository.register("John", email, "password123");
+        AuthResult result = authRepository.register("John", email, "Password123!");
 
         assertFalse(result.isSuccess());
         assertEquals("User with this email already exists.", result.getMessage());
@@ -108,7 +157,7 @@ public class AuthRepositoryTest {
     public void register_Success_NormalizesDataAndSavesSession() throws Exception {
         String rawEmail = "  TEST@Example.com  ";
         String normalizedEmail = "test@example.com";
-        String password = "securePassword123";
+        String password = "Secure password123!";
 
         when(userDao.checkUserExists(normalizedEmail)).thenReturn(false);
 
@@ -234,6 +283,21 @@ public class AuthRepositoryTest {
 
         when(sessionManager.isLoggedIn()).thenReturn(false);
         assertFalse(authRepository.isUserLoggedIn());
+    }
+
+    private void assertRegistrationPasswordFailure(
+            String password,
+            String expectedMessage
+    ) {
+        AuthResult result = authRepository.register(
+                "user",
+                "test@example.com",
+                password
+        );
+
+        assertFalse(result.isSuccess());
+        assertEquals(expectedMessage, result.getMessage());
+        verifyNoInteractions(userDao);
     }
 
     /**
