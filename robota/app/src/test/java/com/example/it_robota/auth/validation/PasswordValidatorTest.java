@@ -32,6 +32,21 @@ public class PasswordValidatorTest {
     }
 
     @Test
+    public void whitespaceOnlyPasswordIsRejectedBeforeOtherRules() {
+        assertInvalid(" ", PasswordValidator.WHITESPACE_ONLY_MESSAGE);
+        assertInvalid("      ", PasswordValidator.WHITESPACE_ONLY_MESSAGE);
+        assertInvalid(" \t\n ", PasswordValidator.WHITESPACE_ONLY_MESSAGE);
+    }
+
+    @Test
+    public void whitespaceOnlyRuleDoesNotRejectEmptyOrMixedPasswords() {
+        assertTrue(validator.isWhitespaceOnly("      "));
+        assertFalse(validator.isWhitespaceOnly(null));
+        assertFalse(validator.isWhitespaceOnly(""));
+        assertFalse(validator.isWhitespaceOnly("Valid pass1!"));
+    }
+
+    @Test
     public void leadingSpaceIsRejectedWithClearMessage() {
         assertInvalid(" Password1!", PasswordValidator.BOUNDARY_SPACE_MESSAGE);
     }

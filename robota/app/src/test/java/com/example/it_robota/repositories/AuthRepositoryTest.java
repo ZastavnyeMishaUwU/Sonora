@@ -69,6 +69,14 @@ public class AuthRepositoryTest {
     }
 
     @Test
+    public void register_passwordContainingOnlySpaces_returnsFailure() {
+        assertRegistrationPasswordFailure(
+                "      ",
+                PasswordValidator.WHITESPACE_ONLY_MESSAGE
+        );
+    }
+
+    @Test
     public void register_passwordStartingWithSpace_returnsFailure() {
         assertRegistrationPasswordFailure(
                 " Password1!",

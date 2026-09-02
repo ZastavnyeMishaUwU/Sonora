@@ -9,6 +9,8 @@ public final class PasswordValidator {
 
     public static final String EMPTY_MESSAGE =
             "Password must not be empty.";
+    public static final String WHITESPACE_ONLY_MESSAGE =
+            "Password must not consist only of spaces.";
     public static final String BOUNDARY_SPACE_MESSAGE =
             "Password must not start or end with a space.";
     public static final String MINIMUM_LENGTH_MESSAGE =
@@ -27,6 +29,10 @@ public final class PasswordValidator {
     public PasswordValidationResult validate(String password) {
         if (password == null || password.isEmpty()) {
             return PasswordValidationResult.invalid(EMPTY_MESSAGE);
+        }
+
+        if (isWhitespaceOnly(password)) {
+            return PasswordValidationResult.invalid(WHITESPACE_ONLY_MESSAGE);
         }
 
         if (!hasValidSpacePlacement(password)) {
@@ -56,6 +62,18 @@ public final class PasswordValidator {
      */
     public boolean hasMinimumLength(String password) {
         return password != null && password.length() >= MINIMUM_LENGTH;
+    }
+
+    /**
+     * Detects non-empty passwords containing only whitespace.
+     *
+     * @param password raw password value
+     * @return true when every symbol is whitespace
+     */
+    public boolean isWhitespaceOnly(String password) {
+        return password != null
+                && !password.isEmpty()
+                && password.codePoints().allMatch(Character::isWhitespace);
     }
 
     /**
