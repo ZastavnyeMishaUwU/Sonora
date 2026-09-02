@@ -17,11 +17,15 @@ public class MusicPlayerManager {
     private static MusicPlayerManager instance;
     private MediaPlayer mediaPlayer;
 
+
     /**
     * Constructor initializing the MediaPlayer
     */
     private MusicPlayerManager() {
         initMediaPlayer();
+    }
+    MusicPlayerManager(MediaPlayer mediaPlayer) {
+        this.mediaPlayer = mediaPlayer;
     }
 
     public static synchronized MusicPlayerManager getInstance() {
