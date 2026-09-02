@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.MainActivity;
@@ -133,6 +134,15 @@ public class RegisterActivity extends AppCompatActivity {
 
         if (!passwordValidation.isValid()) {
             showStatus(passwordValidation.getMessage());
+
+            return;
+        }
+
+        if (password.chars().anyMatch(Character::isWhitespace)) {
+            new AlertDialog.Builder(this)
+                    .setMessage("Space character detected")
+                    .setPositiveButton("OK", null)
+                    .show();
 
             return;
         }
