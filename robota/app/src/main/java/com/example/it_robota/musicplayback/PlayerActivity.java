@@ -1,5 +1,6 @@
 package com.example.it_robota.musicplayback;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -62,6 +63,7 @@ public class PlayerActivity extends AppCompatActivity {
     private String currentTrackUrl;
 
     private boolean isUserTracking = false;
+    private boolean trackDetailsOpening;
 
     /**
      * Initializes components, view bindings, and starts fetching track details.
@@ -285,7 +287,8 @@ public class PlayerActivity extends AppCompatActivity {
      * Opens the details screen for the currently playing track.
      */
     private void openTrackDetails() {
-        if (!sessionManager.isLoggedIn()) {
+        if (trackDetailsOpening || isFinishing() || isDestroyed()
+                || !sessionManager.isLoggedIn()) {
             return;
         }
 
@@ -311,7 +314,15 @@ public class PlayerActivity extends AppCompatActivity {
                 trackId
         );
 
-        startActivity(intent);
+        trackDetailsOpening = true;
+        updateDetailsAvailability();
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException | SecurityException exception) {
+            trackDetailsOpening = false;
+            updateDetailsAvailability();
+            Toast.makeText(this, R.string.track_details_open_error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -323,12 +334,15 @@ public class PlayerActivity extends AppCompatActivity {
                         ? View.VISIBLE
                         : View.GONE
         );
+        detailsButton.setEnabled(!trackDetailsOpening
+                && trackId != null && !trackId.trim().isEmpty());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
+        trackDetailsOpening = false;
         if (sessionManager != null) {
             updateDetailsAvailability();
         }

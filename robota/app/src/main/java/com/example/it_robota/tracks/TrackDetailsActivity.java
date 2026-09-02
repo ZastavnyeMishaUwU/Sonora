@@ -100,6 +100,9 @@ public class TrackDetailsActivity extends AppCompatActivity {
                     track.setLocalFilePath(trackDownloadManager.getLocalFilePath(trackId));
                 }
                 runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
                     if (track == null) {
                         showError(R.string.track_details_not_found);
                     } else {
@@ -108,7 +111,11 @@ public class TrackDetailsActivity extends AppCompatActivity {
                     }
                 });
             } catch (Exception exception) {
-                runOnUiThread(() -> showError(R.string.track_details_load_error));
+                runOnUiThread(() -> {
+                    if (!isFinishing() && !isDestroyed()) {
+                        showError(R.string.track_details_load_error);
+                    }
+                });
             }
         });
     }
