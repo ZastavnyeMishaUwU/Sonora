@@ -49,7 +49,8 @@ public class LocalFileStorageManager {
     }
 
     /**
-     * Builds a consistent local audio file path for a track.
+     * Builds the legacy shared path for a track.
+     * New account-owned downloads use {@link #buildFilePath(String, String)}.
      *
      * @param trackId track identifier
      * @return absolute path for the track file
@@ -63,7 +64,15 @@ public class LocalFileStorageManager {
         return trackFile.getAbsolutePath();
     }
 
-    /** Separates audio files by account without exposing an email in the file name. */
+    /**
+     * Builds an account-specific path using hashes of the normalized email and track ID.
+     * The raw email is not included in the file name.
+     *
+     * @param email owner's email
+     * @param trackId non-null track identifier
+     * @return absolute path inside the application's music directory
+     * @throws IllegalArgumentException if the email is null or blank after normalization
+     */
     public String buildFilePath(String email, String trackId) {
         String account = AccountSession.normalizeEmail(email);
         if (account.isEmpty()) { throw new IllegalArgumentException("Account email is required."); }
@@ -71,6 +80,13 @@ public class LocalFileStorageManager {
                 + "_track_" + digest(trackId) + FILE_EXTENSION).getAbsolutePath();
     }
 
+    /**
+     * Hashes a value into a fixed-length file-name component.
+     *
+     * @param value non-null text encoded as UTF-8
+     * @return lowercase hexadecimal SHA-256 digest
+     * @throws IllegalStateException if SHA-256 is unavailable
+     */
     private String digest(String value) {
         try {
             byte[] bytes = MessageDigest.getInstance("SHA-256")

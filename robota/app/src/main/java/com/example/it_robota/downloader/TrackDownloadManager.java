@@ -43,19 +43,26 @@ public class TrackDownloadManager {
     }
 
     /**
-     * Main method to handle the download process.
-     * 
-     * Required Logic flow:
-     * 1. Get track download URL from Track object
-     * 2. Create local file destination
-     * 3. Download audio stream via HTTP
-     * 4. Save file to app-specific music directory
-     * 5. Store local file path in Room database
+     * Downloads a track for the current session and stores its local path in Room.
+     * Must be called off the UI thread.
+     *
+     * @param track track with a download URL
+     * @throws Exception if the track, session, download or database write is invalid or fails
      */
     public void downloadTrack(Track track) throws Exception {
         downloadTrack(track, sessionManager.getAccount());
     }
 
+    /**
+     * Downloads audio to an account-specific file, reusing an existing nonempty file.
+     * The session is checked before starting; a later account switch does not transfer ownership
+     * of the download. The supplied track's local path is updated only if that session is current.
+     * Must be called off the UI thread.
+     *
+     * @param track track metadata and download URL
+     * @param account session captured before queuing the download
+     * @throws Exception if validation, downloading, file handling or database storage fails
+     */
     public void downloadTrack(Track track, AccountSession account) throws Exception {
         if (track == null) {
             throw new Exception("Track information is missing.");
@@ -118,7 +125,12 @@ public class TrackDownloadManager {
     }
 
     /**
-     * Acceptance Criteria: App can check whether a track is already downloaded.
+     * Checks for a nonempty audio file belonging to the current account.
+     * Removes the account's stale record if its file is missing or empty.
+     * Must be called off the UI thread.
+     *
+     * @param trackId track identifier
+     * @return true when the account has a record and an available nonempty file
      */
     public boolean isTrackDownloaded(String trackId) {
         DownloadedTrackEntity entity = getDownloadedTrack(trackId);
@@ -139,13 +151,23 @@ public class TrackDownloadManager {
     }
 
     /**
-     * Returns the local file path from Room database.
-     * This fulfills the requirement to "store local file path in Room".
+     * Resolves an available local file for the current session off the UI thread.
+     *
+     * @param trackId track identifier
+     * @return local path, or null when the account has no available download
      */
     public String getLocalFilePath(String trackId) {
         return getLocalFilePath(trackId, sessionManager.getAccount());
     }
 
+    /**
+     * Resolves the captured account's nonempty audio file off the UI thread.
+     * Deletes a stale database record when its file is missing or empty.
+     *
+     * @param trackId track identifier
+     * @param account session captured before the lookup
+     * @return local path, or null if the session is stale or no usable file is found
+     */
     public String getLocalFilePath(String trackId, AccountSession account) {
         DownloadedTrackEntity entity = getDownloadedTrack(trackId, account);
         if (entity == null) {
@@ -165,7 +187,12 @@ public class TrackDownloadManager {
     }
 
     /**
-     * Internal helper to handle the actual network stream (Step 3).
+     * Writes an HTTP response to a temporary file and checks for a nonempty MP3 header.
+     * The caller is responsible for removing partial files after a failure.
+     *
+     * @param downloadUrl audio URL to request
+     * @param targetFile temporary file to write
+     * @throws Exception if the request, file write or header check fails
      */
     private void downloadAudioStream(String downloadUrl, File targetFile) throws Exception {
         HttpURLConnection connection = null;
@@ -217,6 +244,11 @@ public class TrackDownloadManager {
 
     /**
      * Accepts MP3 files beginning with an ID3 tag or an MPEG audio frame.
+     * This checks only the prefix, not whether the entire file can be decoded.
+     *
+     * @param header initial bytes read from the response
+     * @param headerLength number of populated bytes in the buffer
+     * @return true when the prefix matches an ID3 tag or MPEG frame sync
      */
     private boolean hasMp3Header(byte[] header, int headerLength) {
         if (headerLength < 2) {
@@ -234,12 +266,22 @@ public class TrackDownloadManager {
     }
 
     /**
-     * Returns the active user's downloaded-track record.
+     * Reads a download record for the current session without checking its file.
+     *
+     * @param trackId track identifier
+     * @return matching account-owned record, or null
      */
     private DownloadedTrackEntity getDownloadedTrack(String trackId) {
         return getDownloadedTrack(trackId, sessionManager.getAccount());
     }
 
+    /**
+     * Reads a record by user ID and email after checking the captured session.
+     *
+     * @param trackId track identifier
+     * @param account session captured before the lookup
+     * @return record, or null for an invalid ID, stale session or missing download
+     */
     private DownloadedTrackEntity getDownloadedTrack(String trackId, AccountSession account) {
         if (trackId == null || trackId.trim().isEmpty() || !sessionManager.isCurrent(account)) {
             return null;
@@ -247,13 +289,27 @@ public class TrackDownloadManager {
         return database.downloadedTrackDao().getDownloadByAccount(trackId, account.getUserId(), account.getEmail());
     }
 
+    /**
+     * Reads the captured account's download records off the UI thread.
+     * Files are not checked here; the caller must recheck the session before displaying results.
+     *
+     * @param account session captured before queuing the read
+     * @return account-owned records, or an empty list if the session is no longer current
+     */
     public List<DownloadedTrackEntity> getDownloadedTracks(AccountSession account) {
         return sessionManager.isCurrent(account)
                 ? database.downloadedTrackDao().getDownloadsByAccount(account.getUserId(), account.getEmail())
                 : Collections.emptyList();
     }
 
-    /** Removes only the selected owner's record; legacy shared files survive other owners' removal. */
+    /**
+     * Removes an account's download off the UI thread, retaining files referenced by other records.
+     * Does nothing if the session is stale or no matching record exists.
+     *
+     * @param trackId track identifier
+     * @param account session captured before queuing the removal
+     * @throws Exception if an unshared file cannot be deleted or the database operation fails
+     */
     public void removeDownload(String trackId, AccountSession account) throws Exception {
         DownloadedTrackEntity track = getDownloadedTrack(trackId, account);
         if (track == null) { return; }
@@ -266,6 +322,10 @@ public class TrackDownloadManager {
 
     /**
      * Moves a completed temporary download into its final location.
+     *
+     * @param temporaryFile completed download
+     * @param targetFile final account-specific audio file
+     * @throws Exception if an existing target cannot be deleted or the move fails
      */
     private void replaceFile(File temporaryFile, File targetFile) throws Exception {
         if (targetFile.exists() && !targetFile.delete()) {
@@ -278,7 +338,9 @@ public class TrackDownloadManager {
     }
 
     /**
-     * Removes an exact download file when it exists.
+     * Removes an exact download file when it exists, logging a failed deletion.
+     *
+     * @param file temporary or newly downloaded file to clean up
      */
     private void deleteIfPresent(File file) {
         if (file.exists() && !file.delete()) {

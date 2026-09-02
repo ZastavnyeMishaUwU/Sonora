@@ -65,7 +65,8 @@ public class DownloadedTracksActivity extends AccountActivity {
     }
 
     /**
-     * Clears private rows and playback when the account changes or the screen is hidden.
+     * Clears private rows, playback and any removal dialog when the account changes or the screen stops.
+     * Saved download records and files are left untouched.
      */
     @Override
     protected void clearAccountContent() {
@@ -91,7 +92,10 @@ public class DownloadedTracksActivity extends AccountActivity {
     }
 
     /**
-     * Reads downloaded tracks for the active user outside the UI thread.
+     * Reads downloads in the background for the captured session.
+     *
+     * @param account session to display, or null to show the login-required message
+     * @param revision content revision captured for this load
      */
     @Override
     protected void loadAccountContent(AccountSession account, int revision) {
@@ -118,6 +122,8 @@ public class DownloadedTracksActivity extends AccountActivity {
      *
      * @param tracks downloaded tracks to display
      * @param emptyMessageResource message shown when the supplied list is empty
+     * @param account session that owns the result
+     * @param revision revision to check before updating the list
      */
     private void showTracks(List<DownloadedTrackEntity> tracks, int emptyMessageResource,
                             AccountSession account, int revision) {
@@ -136,7 +142,8 @@ public class DownloadedTracksActivity extends AccountActivity {
     }
 
     /**
-     * Checks the stored local path and starts playback without a network request.
+     * Checks ownership and file availability before starting offline playback.
+     * A session or revision change prevents the background lookup from starting playback.
      *
      * @param downloadedTrack selected downloaded-track record
      */
@@ -183,7 +190,8 @@ public class DownloadedTracksActivity extends AccountActivity {
     }
 
     /**
-     * Asks the user to confirm removal of a downloaded track.
+     * Asks for removal confirmation while retaining the selected account and revision.
+     * The dialog is dismissed when account content is cleared.
      *
      * @param downloadedTrack track selected for removal
      */
@@ -211,6 +219,8 @@ public class DownloadedTracksActivity extends AccountActivity {
      * Removes the captured account's download in the background without affecting other owners.
      *
      * @param downloadedTrack track selected for removal
+     * @param account session captured when the confirmation dialog was opened
+     * @param revision content revision captured with the session
      */
     private void removeDownloadedTrack(DownloadedTrackEntity downloadedTrack, AccountSession account, int revision) {
         if (!acceptsResult(account, revision)) { return; }
@@ -225,9 +235,11 @@ public class DownloadedTracksActivity extends AccountActivity {
     }
 
     /**
-     * Removes a successfully deleted track from the visible list immediately.
+     * Removes a deleted download from the visible list if its session and revision still match.
      *
-     * @param downloadedTrack track whose file and database record were deleted
+     * @param downloadedTrack track whose account-owned download was removed
+     * @param account session that requested removal
+     * @param revision content revision captured before removal
      */
     private void showRemovalSuccess(DownloadedTrackEntity downloadedTrack, AccountSession account, int revision) {
         runOnUiThread(() -> {
@@ -248,6 +260,9 @@ public class DownloadedTracksActivity extends AccountActivity {
 
     /**
      * Displays a non-fatal message when a track cannot be fully removed.
+     *
+     * @param account session that requested removal
+     * @param revision revision to check before displaying the message
      */
     private void showRemovalError(AccountSession account, int revision) {
         runOnUiThread(() -> {
@@ -263,6 +278,14 @@ public class DownloadedTracksActivity extends AccountActivity {
         });
     }
 
+    /**
+     * Compares a download's stored owner with a captured account.
+     * This does not check whether that session is still current.
+     *
+     * @param track non-null downloaded-track record
+     * @param account account to compare, or null
+     * @return true when both user ID and owner email match
+     */
     private boolean ownsTrack(DownloadedTrackEntity track, AccountSession account) {
         return account != null && track.getUserId() == account.getUserId()
                 && track.getOwnerEmail().equals(account.getEmail());
@@ -318,7 +341,7 @@ public class DownloadedTracksActivity extends AccountActivity {
         }
 
         /**
-         * Returns a stable numeric identifier for a list position.
+         * Uses the current list position as the row identifier.
          *
          * @param position list position
          * @return list position as the row identifier

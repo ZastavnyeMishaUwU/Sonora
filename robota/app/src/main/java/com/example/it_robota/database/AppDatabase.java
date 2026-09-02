@@ -26,6 +26,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 public abstract class AppDatabase extends RoomDatabase {
 
     public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        /**
+         * Enables generated user IDs and adds email ownership to favorites and downloads.
+         * Existing rows are preserved; records with the reused user ID 0 remain unassigned.
+         *
+         * @param database database being upgraded
+         */
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("CREATE TABLE users_new (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "

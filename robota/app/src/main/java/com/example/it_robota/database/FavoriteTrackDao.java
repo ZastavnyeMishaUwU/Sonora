@@ -15,31 +15,61 @@ import java.util.List;
 @Dao
 public interface FavoriteTrackDao {
 
+    /**
+     * Returns an account's favorite tracks, sorted by name without case sensitivity.
+     *
+     * @param userId database user identifier
+     * @param email normalized owner email
+     * @return track metadata linked to the account
+     */
     @Query("SELECT * FROM tracks WHERE id IN (SELECT trackId FROM favorite_tracks "
             + "WHERE userId = :userId AND ownerEmail = :email) ORDER BY name COLLATE NOCASE")
     List<TrackEntity> getFavoriteTracksByAccount(long userId, String email);
 
+    /**
+     * Checks whether the specified account has saved a track.
+     *
+     * @param trackId track identifier
+     * @param userId database user identifier
+     * @param email normalized owner email
+     * @return true when the account's favorite link exists
+     */
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_tracks WHERE trackId = :trackId "
             + "AND userId = :userId AND ownerEmail = :email)")
     boolean isTrackFavoriteForAccount(String trackId, long userId, String email);
 
+    /**
+     * Removes one account's favorite link without deleting shared track metadata.
+     *
+     * @param trackId track identifier
+     * @param userId database user identifier
+     * @param email normalized owner email
+     */
     @Query("DELETE FROM favorite_tracks WHERE trackId = :trackId AND userId = :userId AND ownerEmail = :email")
     void deleteForAccount(String trackId, long userId, String email);
 
     /**
-     * Inserts a track into the tracks table. Replaces it if it already exists.
+     * Inserts shared track metadata, replacing the record if its ID already exists.
+     *
+     * @param track track metadata to store
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertTrack(TrackEntity track);
 
     /**
-     * Deletes a specific track from the database using its ID.
+     * Deletes favorite links by user ID without filtering their owner email.
+     * Use {@link #deleteForAccount(String, long, String)} for account-scoped removal.
+     *
+     * @param trackId track identifier
+     * @param userId database user identifier
      */
     @Query("DELETE FROM favorite_tracks WHERE trackId = :trackId AND userId = :userId")
     void deleteTrack(String trackId, long userId);
 
     /**
-     * Saves a link between a user and their favorite track. Replaces on conflict.
+     * Saves a favorite link, replacing a link with the same user ID, email and track ID.
+     *
+     * @param favorite account-to-track link with its owner email set
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertFavoriteLink(FavoriteTrackEntity favorite);
@@ -57,14 +87,22 @@ public interface FavoriteTrackDao {
     }
 
     /**
-     * Retrieves all favorite tracks belonging to a specific user.
+     * Returns favorites by user ID, including links with an unassigned owner email.
+     * Use {@link #getFavoriteTracksByAccount(long, String)} for an account's visible list.
+     *
+     * @param userId database user identifier
+     * @return matching track metadata, sorted by name
      */
     @Query("SELECT * FROM tracks WHERE id IN (SELECT trackId FROM favorite_tracks WHERE userId = :userId) "
             + "ORDER BY name COLLATE NOCASE")
     List<TrackEntity> getFavoriteTracksByUser(long userId);
 
     /**
-     * Checks if a specific track is already marked as a favorite by a user.
+     * Checks for a favorite link by user ID without filtering its owner email.
+     *
+     * @param trackId track identifier
+     * @param userId database user identifier
+     * @return true when a matching favorite link exists
      */
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_tracks WHERE trackId = :trackId AND userId = :userId)")
     boolean isTrackFavorite(String trackId, long userId);

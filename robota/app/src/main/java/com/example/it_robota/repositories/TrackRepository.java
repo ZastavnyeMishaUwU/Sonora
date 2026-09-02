@@ -34,6 +34,13 @@ public class TrackRepository {
         favoriteTrackDao = AppDatabase.getInstance(applicationContext).favoriteTrackDao();
         sessionManager = new SessionManager(applicationContext);
     }
+    /**
+     * Creates a repository with supplied dependencies, including test doubles.
+     *
+     * @param jamendoApiClient client for public track data
+     * @param favoriteTrackDao storage for account-owned favorites
+     * @param sessionManager source of the active session
+     */
     public TrackRepository(JamendoApiClient jamendoApiClient, FavoriteTrackDao favoriteTrackDao, SessionManager sessionManager) {
         this.jamendoApiClient = jamendoApiClient;
         this.favoriteTrackDao = favoriteTrackDao;
@@ -62,6 +69,15 @@ public class TrackRepository {
         return getTrackDetails(trackId, sessionManager.getAccount());
     }
 
+    /**
+     * Loads public details and the captured account's favorite status off the UI thread.
+     * Download paths are not part of shared metadata and must be resolved separately.
+     *
+     * @param trackId Jamendo track identifier
+     * @param account session captured before the request; null or stale sessions have no favorite status
+     * @return track details with no local path, or null if the API returns no track
+     * @throws Exception if the API request, parsing or favorite lookup fails
+     */
     public Track getTrackDetails(String trackId, AccountSession account) throws Exception {
         Track track = jamendoApiClient.getTrackDetails(trackId);
         if (track != null) {
@@ -80,6 +96,13 @@ public class TrackRepository {
         return getSavedTracks(sessionManager.getAccount());
     }
 
+    /**
+     * Reads favorites for a captured session off the UI thread.
+     * The caller must recheck the session before displaying the returned list.
+     *
+     * @param account session captured before queuing the read
+     * @return favorites without local paths, or an empty list if the session is no longer current
+     */
     public List<Track> getSavedTracks(AccountSession account) {
         List<Track> tracks = new ArrayList<>();
         if (!sessionManager.isCurrent(account)) {
@@ -102,6 +125,14 @@ public class TrackRepository {
         saveFavorite(track, sessionManager.getAccount());
     }
 
+    /**
+     * Stores shared metadata and a favorite link for the captured account off the UI thread.
+     * The session must still be current when the operation starts.
+     *
+     * @param track track to save and mark as a favorite
+     * @param account session captured before queuing the write
+     * @throws Exception if the track is invalid, the session is stale or storage fails
+     */
     public void saveFavorite(Track track, AccountSession account) throws Exception {
         if (track == null || isBlank(track.getId())) {
             throw new Exception("Track is empty.");
@@ -126,6 +157,13 @@ public class TrackRepository {
         removeFavorite(trackId, sessionManager.getAccount());
     }
 
+    /**
+     * Removes the captured account's favorite link off the UI thread, preserving metadata.
+     * Does nothing for a missing track ID or a session that is no longer current.
+     *
+     * @param trackId track identifier
+     * @param account session captured before queuing the removal
+     */
     public void removeFavorite(String trackId, AccountSession account) {
         if (!sessionManager.isCurrent(account) || isBlank(trackId)) {
             return;
@@ -143,7 +181,13 @@ public class TrackRepository {
         return isTrackFavorite(trackId, sessionManager.getAccount());
     }
 
-    /** Checks a favorite against the captured, still-active account. */
+    /**
+     * Looks up a favorite only while the captured session is current.
+     *
+     * @param trackId track identifier
+     * @param account session to check
+     * @return true when the session is current and its favorite link exists
+     */
     private boolean isTrackFavorite(String trackId, AccountSession account) {
         return sessionManager.isCurrent(account) && !isBlank(trackId)
                 && favoriteTrackDao.isTrackFavoriteForAccount(trackId, account.getUserId(), account.getEmail());

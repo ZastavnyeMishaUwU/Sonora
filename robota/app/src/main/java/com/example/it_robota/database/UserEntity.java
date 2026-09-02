@@ -26,7 +26,7 @@ public class UserEntity {
     /**
      * Creates a UserEntity object with all user fields.
      *
-     * @param id user ID
+     * @param id user ID, or 0 to generate an ID when inserting a new account
      * @param username username
      * @param email user email
      * @param passwordHash hashed password
@@ -52,7 +52,7 @@ public class UserEntity {
     /**
      * Sets user ID.
      *
-     * @param id user ID
+     * @param id user ID, or 0 to generate an ID when inserting a new account
      */
     public void setId(long id) {
         this.id = id;

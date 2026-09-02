@@ -39,6 +39,11 @@ public class FavoritesActivity extends AccountActivity {
     private ProgressBar progressBar;
     private TextView emptyStateTextView;
 
+    /**
+     * Requires a login and prepares the list before enabling account refreshes.
+     *
+     * @param savedInstanceState previously saved activity state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +65,7 @@ public class FavoritesActivity extends AccountActivity {
         accountUiReady();
     }
 
+    /** Clears the visible favorites without removing saved links from the database. */
     @Override
     protected void clearAccountContent() {
         favoriteTracks.clear();
@@ -69,7 +75,10 @@ public class FavoritesActivity extends AccountActivity {
     }
 
     /**
-     * Loads favorites for the current user outside the UI thread.
+     * Loads favorites in the background and ignores results from an older session or revision.
+     *
+     * @param account session to display, or null to show the login-required message
+     * @param revision content revision captured for this load
      */
     @Override
     protected void loadAccountContent(AccountSession account, int revision) {
@@ -93,6 +102,11 @@ public class FavoritesActivity extends AccountActivity {
         });
     }
 
+    /**
+     * Replaces the visible list on the UI thread after the caller has checked the session.
+     *
+     * @param tracks favorites to display
+     */
     private void showTracks(List<Track> tracks) {
         favoriteTracks.clear();
         favoriteTracks.addAll(tracks);
@@ -104,7 +118,10 @@ public class FavoritesActivity extends AccountActivity {
     }
 
     /**
-     * Removes a track from the current user's favorites in the background.
+     * Removes a favorite for the displayed account in the background.
+     * The result is applied only while the captured session and revision still match.
+     *
+     * @param track favorite selected for removal
      */
     private void removeFavorite(Track track) {
         AccountSession account = displayedAccount;
@@ -132,6 +149,11 @@ public class FavoritesActivity extends AccountActivity {
         });
     }
 
+    /**
+     * Opens the selected track in the player if the displayed account is still current.
+     *
+     * @param track selected favorite; missing tracks or IDs are ignored
+     */
     private void openPlayer(Track track) {
         if (!acceptsResult(displayedAccount, accountRevision())
                 || track == null || track.getId() == null || track.getId().trim().isEmpty()) {
@@ -142,12 +164,18 @@ public class FavoritesActivity extends AccountActivity {
         startActivity(intent);
     }
 
+    /** Shows the loading indicator and hides the previous list and state message. */
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
         favoritesListView.setVisibility(View.GONE);
         emptyStateTextView.setVisibility(View.GONE);
     }
 
+    /**
+     * Clears the visible list and shows an empty, error or login-required message.
+     *
+     * @param messageResource string resource to display
+     */
     private void showEmptyState(int messageResource) {
         favoriteTracks.clear();
         favoritesAdapter.notifyDataSetChanged();
@@ -157,6 +185,7 @@ public class FavoritesActivity extends AccountActivity {
         emptyStateTextView.setVisibility(View.VISIBLE);
     }
 
+    /** Invalidates account callbacks and shuts down the screen's background executor. */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -165,21 +194,42 @@ public class FavoritesActivity extends AccountActivity {
 
     private class FavoritesAdapter extends BaseAdapter {
 
+        /** @return number of favorites in the visible list */
         @Override
         public int getCount() {
             return favoriteTracks.size();
         }
 
+        /**
+         * Returns a favorite at the given list position.
+         *
+         * @param position zero-based list position
+         * @return selected favorite
+         */
         @Override
         public Track getItem(int position) {
             return favoriteTracks.get(position);
         }
 
+        /**
+         * Uses the current list position as the row identifier.
+         *
+         * @param position zero-based list position
+         * @return row identifier
+         */
         @Override
         public long getItemId(int position) {
             return position;
         }
 
+        /**
+         * Creates or reuses a row and binds its metadata, playback and removal actions.
+         *
+         * @param position zero-based list position
+         * @param convertView reusable row, or null
+         * @param parent parent list
+         * @return populated favorite row
+         */
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View itemView = convertView;
@@ -203,6 +253,13 @@ public class FavoritesActivity extends AccountActivity {
         }
     }
 
+    /**
+     * Supplies display text when optional track metadata is missing.
+     *
+     * @param value metadata value, or null
+     * @param fallbackResource string resource used for null or blank values
+     * @return original value or the fallback text
+     */
     private String valueOrFallback(String value, int fallbackResource) {
         return value == null || value.trim().isEmpty() ? getString(fallbackResource) : value;
     }

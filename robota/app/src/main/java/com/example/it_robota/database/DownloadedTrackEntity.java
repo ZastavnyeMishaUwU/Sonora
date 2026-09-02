@@ -20,9 +20,15 @@ public class DownloadedTrackEntity {
     @ColumnInfo(defaultValue = "''")
     private String ownerEmail = "";
 
+    /** @return owner email, or an empty string for an unassigned record */
     @NonNull
     public String getOwnerEmail() { return ownerEmail; }
 
+    /**
+     * Sets the email used with the user ID to identify the download's owner.
+     *
+     * @param ownerEmail normalized email, or an empty string for an unassigned record
+     */
     public void setOwnerEmail(@NonNull String ownerEmail) { this.ownerEmail = ownerEmail; }
 
     @NonNull

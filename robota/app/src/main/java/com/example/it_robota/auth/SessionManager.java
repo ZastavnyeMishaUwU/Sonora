@@ -30,7 +30,8 @@ public class SessionManager {
     }
 
     /**
-     * Saves the active user's identifier and email.
+     * Saves the user's identifier and normalized email with a fresh login token.
+     * A new token invalidates snapshots from previous logins, including the same account.
      *
      * @param userId active user identifier
      * @param email active user email
@@ -45,7 +46,7 @@ public class SessionManager {
     }
 
     /**
-     * Removes all values belonging to the current session.
+     * Removes session preferences without deleting the account's favorites or downloads.
      */
     public void clearSession() {
         sharedPreferences.edit()
@@ -88,7 +89,12 @@ public class SessionManager {
         return sharedPreferences.getString(KEY_CURRENT_USER_EMAIL, null);
     }
 
-    /** Reads one atomic preference snapshot, never mixing two users during a switch. */
+    /**
+     * Reads session fields from one preference snapshot and validates their types.
+     * Legacy sessions without a string token use an empty token.
+     *
+     * @return captured account, or null when logged out or required fields are invalid
+     */
     public AccountSession getAccount() {
         Map<String, ?> values = sharedPreferences.getAll();
         Object id = values.get(KEY_CURRENT_USER_ID);
@@ -102,14 +108,31 @@ public class SessionManager {
         return new AccountSession((Long) id, (String) email, token instanceof String ? (String) token : "");
     }
 
+    /**
+     * Checks that a captured account still matches the current login.
+     *
+     * @param account snapshot to check, or null
+     * @return true when the account and login token still match
+     */
     public boolean isCurrent(AccountSession account) {
         return account != null && account.equals(getAccount());
     }
 
+    /**
+     * Registers a listener for session preference changes.
+     * The caller must retain the listener and unregister it when no longer needed.
+     *
+     * @param listener listener to register
+     */
     public void addListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
         sharedPreferences.registerOnSharedPreferenceChangeListener(listener);
     }
 
+    /**
+     * Stops delivering session preference changes to a listener.
+     *
+     * @param listener previously registered listener
+     */
     public void removeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener);
     }
