@@ -39,7 +39,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-/** Tests navigation independently of whether the remote track request succeeds. */
+/**
+* Tests navigation independently of whether the remote track request succeeds. 
+*/
 @RunWith(AndroidJUnit4.class)
 public class TrackDetailsNavigationInstrumentedTest {
 
