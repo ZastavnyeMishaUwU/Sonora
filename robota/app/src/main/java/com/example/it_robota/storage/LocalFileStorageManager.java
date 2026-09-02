@@ -5,6 +5,10 @@ import android.os.Environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import com.example.it_robota.auth.AccountSession;
 
 /**
  * Owns local file operations inside the application's music directory.
@@ -57,6 +61,28 @@ public class LocalFileStorageManager {
                 FILE_PREFIX + safeTrackId + FILE_EXTENSION
         );
         return trackFile.getAbsolutePath();
+    }
+
+    /** Separates audio files by account without exposing an email in the file name. */
+    public String buildFilePath(String email, String trackId) {
+        String account = AccountSession.normalizeEmail(email);
+        if (account.isEmpty()) { throw new IllegalArgumentException("Account email is required."); }
+        return new File(getMusicDirectory(), "account_" + digest(account)
+                + "_track_" + digest(trackId) + FILE_EXTENSION).getAbsolutePath();
+    }
+
+    private String digest(String value) {
+        try {
+            byte[] bytes = MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder result = new StringBuilder();
+            for (byte valueByte : bytes) {
+                result.append(String.format(java.util.Locale.ROOT, "%02x", valueByte & 0xff));
+            }
+            return result.toString();
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     /**

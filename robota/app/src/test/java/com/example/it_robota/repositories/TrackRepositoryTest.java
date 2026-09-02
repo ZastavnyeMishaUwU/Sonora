@@ -11,6 +11,7 @@ import static org.mockito.Mockito.any;
 
 import com.example.it_robota.api.JamendoApiClient;
 import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.auth.AccountSession;
 import com.example.it_robota.database.FavoriteTrackDao;
 import com.example.it_robota.database.FavoriteTrackEntity;
 import com.example.it_robota.database.TrackEntity;
@@ -45,6 +46,7 @@ public class TrackRepositoryTest {
 
     private static final long VALID_USER_ID = 100L;
     private static final String TRACK_ID = "track_123";
+    private static final AccountSession ACCOUNT = new AccountSession(VALID_USER_ID, "first@example.com", "login-1");
 
     /**
      * Initializes the repository with mock dependencies before each test execution.
@@ -77,9 +79,9 @@ public class TrackRepositoryTest {
     public void getTrackDetails_whenTrackExistsAndIsFavorite_setsFavoriteTrue() throws Exception {
         Track track = createDummyTrack(TRACK_ID);
         when(jamendoApiClient.getTrackDetails(TRACK_ID)).thenReturn(track);
-        when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.getCurrentUserId()).thenReturn(VALID_USER_ID);
-        when(favoriteTrackDao.isTrackFavorite(TRACK_ID, VALID_USER_ID)).thenReturn(true);
+        when(sessionManager.getAccount()).thenReturn(ACCOUNT);
+        when(sessionManager.isCurrent(ACCOUNT)).thenReturn(true);
+        when(favoriteTrackDao.isTrackFavoriteForAccount(TRACK_ID, VALID_USER_ID, ACCOUNT.getEmail())).thenReturn(true);
 
         Track result = trackRepository.getTrackDetails(TRACK_ID);
 
@@ -105,12 +107,12 @@ public class TrackRepositoryTest {
      */
     @Test
     public void getSavedTracks_whenUserNotLoggedIn_returnsEmptyList() {
-        when(sessionManager.isLoggedIn()).thenReturn(false);
+        when(sessionManager.getAccount()).thenReturn(null);
 
         List<Track> tracks = trackRepository.getSavedTracks();
 
         assertTrue(tracks.isEmpty());
-        verify(favoriteTrackDao, never()).getFavoriteTracksByUser(any(Long.class));
+        verify(favoriteTrackDao, never()).getFavoriteTracksByAccount(any(Long.class), any());
     }
 
     /**
@@ -119,13 +121,13 @@ public class TrackRepositoryTest {
      */
     @Test
     public void getSavedTracks_whenUserLoggedIn_returnsMappedTracks() {
-        when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.getCurrentUserId()).thenReturn(VALID_USER_ID);
+        when(sessionManager.getAccount()).thenReturn(ACCOUNT);
+        when(sessionManager.isCurrent(ACCOUNT)).thenReturn(true);
 
         TrackEntity entity = new TrackEntity();
         entity.setId(TRACK_ID);
         entity.setName("Test Song");
-        when(favoriteTrackDao.getFavoriteTracksByUser(VALID_USER_ID))
+        when(favoriteTrackDao.getFavoriteTracksByAccount(VALID_USER_ID, ACCOUNT.getEmail()))
                 .thenReturn(Collections.singletonList(entity));
 
         List<Track> tracks = trackRepository.getSavedTracks();
@@ -159,7 +161,7 @@ public class TrackRepositoryTest {
     @Test(expected = Exception.class)
     public void saveFavorite_whenUserNotLoggedIn_throwsException() throws Exception {
         Track track = createDummyTrack(TRACK_ID);
-        when(sessionManager.isLoggedIn()).thenReturn(false);
+        when(sessionManager.getAccount()).thenReturn(null);
 
         trackRepository.saveFavorite(track);
     }
@@ -170,8 +172,8 @@ public class TrackRepositoryTest {
     @Test
     public void saveFavorite_whenValidTrackAndUser_savesAndSetsFavoriteTrue() throws Exception {
         Track track = createDummyTrack(TRACK_ID);
-        when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.getCurrentUserId()).thenReturn(VALID_USER_ID);
+        when(sessionManager.getAccount()).thenReturn(ACCOUNT);
+        when(sessionManager.isCurrent(ACCOUNT)).thenReturn(true);
 
         trackRepository.saveFavorite(track);
 
@@ -184,12 +186,12 @@ public class TrackRepositoryTest {
      */
     @Test
     public void removeFavorite_whenValidIdAndLoggedIn_deletesFromDao() {
-        when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.getCurrentUserId()).thenReturn(VALID_USER_ID);
+        when(sessionManager.getAccount()).thenReturn(ACCOUNT);
+        when(sessionManager.isCurrent(ACCOUNT)).thenReturn(true);
 
         trackRepository.removeFavorite(TRACK_ID);
 
-        verify(favoriteTrackDao).deleteTrack(TRACK_ID, VALID_USER_ID);
+        verify(favoriteTrackDao).deleteForAccount(TRACK_ID, VALID_USER_ID, ACCOUNT.getEmail());
     }
 
     /**
@@ -199,27 +201,59 @@ public class TrackRepositoryTest {
     public void removeFavorite_whenTrackIdIsBlank_doesNothing() {
         trackRepository.removeFavorite("  ");
 
-        verify(favoriteTrackDao, never()).deleteTrack(any(), any(Long.class));
+        verify(favoriteTrackDao, never()).deleteForAccount(any(), any(Long.class), any());
     }
 
     /**
-     * Verifies handling of ClassCastException during user ID retrieval:
-     * the session should be cleared and the method should return false.
+     * Invalid session snapshots must not query another account's favorites.
      */
     @Test
-    public void isTrackFavorite_whenClassCastExceptionInSession_clearsSessionAndReturnsFalse() {
-        when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.getCurrentUserId()).thenThrow(new ClassCastException("Bad cast"));
+    public void isTrackFavorite_whenSessionIsInvalid_returnsFalse() {
+        when(sessionManager.getAccount()).thenReturn(null);
 
         boolean isFavorite = trackRepository.isTrackFavorite(TRACK_ID);
 
         assertFalse(isFavorite);
-        verify(sessionManager).clearSession();
+        verify(favoriteTrackDao, never()).isTrackFavoriteForAccount(any(), any(Long.class), any());
     }
 
     /**
-     * Creates a dummy {@link Track} instance for testing purposes.
+     * Switching accounts changes both components of the ownership query.
      */
+    @Test
+    public void accountSwitchQueriesTheNewEmailAndId() {
+        AccountSession second = new AccountSession(200, "second@example.com", "login-2");
+        when(sessionManager.getAccount()).thenReturn(ACCOUNT, second);
+        when(sessionManager.isCurrent(ACCOUNT)).thenReturn(true);
+        when(sessionManager.isCurrent(second)).thenReturn(true);
+        trackRepository.getSavedTracks();
+        trackRepository.getSavedTracks();
+        verify(favoriteTrackDao).getFavoriteTracksByAccount(VALID_USER_ID, ACCOUNT.getEmail());
+        verify(favoriteTrackDao).getFavoriteTracksByAccount(200, second.getEmail());
+    }
+
+    @Test
+    public void staleAccountCannotRemoveOrSaveAnotherUsersFavorite() throws Exception {
+        org.junit.Assert.assertThrows(Exception.class,
+                () -> trackRepository.saveFavorite(createDummyTrack(TRACK_ID), ACCOUNT));
+        trackRepository.removeFavorite(TRACK_ID, ACCOUNT);
+        org.mockito.Mockito.verifyNoInteractions(favoriteTrackDao);
+    }
+
+    @Test
+    public void sharedMetadataNeverIncludesAnotherUsersLocalPath() throws Exception {
+        when(sessionManager.getAccount()).thenReturn(ACCOUNT);
+        when(sessionManager.isCurrent(ACCOUNT)).thenReturn(true);
+        Track track = createDummyTrack(TRACK_ID);
+        track.setLocalFilePath("private-first-account.mp3");
+        trackRepository.saveFavorite(track);
+        org.mockito.ArgumentCaptor<TrackEntity> metadata = org.mockito.ArgumentCaptor.forClass(TrackEntity.class);
+        org.mockito.ArgumentCaptor<FavoriteTrackEntity> owner = org.mockito.ArgumentCaptor.forClass(FavoriteTrackEntity.class);
+        verify(favoriteTrackDao).saveFavorite(metadata.capture(), owner.capture());
+        org.junit.Assert.assertNull(metadata.getValue().getLocalFilePath());
+        assertEquals(ACCOUNT.getEmail(), owner.getValue().getOwnerEmail());
+    }
+
     private Track createDummyTrack(String id) {
         return new Track(
                 id,

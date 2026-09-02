@@ -13,6 +13,19 @@ import java.util.List;
 @Dao
 public interface DownloadedTrackDao {
 
+    @Query("SELECT * FROM downloaded_tracks WHERE userId = :userId AND ownerEmail = :email")
+    List<DownloadedTrackEntity> getDownloadsByAccount(long userId, String email);
+
+    @Query("SELECT * FROM downloaded_tracks WHERE trackId = :trackId AND userId = :userId "
+            + "AND ownerEmail = :email LIMIT 1")
+    DownloadedTrackEntity getDownloadByAccount(String trackId, long userId, String email);
+
+    @Query("DELETE FROM downloaded_tracks WHERE trackId = :trackId AND userId = :userId AND ownerEmail = :email")
+    void deleteForAccount(String trackId, long userId, String email);
+
+    @Query("SELECT COUNT(*) FROM downloaded_tracks WHERE localPath = :path")
+    int countFileReferences(String path);
+
     /**
      * Saves a downloaded track record, replacing an existing matching record.
      *

@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.example.it_robota.api.JamendoApiClient;
 import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.auth.AccountSession;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.FavoriteTrackDao;
 import com.example.it_robota.database.FavoriteTrackEntity;
@@ -17,8 +18,6 @@ import java.util.List;
  * Repository for track search, details and user-specific favorite storage.
  */
 public class TrackRepository {
-
-    private static final long NO_USER_ID = -1L;
 
     private final JamendoApiClient jamendoApiClient;
     private final FavoriteTrackDao favoriteTrackDao;
@@ -60,9 +59,14 @@ public class TrackRepository {
      * @throws Exception if track details cannot be loaded
      */
     public Track getTrackDetails(String trackId) throws Exception {
+        return getTrackDetails(trackId, sessionManager.getAccount());
+    }
+
+    public Track getTrackDetails(String trackId, AccountSession account) throws Exception {
         Track track = jamendoApiClient.getTrackDetails(trackId);
         if (track != null) {
-            track.setFavorite(isTrackFavorite(track.getId()));
+            track.setFavorite(isTrackFavorite(track.getId(), account));
+            track.setLocalFilePath(null);
         }
         return track;
     }
@@ -73,13 +77,16 @@ public class TrackRepository {
      * @return current user's favorite tracks
      */
     public List<Track> getSavedTracks() {
-        long userId = getCurrentUserId();
+        return getSavedTracks(sessionManager.getAccount());
+    }
+
+    public List<Track> getSavedTracks(AccountSession account) {
         List<Track> tracks = new ArrayList<>();
-        if (userId == NO_USER_ID) {
+        if (!sessionManager.isCurrent(account)) {
             return tracks;
         }
 
-        for (TrackEntity entity : favoriteTrackDao.getFavoriteTracksByUser(userId)) {
+        for (TrackEntity entity : favoriteTrackDao.getFavoriteTracksByAccount(account.getUserId(), account.getEmail())) {
             tracks.add(toTrack(entity));
         }
         return tracks;
@@ -92,19 +99,21 @@ public class TrackRepository {
      * @throws Exception when the track is invalid or no user is logged in
      */
     public void saveFavorite(Track track) throws Exception {
+        saveFavorite(track, sessionManager.getAccount());
+    }
+
+    public void saveFavorite(Track track, AccountSession account) throws Exception {
         if (track == null || isBlank(track.getId())) {
             throw new Exception("Track is empty.");
         }
 
-        long userId = getCurrentUserId();
-        if (userId == NO_USER_ID) {
+        if (!sessionManager.isCurrent(account)) {
             throw new Exception("User is not logged in.");
         }
 
-        favoriteTrackDao.saveFavorite(
-                toTrackEntity(track),
-                new FavoriteTrackEntity(userId, track.getId())
-        );
+        FavoriteTrackEntity favorite = new FavoriteTrackEntity(account.getUserId(), track.getId());
+        favorite.setOwnerEmail(account.getEmail());
+        favoriteTrackDao.saveFavorite(toTrackEntity(track), favorite);
         track.setFavorite(true);
     }
 
@@ -114,11 +123,14 @@ public class TrackRepository {
      * @param trackId track identifier
      */
     public void removeFavorite(String trackId) {
-        long userId = getCurrentUserId();
-        if (userId == NO_USER_ID || isBlank(trackId)) {
+        removeFavorite(trackId, sessionManager.getAccount());
+    }
+
+    public void removeFavorite(String trackId, AccountSession account) {
+        if (!sessionManager.isCurrent(account) || isBlank(trackId)) {
             return;
         }
-        favoriteTrackDao.deleteTrack(trackId, userId);
+        favoriteTrackDao.deleteForAccount(trackId, account.getUserId(), account.getEmail());
     }
 
     /**
@@ -128,28 +140,13 @@ public class TrackRepository {
      * @return true when the current user saved the track
      */
     public boolean isTrackFavorite(String trackId) {
-        long userId = getCurrentUserId();
-        return userId != NO_USER_ID
-                && !isBlank(trackId)
-                && favoriteTrackDao.isTrackFavorite(trackId, userId);
+        return isTrackFavorite(trackId, sessionManager.getAccount());
     }
 
-    /**
-     * Returns the valid active user identifier.
-     *
-     * @return user identifier, or -1 when no valid session exists
-     */
-    private long getCurrentUserId() {
-        try {
-            if (!sessionManager.isLoggedIn()) {
-                return NO_USER_ID;
-            }
-            long userId = sessionManager.getCurrentUserId();
-            return userId >= 0L ? userId : NO_USER_ID;
-        } catch (ClassCastException exception) {
-            sessionManager.clearSession();
-            return NO_USER_ID;
-        }
+    /** Checks a favorite against the captured, still-active account. */
+    private boolean isTrackFavorite(String trackId, AccountSession account) {
+        return sessionManager.isCurrent(account) && !isBlank(trackId)
+                && favoriteTrackDao.isTrackFavoriteForAccount(trackId, account.getUserId(), account.getEmail());
     }
 
     /**
@@ -170,7 +167,8 @@ public class TrackRepository {
         entity.setImageUrl(track.getImageUrl());
         entity.setLicenseUrl(track.getLicenseUrl());
         entity.setFavorite(true);
-        entity.setLocalFilePath(track.getLocalFilePath());
+        // Track metadata is shared. Download paths belong only in account-owned records.
+        entity.setLocalFilePath(null);
         return entity;
     }
 
@@ -192,7 +190,7 @@ public class TrackRepository {
                 entity.getImageUrl(),
                 entity.getLicenseUrl(),
                 true,
-                entity.getLocalFilePath()
+                null
         );
     }
 

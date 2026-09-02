@@ -16,7 +16,7 @@ public interface UserDao {
      *
      * @param userEntity user entity to insert
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     void insertUser(UserEntity userEntity);
 
     /**

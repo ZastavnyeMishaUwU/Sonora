@@ -6,10 +6,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
 import com.example.it_robota.auth.AuthenticationGuard;
+import com.example.it_robota.auth.AccountActivity;
+import com.example.it_robota.auth.AccountSession;
 import com.example.it_robota.downloader.TrackDownloadManager;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.MusicPlayerManager;
@@ -23,7 +24,7 @@ import java.util.concurrent.Executors;
 /**
  * Displays track information and delegates track actions to their existing managers.
  */
-public class TrackDetailsActivity extends AppCompatActivity {
+public class TrackDetailsActivity extends AccountActivity {
 
     public static final String EXTRA_TRACK_ID = "trackId";
 
@@ -45,6 +46,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
     private MaterialButton downloadButton;
     private boolean favoriteUpdateInProgress;
     private boolean downloadInProgress;
+    private String trackId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,12 +68,31 @@ public class TrackDetailsActivity extends AppCompatActivity {
         favoriteButton.setOnClickListener(view -> toggleFavorite());
         downloadButton.setOnClickListener(view -> downloadTrack());
 
-        String trackId = getIntent().getStringExtra(EXTRA_TRACK_ID);
+        trackId = getIntent().getStringExtra(EXTRA_TRACK_ID);
+        accountUiReady();
+    }
+
+    @Override
+    protected void clearAccountContent() {
+        currentTrack = null;
+        favoriteUpdateInProgress = false;
+        downloadInProgress = false;
+        musicPlayerManager.stop();
+        contentView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    protected void loadAccountContent(AccountSession account, int revision) {
+        if (account == null) {
+            showError(R.string.track_details_login_required);
+            return;
+        }
         if (trackId == null || trackId.trim().isEmpty()) {
             showError(R.string.track_details_missing_id);
             return;
         }
-        loadTrack(trackId.trim());
+        loadTrack(trackId.trim(), account, revision);
     }
 
     private void bindViews() {
@@ -91,16 +112,16 @@ public class TrackDetailsActivity extends AppCompatActivity {
     /**
      * Loads track details and local states outside the UI thread.
      */
-    private void loadTrack(String trackId) {
+    private void loadTrack(String trackId, AccountSession account, int revision) {
         showLoading();
         executorService.execute(() -> {
             try {
-                Track track = trackRepository.getTrackDetails(trackId);
-                if (track != null && trackDownloadManager.isTrackDownloaded(trackId)) {
-                    track.setLocalFilePath(trackDownloadManager.getLocalFilePath(trackId));
+                Track track = trackRepository.getTrackDetails(trackId, account);
+                if (track != null) {
+                    track.setLocalFilePath(trackDownloadManager.getLocalFilePath(trackId, account));
                 }
                 runOnUiThread(() -> {
-                    if (isFinishing() || isDestroyed()) {
+                    if (!acceptsResult(account, revision)) {
                         return;
                     }
                     if (track == null) {
@@ -112,7 +133,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
-                    if (!isFinishing() && !isDestroyed()) {
+                    if (acceptsResult(account, revision)) {
                         showError(R.string.track_details_load_error);
                     }
                 });
@@ -170,7 +191,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
     }
 
     private void playTrack() {
-        if (currentTrack == null) {
+        if (currentTrack == null || !acceptsResult(displayedAccount, accountRevision())) {
             return;
         }
         String audioSource = currentTrack.getLocalFilePath();
@@ -189,21 +210,25 @@ public class TrackDetailsActivity extends AppCompatActivity {
      * Adds or removes the track in Room without blocking the UI thread.
      */
     private void toggleFavorite() {
-        if (currentTrack == null || favoriteUpdateInProgress) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (currentTrack == null || favoriteUpdateInProgress || !acceptsResult(account, revision)) {
             return;
         }
 
         boolean removeFavorite = currentTrack.isFavorite();
+        Track track = currentTrack;
         favoriteUpdateInProgress = true;
         favoriteButton.setEnabled(false);
         executorService.execute(() -> {
             try {
                 if (removeFavorite) {
-                    trackRepository.removeFavorite(currentTrack.getId());
+                    trackRepository.removeFavorite(track.getId(), account);
                 } else {
-                    trackRepository.saveFavorite(currentTrack);
+                    trackRepository.saveFavorite(track, account);
                 }
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     currentTrack.setFavorite(!removeFavorite);
                     favoriteUpdateInProgress = false;
                     updateStatuses();
@@ -217,6 +242,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     favoriteUpdateInProgress = false;
                     updateStatuses();
                     Toast.makeText(
@@ -230,18 +256,22 @@ public class TrackDetailsActivity extends AppCompatActivity {
     }
 
     private void downloadTrack() {
-        if (currentTrack == null || downloadInProgress) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (currentTrack == null || downloadInProgress || !acceptsResult(account, revision)) {
             return;
         }
         downloadInProgress = true;
+        Track track = currentTrack;
         downloadButton.setEnabled(false);
         executorService.execute(() -> {
             try {
-                trackDownloadManager.downloadTrack(currentTrack);
-                currentTrack.setLocalFilePath(
-                        trackDownloadManager.getLocalFilePath(currentTrack.getId())
+                trackDownloadManager.downloadTrack(track, account);
+                track.setLocalFilePath(
+                        trackDownloadManager.getLocalFilePath(track.getId(), account)
                 );
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     downloadInProgress = false;
                     updateStatuses();
                     Toast.makeText(
@@ -252,6 +282,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     downloadInProgress = false;
                     updateStatuses();
                     Toast.makeText(

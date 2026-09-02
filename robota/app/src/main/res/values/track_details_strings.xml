@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="track_details_title">Track details</string>
+    <string name="track_details_login_required">Log in to view track details.</string>
     <string name="track_details_album_label">Album</string>
     <string name="track_details_duration_label">Duration</string>
     <string name="track_details_play">Play track</string>

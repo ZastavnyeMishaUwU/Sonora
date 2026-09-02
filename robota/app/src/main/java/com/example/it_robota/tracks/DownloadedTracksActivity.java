@@ -11,13 +11,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
 import com.example.it_robota.auth.AuthenticationGuard;
-import com.example.it_robota.auth.SessionManager;
-import com.example.it_robota.database.AppDatabase;
-import com.example.it_robota.database.DownloadedTrackDao;
+import com.example.it_robota.auth.AccountActivity;
+import com.example.it_robota.auth.AccountSession;
+import com.example.it_robota.downloader.TrackDownloadManager;
 import com.example.it_robota.database.DownloadedTrackEntity;
 import com.example.it_robota.musicplayback.MusicPlayerManager;
 import com.example.it_robota.storage.LocalFileStorageManager;
@@ -30,17 +29,17 @@ import java.util.concurrent.Executors;
 /**
  * Displays tracks downloaded by the current user and plays their local audio files.
  */
-public class DownloadedTracksActivity extends AppCompatActivity {
+public class DownloadedTracksActivity extends AccountActivity {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final List<DownloadedTrackEntity> downloadedTracks = new ArrayList<>();
 
-    private DownloadedTrackDao downloadedTrackDao;
-    private SessionManager sessionManager;
+    private TrackDownloadManager downloadManager;
     private LocalFileStorageManager localFileStorageManager;
     private MusicPlayerManager musicPlayerManager;
     private DownloadedTrackAdapter downloadedTrackAdapter;
     private TextView emptyStateTextView;
+    private AlertDialog removalDialog;
 
     /**
      * Initializes dependencies, list rendering and local playback behavior.
@@ -57,26 +56,23 @@ public class DownloadedTracksActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_downloaded_tracks);
 
-        downloadedTrackDao = AppDatabase.getInstance(this).downloadedTrackDao();
-        sessionManager = new SessionManager(this);
+        downloadManager = new TrackDownloadManager(this);
         localFileStorageManager = new LocalFileStorageManager(this);
         musicPlayerManager = new MusicPlayerManager();
 
         bindList();
+        accountUiReady();
     }
 
     /**
-     * Reloads downloads whenever the screen becomes visible.
+     * Clears private rows and playback when the account changes or the screen is hidden.
      */
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (sessionManager == null) {
-            return;
-        }
-
-        loadDownloadedTracks();
+    protected void clearAccountContent() {
+        downloadedTracks.clear();
+        downloadedTrackAdapter.notifyDataSetChanged();
+        musicPlayerManager.stop();
+        if (removalDialog != null) { removalDialog.dismiss(); removalDialog = null; }
     }
 
     /**
@@ -97,23 +93,22 @@ public class DownloadedTracksActivity extends AppCompatActivity {
     /**
      * Reads downloaded tracks for the active user outside the UI thread.
      */
-    private void loadDownloadedTracks() {
+    @Override
+    protected void loadAccountContent(AccountSession account, int revision) {
         emptyStateTextView.setText(R.string.downloaded_tracks_loading);
         downloadedTracks.clear();
         downloadedTrackAdapter.notifyDataSetChanged();
+        if (account == null) {
+            emptyStateTextView.setText(R.string.downloaded_tracks_login_required);
+            return;
+        }
 
         executorService.execute(() -> {
             try {
-                long userId = sessionManager.getCurrentUserId();
-                if (userId < 0) {
-                    showTracks(new ArrayList<>(), R.string.downloaded_tracks_login_required);
-                    return;
-                }
-
-                List<DownloadedTrackEntity> tracks = downloadedTrackDao.getDownloadedTracks(userId);
-                showTracks(tracks, R.string.downloaded_tracks_empty);
+                List<DownloadedTrackEntity> tracks = downloadManager.getDownloadedTracks(account);
+                showTracks(tracks, R.string.downloaded_tracks_empty, account, revision);
             } catch (Exception exception) {
-                showTracks(new ArrayList<>(), R.string.downloaded_tracks_load_error);
+                showTracks(new ArrayList<>(), R.string.downloaded_tracks_load_error, account, revision);
             }
         });
     }
@@ -124,9 +119,10 @@ public class DownloadedTracksActivity extends AppCompatActivity {
      * @param tracks downloaded tracks to display
      * @param emptyMessageResource message shown when the supplied list is empty
      */
-    private void showTracks(List<DownloadedTrackEntity> tracks, int emptyMessageResource) {
+    private void showTracks(List<DownloadedTrackEntity> tracks, int emptyMessageResource,
+                            AccountSession account, int revision) {
         runOnUiThread(() -> {
-            if (isFinishing() || isDestroyed()) {
+            if (!acceptsResult(account, revision)) {
                 return;
             }
 
@@ -145,12 +141,25 @@ public class DownloadedTracksActivity extends AppCompatActivity {
      * @param downloadedTrack selected downloaded-track record
      */
     private void playDownloadedTrack(DownloadedTrackEntity downloadedTrack) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (!ownsTrack(downloadedTrack, account) || !acceptsResult(account, revision)) { return; }
         executorService.execute(() -> {
-            String localPath = downloadedTrack.getLocalPath();
+            String localPath;
+            try {
+                localPath = downloadManager.getLocalFilePath(downloadedTrack.getTrackId(), account);
+            } catch (RuntimeException exception) {
+                runOnUiThread(() -> {
+                    if (acceptsResult(account, revision)) {
+                        Toast.makeText(this, R.string.downloaded_tracks_load_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return;
+            }
             boolean fileAvailable = localFileStorageManager.fileExists(localPath);
 
             runOnUiThread(() -> {
-                if (isFinishing() || isDestroyed()) {
+                if (!acceptsResult(account, revision)) {
                     return;
                 }
 
@@ -179,46 +188,38 @@ public class DownloadedTracksActivity extends AppCompatActivity {
      * @param downloadedTrack track selected for removal
      */
     private void confirmTrackRemoval(DownloadedTrackEntity downloadedTrack) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (!ownsTrack(downloadedTrack, account) || !acceptsResult(account, revision)) { return; }
         String trackName = valueOrFallback(
                 downloadedTrack.getTrackName(),
                 getString(R.string.downloaded_tracks_unknown_track, downloadedTrack.getTrackId())
         );
 
-        new AlertDialog.Builder(this)
+        removalDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.downloaded_tracks_remove_title)
                 .setMessage(getString(R.string.downloaded_tracks_remove_message, trackName))
                 .setNegativeButton(R.string.downloaded_tracks_remove_cancel, null)
                 .setPositiveButton(
                         R.string.downloaded_tracks_remove_confirm,
-                        (dialog, which) -> removeDownloadedTrack(downloadedTrack)
+                        (dialog, which) -> removeDownloadedTrack(downloadedTrack, account, revision)
                 )
                 .show();
     }
 
     /**
-     * Deletes the local file and then removes its Room record in the background.
-     * A missing local file is treated as an already completed file deletion.
+     * Removes the captured account's download in the background without affecting other owners.
      *
      * @param downloadedTrack track selected for removal
      */
-    private void removeDownloadedTrack(DownloadedTrackEntity downloadedTrack) {
+    private void removeDownloadedTrack(DownloadedTrackEntity downloadedTrack, AccountSession account, int revision) {
+        if (!acceptsResult(account, revision)) { return; }
         executorService.execute(() -> {
             try {
-                boolean fileRemoved = localFileStorageManager.deleteFile(
-                        downloadedTrack.getLocalPath()
-                );
-                if (!fileRemoved) {
-                    showRemovalError();
-                    return;
-                }
-
-                downloadedTrackDao.deleteDownloadedTrack(
-                        downloadedTrack.getTrackId(),
-                        downloadedTrack.getUserId()
-                );
-                showRemovalSuccess(downloadedTrack);
+                downloadManager.removeDownload(downloadedTrack.getTrackId(), account);
+                showRemovalSuccess(downloadedTrack, account, revision);
             } catch (Exception exception) {
-                showRemovalError();
+                showRemovalError(account, revision);
             }
         });
     }
@@ -228,9 +229,9 @@ public class DownloadedTracksActivity extends AppCompatActivity {
      *
      * @param downloadedTrack track whose file and database record were deleted
      */
-    private void showRemovalSuccess(DownloadedTrackEntity downloadedTrack) {
+    private void showRemovalSuccess(DownloadedTrackEntity downloadedTrack, AccountSession account, int revision) {
         runOnUiThread(() -> {
-            if (isFinishing() || isDestroyed()) {
+            if (!acceptsResult(account, revision)) {
                 return;
             }
 
@@ -248,9 +249,9 @@ public class DownloadedTracksActivity extends AppCompatActivity {
     /**
      * Displays a non-fatal message when a track cannot be fully removed.
      */
-    private void showRemovalError() {
+    private void showRemovalError(AccountSession account, int revision) {
         runOnUiThread(() -> {
-            if (isFinishing() || isDestroyed()) {
+            if (!acceptsResult(account, revision)) {
                 return;
             }
 
@@ -260,6 +261,11 @@ public class DownloadedTracksActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT
             ).show();
         });
+    }
+
+    private boolean ownsTrack(DownloadedTrackEntity track, AccountSession account) {
+        return account != null && track.getUserId() == account.getUserId()
+                && track.getOwnerEmail().equals(account.getEmail());
     }
 
     /**

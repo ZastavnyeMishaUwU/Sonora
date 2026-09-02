@@ -15,6 +15,17 @@ import java.util.List;
 @Dao
 public interface FavoriteTrackDao {
 
+    @Query("SELECT * FROM tracks WHERE id IN (SELECT trackId FROM favorite_tracks "
+            + "WHERE userId = :userId AND ownerEmail = :email) ORDER BY name COLLATE NOCASE")
+    List<TrackEntity> getFavoriteTracksByAccount(long userId, String email);
+
+    @Query("SELECT EXISTS(SELECT 1 FROM favorite_tracks WHERE trackId = :trackId "
+            + "AND userId = :userId AND ownerEmail = :email)")
+    boolean isTrackFavoriteForAccount(String trackId, long userId, String email);
+
+    @Query("DELETE FROM favorite_tracks WHERE trackId = :trackId AND userId = :userId AND ownerEmail = :email")
+    void deleteForAccount(String trackId, long userId, String email);
+
     /**
      * Inserts a track into the tracks table. Replaces it if it already exists.
      */

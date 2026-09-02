@@ -2,17 +2,27 @@ package com.example.it_robota.database;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.ColumnInfo;
 
 /**
  * Entity for storing favorite tracks for users.
  */
 @Entity(
         tableName = "favorite_tracks",
-        primaryKeys = {"userId", "trackId"}
+        primaryKeys = {"userId", "ownerEmail", "trackId"}
 )
 public class FavoriteTrackEntity {
 
     private long userId;
+
+    @NonNull
+    @ColumnInfo(defaultValue = "''")
+    private String ownerEmail = "";
+
+    @NonNull
+    public String getOwnerEmail() { return ownerEmail; }
+
+    public void setOwnerEmail(@NonNull String ownerEmail) { this.ownerEmail = ownerEmail; }
 
     @NonNull
     private String trackId = "";

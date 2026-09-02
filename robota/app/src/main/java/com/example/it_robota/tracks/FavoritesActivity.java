@@ -12,11 +12,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.it_robota.R;
 import com.example.it_robota.auth.AuthenticationGuard;
-import com.example.it_robota.auth.SessionManager;
+import com.example.it_robota.auth.AccountActivity;
+import com.example.it_robota.auth.AccountSession;
 import com.example.it_robota.models.Track;
 import com.example.it_robota.musicplayback.PlayerActivity;
 import com.example.it_robota.repositories.TrackRepository;
@@ -29,12 +29,11 @@ import java.util.concurrent.Executors;
 /**
  * Lists favorite tracks saved for the currently logged-in user.
  */
-public class FavoritesActivity extends AppCompatActivity {
+public class FavoritesActivity extends AccountActivity {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final List<Track> favoriteTracks = new ArrayList<>();
     private TrackRepository trackRepository;
-    private SessionManager sessionManager;
     private FavoritesAdapter favoritesAdapter;
     private ListView favoritesListView;
     private ProgressBar progressBar;
@@ -51,7 +50,6 @@ public class FavoritesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_favorites);
 
         trackRepository = new TrackRepository(this);
-        sessionManager = new SessionManager(this);
         favoritesListView = findViewById(R.id.lvFavorites);
         progressBar = findViewById(R.id.favoritesProgress);
         emptyStateTextView = findViewById(R.id.tvFavoritesEmptyState);
@@ -59,24 +57,23 @@ public class FavoritesActivity extends AppCompatActivity {
         favoritesListView.setAdapter(favoritesAdapter);
 
         findViewById(R.id.btnBackFavorites).setOnClickListener(view -> finish());
+        accountUiReady();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (sessionManager == null) {
-            return;
-        }
-
-        loadFavorites();
+    protected void clearAccountContent() {
+        favoriteTracks.clear();
+        favoritesAdapter.notifyDataSetChanged();
+        favoritesListView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
     }
 
     /**
      * Loads favorites for the current user outside the UI thread.
      */
-    private void loadFavorites() {
-        if (!sessionManager.isLoggedIn()) {
+    @Override
+    protected void loadAccountContent(AccountSession account, int revision) {
+        if (account == null) {
             showEmptyState(R.string.favorites_login_required);
             return;
         }
@@ -84,10 +81,14 @@ public class FavoritesActivity extends AppCompatActivity {
         showLoading();
         executorService.execute(() -> {
             try {
-                List<Track> tracks = trackRepository.getSavedTracks();
-                runOnUiThread(() -> showTracks(tracks));
+                List<Track> tracks = trackRepository.getSavedTracks(account);
+                runOnUiThread(() -> {
+                    if (acceptsResult(account, revision)) { showTracks(tracks); }
+                });
             } catch (RuntimeException exception) {
-                runOnUiThread(() -> showEmptyState(R.string.favorites_load_error));
+                runOnUiThread(() -> {
+                    if (acceptsResult(account, revision)) { showEmptyState(R.string.favorites_load_error); }
+                });
             }
         });
     }
@@ -106,10 +107,14 @@ public class FavoritesActivity extends AppCompatActivity {
      * Removes a track from the current user's favorites in the background.
      */
     private void removeFavorite(Track track) {
+        AccountSession account = displayedAccount;
+        int revision = accountRevision();
+        if (!acceptsResult(account, revision)) { return; }
         executorService.execute(() -> {
             try {
-                trackRepository.removeFavorite(track.getId());
+                trackRepository.removeFavorite(track.getId(), account);
                 runOnUiThread(() -> {
+                    if (!acceptsResult(account, revision)) { return; }
                     favoriteTracks.remove(track);
                     favoritesAdapter.notifyDataSetChanged();
                     if (favoriteTracks.isEmpty()) {
@@ -118,17 +123,18 @@ public class FavoritesActivity extends AppCompatActivity {
                     Toast.makeText(this, R.string.favorites_removed, Toast.LENGTH_SHORT).show();
                 });
             } catch (RuntimeException exception) {
-                runOnUiThread(() -> Toast.makeText(
-                        this,
-                        R.string.favorites_remove_error,
-                        Toast.LENGTH_SHORT
-                ).show());
+                runOnUiThread(() -> {
+                    if (acceptsResult(account, revision)) {
+                        Toast.makeText(this, R.string.favorites_remove_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
     }
 
     private void openPlayer(Track track) {
-        if (track == null || track.getId() == null || track.getId().trim().isEmpty()) {
+        if (!acceptsResult(displayedAccount, accountRevision())
+                || track == null || track.getId() == null || track.getId().trim().isEmpty()) {
             return;
         }
         Intent intent = new Intent(this, PlayerActivity.class);
@@ -143,6 +149,8 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     private void showEmptyState(int messageResource) {
+        favoriteTracks.clear();
+        favoritesAdapter.notifyDataSetChanged();
         progressBar.setVisibility(View.GONE);
         favoritesListView.setVisibility(View.GONE);
         emptyStateTextView.setText(messageResource);

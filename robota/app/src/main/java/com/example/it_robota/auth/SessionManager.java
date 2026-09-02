@@ -2,6 +2,8 @@ package com.example.it_robota.auth;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Manages the current user session in SharedPreferences.
@@ -12,6 +14,7 @@ public class SessionManager {
     private static final String KEY_LOGGED_IN = "loggedIn";
     private static final String KEY_CURRENT_USER_ID = "currentUserId";
     private static final String KEY_CURRENT_USER_EMAIL = "currentUserEmail";
+    private static final String KEY_SESSION_TOKEN = "sessionToken";
     private static final long NO_USER_ID = -1L;
 
     private final SharedPreferences sharedPreferences;
@@ -36,7 +39,8 @@ public class SessionManager {
         sharedPreferences.edit()
                 .putBoolean(KEY_LOGGED_IN, true)
                 .putLong(KEY_CURRENT_USER_ID, userId)
-                .putString(KEY_CURRENT_USER_EMAIL, email)
+                .putString(KEY_CURRENT_USER_EMAIL, AccountSession.normalizeEmail(email))
+                .putString(KEY_SESSION_TOKEN, UUID.randomUUID().toString())
                 .apply();
     }
 
@@ -48,6 +52,7 @@ public class SessionManager {
                 .remove(KEY_LOGGED_IN)
                 .remove(KEY_CURRENT_USER_ID)
                 .remove(KEY_CURRENT_USER_EMAIL)
+                .remove(KEY_SESSION_TOKEN)
                 .apply();
     }
 
@@ -81,5 +86,31 @@ public class SessionManager {
      */
     public String getCurrentUserEmail() {
         return sharedPreferences.getString(KEY_CURRENT_USER_EMAIL, null);
+    }
+
+    /** Reads one atomic preference snapshot, never mixing two users during a switch. */
+    public AccountSession getAccount() {
+        Map<String, ?> values = sharedPreferences.getAll();
+        Object id = values.get(KEY_CURRENT_USER_ID);
+        Object email = values.get(KEY_CURRENT_USER_EMAIL);
+        Object token = values.get(KEY_SESSION_TOKEN);
+        if (!Boolean.TRUE.equals(values.get(KEY_LOGGED_IN)) || !(id instanceof Long)
+                || (Long) id < 0 || !(email instanceof String)
+                || AccountSession.normalizeEmail((String) email).isEmpty()) {
+            return null;
+        }
+        return new AccountSession((Long) id, (String) email, token instanceof String ? (String) token : "");
+    }
+
+    public boolean isCurrent(AccountSession account) {
+        return account != null && account.equals(getAccount());
+    }
+
+    public void addListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+        sharedPreferences.registerOnSharedPreferenceChangeListener(listener);
+    }
+
+    public void removeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener);
     }
 }

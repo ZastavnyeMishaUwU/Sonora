@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.example.it_robota.auth.SessionManager;
-import com.example.it_robota.repositories.AuthRepository;
+import com.example.it_robota.auth.AccountSession;
 import com.example.it_robota.database.AppDatabase;
 import com.example.it_robota.database.DownloadedTrackEntity;
 import com.example.it_robota.models.Track;
@@ -15,6 +15,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Manager responsible for downloading audio files to the device.
@@ -25,7 +27,6 @@ public class TrackDownloadManager {
 
     private final Context context;
     private final AppDatabase database;
-    private final AuthRepository authRepository;
     private final SessionManager sessionManager;
     private final LocalFileStorageManager localFileStorageManager;
 
@@ -38,7 +39,6 @@ public class TrackDownloadManager {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getInstance(this.context);
         this.sessionManager = new SessionManager(this.context);
-        this.authRepository = new AuthRepository(database.userDao(), this.sessionManager);
         this.localFileStorageManager = new LocalFileStorageManager(this.context);
     }
 
@@ -53,6 +53,10 @@ public class TrackDownloadManager {
      * 5. Store local file path in Room database
      */
     public void downloadTrack(Track track) throws Exception {
+        downloadTrack(track, sessionManager.getAccount());
+    }
+
+    public void downloadTrack(Track track, AccountSession account) throws Exception {
         if (track == null) {
             throw new Exception("Track information is missing.");
         }
@@ -66,16 +70,12 @@ public class TrackDownloadManager {
         if (downloadUrl == null || downloadUrl.trim().isEmpty()) {
             throw new Exception("Track download URL is missing. Cannot download.");
         }
-        if (!authRepository.isUserLoggedIn()) {
+        if (!sessionManager.isCurrent(account)) {
             throw new Exception("User is not logged in. Downloads require an active session.");
         }
 
-        long userId = sessionManager.getCurrentUserId();
-        if (userId == -1) {
-            throw new Exception("User is not logged in. Downloads require an active session.");
-        }
-
-        File localFile = new File(localFileStorageManager.buildFilePath(trackId));
+        long userId = account.getUserId();
+        File localFile = new File(localFileStorageManager.buildFilePath(account.getEmail(), trackId));
         boolean existingFile = localFileStorageManager.fileExists(localFile.getAbsolutePath())
                 && localFile.length() > 0;
 
@@ -101,6 +101,7 @@ public class TrackDownloadManager {
                 track.getArtistName(),
                 localFile.getAbsolutePath()
         );
+        entity.setOwnerEmail(account.getEmail());
 
         try {
             database.downloadedTrackDao().insertDownloadedTrack(entity);
@@ -111,7 +112,9 @@ public class TrackDownloadManager {
             throw new Exception("Downloaded track could not be saved.", exception);
         }
 
-        track.setLocalFilePath(localFile.getAbsolutePath());
+        if (sessionManager.isCurrent(account)) {
+            track.setLocalFilePath(localFile.getAbsolutePath());
+        }
     }
 
     /**
@@ -128,9 +131,9 @@ public class TrackDownloadManager {
             return true;
         }
 
-        database.downloadedTrackDao().deleteDownloadedTrack(
+        database.downloadedTrackDao().deleteForAccount(
                 entity.getTrackId(),
-                entity.getUserId()
+                entity.getUserId(), entity.getOwnerEmail()
         );
         return false;
     }
@@ -140,16 +143,20 @@ public class TrackDownloadManager {
      * This fulfills the requirement to "store local file path in Room".
      */
     public String getLocalFilePath(String trackId) {
-        DownloadedTrackEntity entity = getDownloadedTrack(trackId);
+        return getLocalFilePath(trackId, sessionManager.getAccount());
+    }
+
+    public String getLocalFilePath(String trackId, AccountSession account) {
+        DownloadedTrackEntity entity = getDownloadedTrack(trackId, account);
         if (entity == null) {
             return null;
         }
 
         String localPath = entity.getLocalPath();
         if (!localFileStorageManager.fileExists(localPath) || new File(localPath).length() == 0) {
-            database.downloadedTrackDao().deleteDownloadedTrack(
+            database.downloadedTrackDao().deleteForAccount(
                     entity.getTrackId(),
-                    entity.getUserId()
+                    entity.getUserId(), entity.getOwnerEmail()
             );
             return null;
         }
@@ -230,16 +237,31 @@ public class TrackDownloadManager {
      * Returns the active user's downloaded-track record.
      */
     private DownloadedTrackEntity getDownloadedTrack(String trackId) {
-        if (trackId == null || trackId.trim().isEmpty() || !authRepository.isUserLoggedIn()) {
+        return getDownloadedTrack(trackId, sessionManager.getAccount());
+    }
+
+    private DownloadedTrackEntity getDownloadedTrack(String trackId, AccountSession account) {
+        if (trackId == null || trackId.trim().isEmpty() || !sessionManager.isCurrent(account)) {
             return null;
         }
+        return database.downloadedTrackDao().getDownloadByAccount(trackId, account.getUserId(), account.getEmail());
+    }
 
-        long userId = sessionManager.getCurrentUserId();
-        if (userId < 0) {
-            return null;
+    public List<DownloadedTrackEntity> getDownloadedTracks(AccountSession account) {
+        return sessionManager.isCurrent(account)
+                ? database.downloadedTrackDao().getDownloadsByAccount(account.getUserId(), account.getEmail())
+                : Collections.emptyList();
+    }
+
+    /** Removes only the selected owner's record; legacy shared files survive other owners' removal. */
+    public void removeDownload(String trackId, AccountSession account) throws Exception {
+        DownloadedTrackEntity track = getDownloadedTrack(trackId, account);
+        if (track == null) { return; }
+        if (database.downloadedTrackDao().countFileReferences(track.getLocalPath()) <= 1
+                && !localFileStorageManager.deleteFile(track.getLocalPath())) {
+            throw new Exception("Downloaded file could not be removed.");
         }
-
-        return database.downloadedTrackDao().getDownloadedTrack(trackId, userId);
+        database.downloadedTrackDao().deleteForAccount(trackId, account.getUserId(), account.getEmail());
     }
 
     /**
