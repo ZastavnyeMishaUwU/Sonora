@@ -222,7 +222,9 @@ public class TrackDetailsNavigationInstrumentedTest {
                 .getStringExtra(TrackDetailsActivity.EXTRA_TRACK_ID));
     }
 
-    /** Direct click bursts dispatch navigation asynchronously; wait for the new window. */
+    /** 
+    * Direct click bursts dispatch navigation asynchronously; wait for the new window. 
+    */
     private Activity awaitResumedActivity(Class<? extends Activity> activityClass) {
         AtomicReference<Activity> result = new AtomicReference<>();
         long deadline = SystemClock.uptimeMillis() + 5000;
