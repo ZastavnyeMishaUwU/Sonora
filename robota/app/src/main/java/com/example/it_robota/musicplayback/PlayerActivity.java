@@ -342,7 +342,6 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // Allow another navigation only after returning to the player.
         trackDetailsOpening = false;
         if (sessionManager != null) {
             updateDetailsAvailability();
