@@ -1,5 +1,6 @@
 package com.example.it_robota;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private TrackRepository trackRepository;
     private ExecutorService executorService;
     private Handler mainHandler;
+    private boolean trackDetailsOpening;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +109,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        trackDetailsOpening = false;
+        tracksListView.setEnabled(true);
         updateAuthButtonsVisibility();
     }
 
@@ -173,6 +177,9 @@ public class MainActivity extends AppCompatActivity {
         ));
 
         tracksListView.setOnItemClickListener((parent, view, position, id) -> {
+            if (trackDetailsOpening) {
+                return;
+            }
             Track selectedTrack = tracks.get(position);
             Intent intent = new Intent(this, PlayerActivity.class);
             intent.putExtra(PlayerActivity.EXTRA_TRACK_ID, selectedTrack.getId());
@@ -180,12 +187,30 @@ public class MainActivity extends AppCompatActivity {
         });
 
         tracksListView.setOnItemLongClickListener((parent, view, position, id) -> {
-            Track selectedTrack = tracks.get(position);
-            Intent intent = new Intent(this, TrackDetailsActivity.class);
-            intent.putExtra(TrackDetailsActivity.EXTRA_TRACK_ID, selectedTrack.getId());
-            startActivity(intent);
+            openTrackDetails(tracks.get(position));
             return true;
         });
+    }
+
+    /** Prevents queued long-clicks from opening duplicate details screens. */
+    private void openTrackDetails(Track track) {
+        if (trackDetailsOpening || isFinishing() || isDestroyed()
+                || !sessionManager.isLoggedIn()
+                || track == null || track.getId() == null || track.getId().trim().isEmpty()) {
+            return;
+        }
+
+        Intent intent = new Intent(this, TrackDetailsActivity.class);
+        intent.putExtra(TrackDetailsActivity.EXTRA_TRACK_ID, track.getId());
+        trackDetailsOpening = true;
+        tracksListView.setEnabled(false);
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException | SecurityException exception) {
+            trackDetailsOpening = false;
+            tracksListView.setEnabled(true);
+            Toast.makeText(this, R.string.track_details_open_error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
