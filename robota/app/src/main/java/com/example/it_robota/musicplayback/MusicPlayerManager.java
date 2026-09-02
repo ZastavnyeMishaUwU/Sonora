@@ -14,16 +14,25 @@ public class MusicPlayerManager {
     /**
     * Internal MediaPlayer instance to handle audio streaming
     */
+    private static MusicPlayerManager instance;
     private MediaPlayer mediaPlayer;
+
 
     /**
     * Constructor initializing the MediaPlayer
     */
-    public MusicPlayerManager() {
-        this(new MediaPlayer());
+    private MusicPlayerManager() {
+        initMediaPlayer();
     }
     MusicPlayerManager(MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
+    }
+
+    public static synchronized MusicPlayerManager getInstance() {
+        if (instance == null) {
+            instance = new MusicPlayerManager();
+        }
+        return instance;
     }
 
     /**
@@ -47,13 +56,7 @@ public class MusicPlayerManager {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(url);
             mediaPlayer.prepareAsync();
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mp.start();
-                }
-            });
-
+            mediaPlayer.setOnPreparedListener(mp -> mp.start());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -134,10 +137,7 @@ public class MusicPlayerManager {
      * Checks if audio is currently playing
      */
     public boolean isPlaying() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.isPlaying();
-        }
-        return false;
+        return mediaPlayer != null && mediaPlayer.isPlaying();
     }
 
     /**

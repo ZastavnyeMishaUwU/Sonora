@@ -58,7 +58,7 @@ public class TrackDetailsActivity extends AppCompatActivity {
         bindViews();
 
         trackRepository = new TrackRepository(this);
-        musicPlayerManager = new MusicPlayerManager();
+        musicPlayerManager = MusicPlayerManager.getInstance();
         trackDownloadManager = new TrackDownloadManager(this);
 
         findViewById(R.id.btnTrackDetailsBack).setOnClickListener(view -> finish());

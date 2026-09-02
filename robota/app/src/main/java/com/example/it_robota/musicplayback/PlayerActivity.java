@@ -80,8 +80,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         initViews();
 
-        musicPlayer =
-                new MusicPlayerManager();
+        musicPlayer = MusicPlayerManager.getInstance();
 
         apiClient =
                 new JamendoApiClient(this);
@@ -539,13 +538,7 @@ public class PlayerActivity extends AppCompatActivity {
         super.onDestroy();
 
         if (updateProgressRunnable != null) {
-            handler.removeCallbacks(
-                    updateProgressRunnable
-            );
-        }
-
-        if (musicPlayer != null) {
-            musicPlayer.release();
+            handler.removeCallbacks(updateProgressRunnable);
         }
 
         if (executorService != null) {
