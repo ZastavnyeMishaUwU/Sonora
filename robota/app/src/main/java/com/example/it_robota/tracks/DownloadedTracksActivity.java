@@ -60,7 +60,7 @@ public class DownloadedTracksActivity extends AppCompatActivity {
         downloadedTrackDao = AppDatabase.getInstance(this).downloadedTrackDao();
         sessionManager = new SessionManager(this);
         localFileStorageManager = new LocalFileStorageManager(this);
-        musicPlayerManager = new MusicPlayerManager();
+        musicPlayerManager = MusicPlayerManager.getInstance();
 
         bindList();
     }
